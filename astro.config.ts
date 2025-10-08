@@ -4,7 +4,7 @@ import AstroPureIntegration from 'astro-pure'
 import { defineConfig } from 'astro/config'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
-import node from '@astrojs/node'
+// import node from '@astrojs/node'
 
 // Others
 // import { visualizer } from 'rollup-plugin-visualizer'
@@ -26,7 +26,7 @@ import config from './src/site.config.ts'
 // https://astro.build/config
 export default defineConfig({
   // Top-Level Options
-  site: 'https://myastroblog.zeabur.internal:8080',
+  site: 'https://astro-pure.js.org',
   // Deploy to a sub path; See https://astro-pure.js.org/docs/setup/deployment#platform-with-base-path
   // base: '/astro-pure/',
   trailingSlash: 'never',
@@ -39,8 +39,8 @@ export default defineConfig({
   // 2. Vercel (static)
   // adapter: vercelStatic(),
   // 3. Local (standalone)
-  adapter: node({ mode: 'standalone' }),
-  output: 'server',
+  // adapter: node({ mode: 'standalone' }),
+  // output: 'server',
   
   // adapter: zeabur(),
   // output: 'server',
