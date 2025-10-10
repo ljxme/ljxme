@@ -18,27 +18,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ 设置 Node 环境
+      # 2️⃣ 设置 Node 环境（自动缓存 npm）
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      # 3️⃣ 安装依赖
+      # 3️⃣ 安装依赖（带自动重试）
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "📦 正在安装依赖..."
+          for i in 1 2 3; do
+            npm ci && break || (echo "❌ 安装失败，${i} 秒后重试第 $((i+1)) 次..." && sleep $((i * 5)))
+          done
+          echo "✅ 依赖安装完成"
 
-      # 4️⃣ 删除旧的构建产物（防止残留）
+      # 4️⃣ 删除旧构建产物（防止残留）
       - name: Clean old build
-        run: rm -rf dist
+        run: |
+          echo "🧹 清理旧构建目录..."
+          rm -rf dist .astro
+          echo "✅ 清理完成"
 
       # 5️⃣ 构建 Astro 静态文件
       - name: Build Astro project
-        run: npm run build
+        run: |
+          echo "🏗️ 正在构建 Astro 项目..."
+          npm run build
+          echo "✅ 构建完成"
 
       # 6️⃣ 部署到 page 分支（GitHub Pages 或静态仓库）
-      - name: Deploy to page branch
+      - name: 📦 Deploy to page branch
         run: |
           cd dist
           git init
@@ -47,6 +58,7 @@ jobs:
           git add .
           git commit -m "${{ github.event.head_commit.message }} ==> [$(date +"%Y-%m-%d %H:%M:%S")]"
           git push --force --quiet "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" master:page
+          echo "✅ 已推送至 GitHub page 分支"
 
       # 7️⃣ 同步到 CNB 仓库（带 GitHub commit 信息）
       - name: 🌐 Sync to CNB repository
@@ -60,6 +72,7 @@ jobs:
           GITHUB_COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
           git commit --allow-empty -m "🔄 Sync from GitHub: ${COMMIT_MSG}\n🔗 ${GITHUB_COMMIT_URL}"
           git push --force --quiet cnb main
+          echo "✅ 已同步至 CNB 仓库（带 GitHub 提交信息）"
 
       # 8️⃣ SSH 登录服务器并执行拉取
       - name: 🔧 SSH Deploy to Server
