@@ -1,6 +1,6 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "src/**/*","src/pages/**/*.mdx","src/pages/**/*.md"],
+  "include": [".astro/types.d.ts", "src/**/*"],
   "compilerOptions": {
     // Basic
     "allowJs": true,
