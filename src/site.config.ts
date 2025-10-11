@@ -177,19 +177,19 @@ export const terms: CardListData = {
   title: 'Terms content',
   list: [
     {
-      title: 'Privacy Policy',
+      title: '隐私政策',
       link: '/terms/privacy-policy'
     },
     {
-      title: 'Terms and Conditions',
+      title: '服务条款',
       link: '/terms/terms-and-conditions'
     },
     {
-      title: 'Copyright',
+      title: '版权声明',
       link: '/terms/copyright'
     },
     {
-      title: 'Disclaimer',
+      title: '免责声明',
       link: '/terms/disclaimer'
     }
   ]
