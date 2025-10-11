@@ -111,7 +111,7 @@ export const integ: IntegrationUserConfig = {
     ],
     // Yourself link info
     applyTip: [
-      { name: 'Name', val: theme.title },
+      { name: 'Name', val: "梨尽兴" },
       { name: 'Desc', val: theme.description || 'Null' },
       { name: 'Link', val: 'https://ljx.icu' },
       { name: 'Avatar', val: 'https://ljx.icu/favicon/avatar.png' }
@@ -161,7 +161,7 @@ export const integ: IntegrationUserConfig = {
       comment: true,
       locale: {
         reaction0: 'Like',
-        placeholder: 'Welcome to comment~ (Email to receive replies. Login is unnecessary)'
+        placeholder: '欢迎留下评论~（邮箱用于接收回复，无需登录，评论经审核后可见）'
       },
       imageUploader: false
     }
