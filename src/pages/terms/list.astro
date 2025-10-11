@@ -4,6 +4,7 @@ import { cn } from 'astro-pure/utils'
 import PageLayout from '@/layouts/BaseLayout.astro'
 import { integ, terms } from '@/site-config'
 import Signature from 'preset/components/signature/Signature.astro'
+import { Collapse } from 'astro-pure/user'
 
 const meta = {
   title: '网站政策',
@@ -23,33 +24,35 @@ const meta = {
       <CardList {...terms} />
       <h2 class='text-xl font-medium'>网站相关证书</h2>
       <p class="font-bold">以下图片、证明及资料仅供本站展示，<span style="color:red;">严禁盗用或复制</span></p>
-      <figure class="mt-4">
-        <img
-          src="https://tc.ljx.icu/file/imgs/AkM2pC1N.png"
-          alt="域名证书"
-          loading="lazy"
-          class="rounded shadow max-w-sm md:max-w-md mx-auto my-0"
-        />
-        <figcaption class="mt-2 text-sm text-gray-600 text-center">域名证书</figcaption>
-      </figure>
-      <figure class="mt-4">
-        <img
-          src="https://tc.ljx.icu/file/imgs/akDSAVDu.png"
-          alt="ICP备案查询"
-          loading="lazy"
-          class="rounded shadow mx-auto my-0"
-        />
-        <figcaption class="mt-2 text-sm text-gray-600 text-center">ICP备案查询</figcaption>
-      </figure>
-      <figure class="mt-4">
-        <img
-          src="https://tc.ljx.icu/file/imgs/DddAzfN8.png"
-          alt="公安备案查询"
-          loading="lazy"
-          class="rounded shadow mx-auto my-0"
-        />
-        <figcaption class="mt-2 text-sm text-gray-600 text-center">公安备案查询</figcaption>
-      </figure>
+      <Collapse title='点击查看'>
+        <figure class="mt-4">
+          <img
+            src="https://tc.ljx.icu/file/imgs/AkM2pC1N.png"
+            alt="域名证书"
+            loading="lazy"
+            class="rounded shadow max-w-sm md:max-w-md mx-auto my-0"
+          />
+          <figcaption class="mt-2 text-sm text-gray-600 text-center">域名证书</figcaption>
+        </figure>
+        <figure class="mt-4">
+          <img
+            src="https://tc.ljx.icu/file/imgs/akDSAVDu.png"
+            alt="ICP备案查询"
+            loading="lazy"
+            class="rounded shadow mx-auto my-0"
+          />
+          <figcaption class="mt-2 text-sm text-gray-600 text-center">ICP备案查询</figcaption>
+        </figure>
+        <figure class="mt-4">
+          <img
+            src="https://tc.ljx.icu/file/imgs/DddAzfN8.png"
+            alt="公安备案查询"
+            loading="lazy"
+            class="rounded shadow mx-auto my-0"
+          />
+          <figcaption class="mt-2 text-sm text-gray-600 text-center">公安备案查询</figcaption>
+        </figure>
+      </Collapse>
     </div>
   </main>
 <Signature mode="once-on-view" threshold={0.8} />
