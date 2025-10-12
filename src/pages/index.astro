@@ -4,7 +4,7 @@ import { Image } from 'astro:assets'
 import { Quote } from 'astro-pure/advanced'
 import { PostPreview } from 'astro-pure/components/pages'
 import { getBlogCollection, sortMDByDate } from 'astro-pure/server'
-import { Button, Icon, Label } from 'astro-pure/user'
+import { Button, Icon, Label, Collapse } from 'astro-pure/user'
 // import { Card } from 'astro-pure/user'
 import PageLayout from '@/layouts/BaseLayout.astro'
 // import ProjectCard from '@/components/home/ProjectCard.astro' 设置站点项目时记得打开,其他的类似
@@ -72,6 +72,35 @@ const allPostsByDate = sortMDByDate(allPosts).slice(0, MAX_POSTS)
         <p class='text-muted-foreground'>
           站点仍在构建中，暂未完成所有功能，欢迎您留下印记~🤓。
         </p>
+        <Collapse title='点击成为监工😫'>
+          <div>
+            <ul>
+              <li>
+                <input type="checkbox" disabled />
+                未完成的任务
+                  <ul>
+                    <li>项目页面</li>
+                    <li>留言页面及布局优化</li>
+                    <li>文章迁移</li>
+                    <li>评论系统表情包优化</li>
+                    <li>友链朋友圈</li>
+                  </ul>
+              </li>
+              <li>
+                <input type="checkbox" checked disabled />
+                已完成的任务
+                <span class='text-muted-foreground'>（已完成100%）</span>
+                  <ul>
+                    <li>备案</li>
+                    <li>关于页面</li>
+                    <li>评论系统</li>
+                    <li>友链基本布局</li>
+                    <li>站点政策</li>
+                  </ul>
+              </li>
+            </ul>
+          </div>
+        </Collapse>
         <Button title='More about me' class='w-fit self-end' href='/about' variant='ahead' />
       </Section>
       {
