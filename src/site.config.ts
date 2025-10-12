@@ -29,9 +29,9 @@ export const theme: ThemeUserConfig = {
   },
 
   // === Global configuration ===
-  titleDelimiter: '•',
+  titleDelimiter: '|',
   prerender: true,
-  npmCDN: 'https://cdn.jsdelivr.net/npm',
+  npmCDN: 'https://cdn.jsdmirror.com/npm',
 
   // Still in test
   head: [
