@@ -56,9 +56,11 @@ jobs:
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
           git add .
-          git commit -m "${{ github.event.head_commit.message }} ==> [$(date +"%Y-%m-%d %H:%M:%S")]"
+          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | tr -d '\n' | tr -d '\r')
+          git commit -m "${COMMIT_MSG} ==> [$(date +"%Y-%m-%d %H:%M:%S")]"
           git push --force --quiet "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" master:page
           echo "✅ 已推送至 GitHub page 分支"
+
 
       # 7️⃣ 同步到 CNB 仓库（带 GitHub commit 信息）
       - name: 🌐 Sync to CNB repository
