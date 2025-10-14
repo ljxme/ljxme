@@ -86,10 +86,6 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
 {/* Styles */}
 <link rel='stylesheet' href='/styles/global.css' />
 
-<!-- SparkLite AI 摘要工具样式
-<link rel='stylesheet' href='/styles/gpt.css' />
--->
-
 {
   /* User script*/
   prod && (
@@ -101,10 +97,11 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
   )
 }
 
-<!-- SparkLite AI 摘要工具
+
 {/* SparkLite AI 摘要工具 - 仅在博客页面显示 */}
-<script src="/scripts/js/custom.js" is:inline></script>
+<script src="/src/plugins/custom.js" is:inline></script>
 {Astro.url.pathname.includes('/blog/') && (
-  <script src="/scripts/js/gpt.js" is:inline></script>
+  <script src="/src/plugins/gpt.js" is:inline></script>
 )}
--->
+{/* SparkLite AI 摘要工具样式 */}
+<link rel='stylesheet' href='/src/assets/styles/gpt.css' />

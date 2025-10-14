@@ -3,3 +3,4 @@
 var sparkLite_postSelector = "#content"; // 文章内容容器的选择器，例如 #article-container, .post-content
 var sparkLite_wordLimit = 8000;             // 提交给 API 的最大字数限制
 var sparkLite_typingAnimate = true;         // 是否启用打字机效果
+var sparkLite_proxyApiUrl = "https://aisummary.ljx.icu/api/spark-proxy";

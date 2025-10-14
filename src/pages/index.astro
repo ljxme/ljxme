@@ -71,8 +71,8 @@ const allPostsByDate = sortMDByDate(allPosts).slice(0, MAX_POSTS)
         <Card
           as='div'
           heading='展板'
-          subheading='终于搞好了🥰（留言板还有之前的文章还需做些修改和优化，不过算是能用了）'
-          date='2025-10-13'
+          subheading='留言板页面还需优化，以及之前博客的项目还需要迁移😫'
+          date='2025-10-14'
         >
         </Card>
         <Collapse title='网站访问统计'>
@@ -92,7 +92,7 @@ const allPostsByDate = sortMDByDate(allPosts).slice(0, MAX_POSTS)
       </Section>
       {
         allPostsByDate.length > 0 && (
-          <Section title='博文'>
+          <Section title='文章'>
             <ul class='flex flex-col gap-y-1.5 sm:gap-y-2'>
               {allPostsByDate.map((p) => (
                 <li class='flex flex-col gap-x-2 sm:flex-row'>

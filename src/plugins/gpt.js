@@ -60,7 +60,7 @@ function insertAIDiv(selector) {
     const aiTagDiv = document.createElement('div');
     aiTagDiv.className = 'sparkLite-tag'; // 修改类名
     aiTagDiv.id = 'sparkLite-tag'; // 修改 ID
-    aiTagDiv.textContent = 'Spark Lite'; // 修改显示文本
+    aiTagDiv.textContent = "Li's AI"; // 修改显示文本
     aiTitleDiv.appendChild(aiTagDiv);
 
     const aiExplanationDiv = document.createElement('div');
@@ -149,8 +149,8 @@ var sparkLite = { // 重命名对象
         } catch (e) {
             console.log('读取IndexedDB缓存失败', e);
         }
-
-        const proxyApiUrl = "https://aisummary.ljx.icu/api/spark-proxy";
+        
+        const proxyApiUrl = window.sparkLite_proxyApiUrl
         const requestDataToProxy = { content: content, title: title };
         const timeout = 30000;
 
