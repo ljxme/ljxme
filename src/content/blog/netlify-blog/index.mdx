@@ -2,7 +2,7 @@
 title: 'Netlify部署博客'
 description: '用netlify来部署简易博客'
 publishDate: '2025-08-20'
-heroImage: { src: './cover.jpg', alt: 'an image targetting my article' }
+heroImage: { src: './cover.jpg', alt: 'an image targetting my article', color: '' }
 tags:
   - 工具
   - 笔记
@@ -11,11 +11,11 @@ comment: true
 language: '中文'
 ---
 
-# Netlify简介
+## Netlify简介
 
 Netlify是一个面向现代web项目的托管平台，专注于提供持续部署、无服务器功能和全球CDN分发。它完美结合了GitHub等代码托管平台，实现了代码推送自动触发网站更新的工作流程。作为一个综合性平台，Netlify提供从构建、部署到托管的全套服务。
 
-## Netlify的核心优势
+### Netlify的核心优势
 
 - **免费起步**：Netlify提供慷慨的免费套餐，足够个人博客使用
 - **自动部署**：与GitHub、GitLab等代码仓库无缝集成，实现推送即部署
@@ -23,9 +23,9 @@ Netlify是一个面向现代web项目的托管平台，专注于提供持续部�
 - **HTTPS支持**：自动配置SSL证书，确保网站安全
 - **自定义域名**：支持绑定个人域名，建立专业形象
 
-# 使用Netlify部署博客的步骤
+## 使用Netlify部署博客的步骤
 
-## 1.准备工作
+### 1.准备工作
 
 在开始部署之前，需要进行一些准备工作：
 
@@ -34,7 +34,7 @@ Netlify是一个面向现代web项目的托管平台，专注于提供持续部�
 - 本地开发环境配置
 - （可选）一个自定义域名
 
-## 2.创建博客项目
+### 2.创建博客项目
 
 以使用Hugo为例，创建一个新的博客项目：
 
@@ -55,9 +55,9 @@ hugo new posts/my-first-post.md
 hugo server -D
 ```
 
-编辑config.toml文件配置博客基本信息：
+编辑`config.toml`文件配置博客基本信息：
 
-```toml
+```toml title="config.toml"
 baseURL = "<https://yourblog.netlify.app/>"
 languageCode = "zh-cn"
 title = "我的技术博客"
@@ -69,7 +69,7 @@ theme = "ananke"
   # 更多配置...
 ```
 
-## 3.将项目推送到GitHub
+### 3.将项目推送到GitHub
 
 创建GitHub仓库并推送本地项目：
 
@@ -84,7 +84,7 @@ git remote add origin <https://github.com/yourusername/my-blog.git>
 git push -u origin main
 ```
 
-## 4.在Netlify上部署
+### 4.在Netlify上部署
 
 现在，我们可以使用Netlify部署博客了：
 
@@ -96,7 +96,7 @@ git push -u origin main
   - 发布目录：`public`
 - **点击部署**：Netlify将自动开始构建和部署你的网站
 
-## 5.自定义域名设置
+### 5.自定义域名设置
 
 默认情况下，Netlify会提供一个形如random-name.netlify.app的子域名。如果你想使用自己的域名：
 
@@ -105,7 +105,7 @@ git push -u origin main
 - **配置DNS**：可以选择使用Netlify的DNS服务，或者在你的域名注册商处添加CNAME记录指向Netlify提供的域名
 - **启用HTTPS**：Netlify会自动为你的自定义域名配置免费的Let's Encrypt SSL证书
 
-## 6.持续更新博客
+### 6.持续更新博客
 
 设置完成后，更新博客变得非常简单：
 
@@ -121,9 +121,9 @@ git push
 
 当你推送到GitHub时，Netlify会自动检测到更改并重新构建部署你的网站。
 
-# Netlify高级功能
+## Netlify高级功能
 
-## 1.表单处理
+### 1.表单处理
 
 Netlify支持表单处理，可以轻松创建联系表单：
 
@@ -144,7 +144,7 @@ Netlify支持表单处理，可以轻松创建联系表单：
 </form>
 ```
 
-## 2.重定向与自定义头
+### 2.重定向与自定义头
 
 在项目根目录创建_redirects文件和_headers文件，可以配置URL重定向和HTTP头：
 
@@ -158,7 +158,7 @@ Netlify支持表单处理，可以轻松创建联系表单：
   X-XSS-Protection: 1; mode=block
 ```
 
-## 3.Netlify Functions
+### 3.Netlify Functions
 
 Netlify Functions允许你创建无服务器功能，例如API端点：
 
@@ -174,13 +174,13 @@ exports.handler = async function(event, context) {
 
 部署后，可以通过/.netlify/functions/hello访问此功能。
 
-## 4.环境变量与构建钩子
+### 4.环境变量与构建钩子
 
 Netlify支持环境变量设置和构建钩子，便于集成第三方服务或自定义构建流程。
 
-# Netlify性能优化
+## Netlify性能优化
 
-## 1：静态优先的架构
+### 1：静态优先的架构
 
 > 静态网站的表现远优于动态网站 - 在负载、安全性和速度方面都有显著优势。Netlify的JAMstack架构充分利用了这一点。
 
@@ -190,7 +190,7 @@ Netlify采用"静态优先"的架构理念，通过预渲染页面内容并结�
 - 全球CDN分发确保访问者获得就近节点的快速响应
 - 资源自动优化，包括图片压缩、延迟加载等
 
-## 2：开发体验的革新
+### 2：开发体验的革新
 
 > 现代web开发不应仅关注最终产品，还应关注开发过程的流畅性和可维护性。Netlify提供了一条从本地开发到生产部署的无缝路径。
 
@@ -201,7 +201,7 @@ Netlify彻底改变了博客开发与维护的体验：
 - 部署原子性保证，失败不会影响现有站点
 - 通过CLI工具与本地开发环境无缝集成
 
-# 归纳
+## 归纳
 
 Netlify为博客部署提供了一站式解决方案，从构建到部署，再到维护，都实现了极大的简化。通过本文介绍的步骤，即使是技术基础较弱的用户，也能轻松搭建一个专业、高性能的博客网站。
 
@@ -209,7 +209,7 @@ Netlify为博客部署提供了一站式解决方案，从构建到部署，再�
 
 随着静态网站生成器和JAMstack架构的不断发展，Netlify这样的平台将继续引领博客和网站部署的未来趋势，为内容创作者提供更优质、更高效的发布渠道。
 
-# 📎 参考文章及引用
+## 参考文章及引用
 
 - [Netlify官方文档](https://docs.netlify.com/)
 - [Hugo官方Netlify部署指南](https://gohugo.io/hosting-and-deployment/hosting-on-netlify/)

@@ -2,18 +2,18 @@
 title: '讨论NotionNext如何配置AI摘要'
 description: '在NotionNext[4.8.6]版本中配置AI Summary的临时方案'
 publishDate: '2025-08-22'
-heroImage: { src: './cover.jpg', alt: 'an image targetting my article' }
+heroImage: { src: './cover.jpg', alt: 'an image targetting my article', color: '' }
 tags:
   - 文字
 comment: true
 language: '中文'
 ---
 
-import { Aside } from 'astro-pure/user'
+import { Aside, Collapse } from 'astro-pure/user'
 
-# 一、关于AI Summary
+## 一、关于AI Summary
 
-## 什么是AI Summary
+### 什么是AI Summary
 
 AI Summary（AI摘要）是指使用人工智能技术自动生成文章或内容的简短概述或摘要的功能。在博客平台中，它有以下几个特点：
 
@@ -25,17 +25,17 @@ AI Summary（AI摘要）是指使用人工智能技术自动生成文章或内�
 
 在NotionNext等基于Notion的博客系统中，AI Summary通常作为一个可配置的功能，可以自动为文章生成摘要，显示在文章列表或文章页面中，为读者提供快速预览。
 
-## 是否使用AI Summary
+### 是否使用AI Summary
 
 我个人认为当下的AI技术虽蓬勃发展但仍旧有所不足，目前来看AI Summary比较适合于喜欢快速浏览的人，那么此项技术将为您省去大量的冗余时间，通过快速锁定某篇博文的关键词、简要内容来决定是否继续进行浏览。
 
-# 二、AI Summary在NotionNext项目中的配置
+## 二、AI Summary在NotionNext项目中的配置
 
 <Aside> 
 💡本文中NotionNext所使用版本为4.8.6
 </Aside>
 
-## 相关配置文件
+### 相关配置文件
 
 在我浏览NotionNext项目的仓库时发现了官网中并未详细介绍的plugin.config.js文件（或许以前介绍过但新版并未有具体说明🤔）具体在conf/plugin.config.js，在里面找到了相关配置代码：
 
@@ -53,9 +53,9 @@ AI Summary（AI摘要）是指使用人工智能技术自动生成文章或内�
 
 进而加了TianliGPT官群寻求帮助
 
-# 三、配置洪墨AI（原TianliGPT）
+## 三、配置洪墨AI（原TianliGPT）
 
-## 介绍
+### 介绍
 
 由张洪Heo和Tianli大佬搭建，全新的站点增强插件。为网站站长提供网站的AI增强服务。
 
@@ -63,7 +63,7 @@ AI Summary（AI摘要）是指使用人工智能技术自动生成文章或内�
 
 [洪墨AI - 网站AI摘要、知识库AI客服和搜索插件平台](https://ai.zhheo.com)
 
-## 获取KEY
+### 获取KEY
 
 在首页界面，选择“我的项目”→“新建项目”
 
@@ -79,13 +79,13 @@ AI Summary（AI摘要）是指使用人工智能技术自动生成文章或内�
 
 在首页就能看到我们所需要的KEY了，点击右边图标并保存
 
-## 启用Token
+### 启用Token
 
 > 摘要AI 50,000tokens，在默认配置下满足最少50篇文章的摘要生成，无限期有效
 
 需要在首页“我的会员”右下角选择“充值Token”，选择第二项，一般10￥差不多能有50篇左右，对于新手博客，或者试试水都很不错，5k字/元还是很划算的。
 
-## 网站接入（进阶配置）
+### 网站接入（进阶配置）
 
 在洪墨AI后台主页左边栏下方点击“网站接入”即可进入该页面
 
@@ -131,45 +131,44 @@ let tianliGPT_key = '你的项目KEY';
 
   用处：防止文章在不该出现摘要的地方产生摘要
 
-# 四、接入NotionNext
+## 四、接入NotionNext
 
-## 在GitHub里做如下改动：
+### 在GitHub里做如下改动：
 
-在custom.js文件中添加如下代码：
+在`custom.js`文件中添加如下代码：
 
-```jsx
+```jsx title="custom.js"
 let tianliGPT_postSelector = 'article';
 let tianliGPT_postURL = '你的通配符URL';
 let tianliGPT_key = '你的项目KEY';
 ```
 
-在blog.config.js文件相对应变量处添加如下值：
+在`blog.config.js`文件相对应变量处添加如下值：
 
-```jsx
+```jsx title="blog.config.js"
   // 自定义外部脚本，外部样式
   CUSTOM_EXTERNAL_JS: ['<https://ai.zhheo.com/static/public/tianli_gpt.min.js>'], // e.g. ['<http://xx.com/script.js','http://xx.com/script.js>']
   CUSTOM_EXTERNAL_CSS: ['<https://ai.zhheo.com/static/public/tianli_gpt.min.css>'], // e.g. ['<http://xx.com/style.css','http://xx.com/style.css>']
 ```
 
-# 五、启用洪墨AI
+## 五、启用洪墨AI
 
-修改好代码后点击提交并重新部署即可（如何重新部署？详见：https://docs.tangly1024.com/article/vercel-redploy）
+修改好代码后点击提交并重新部署即可（如何重新部署？详见：https://docs.tangly1024.com/article/vercel-redploy ）
 
 最后打开您的博客，刷新网页即可在您的博文前看到洪墨AI总结的摘要
 
 ![img](https://tc.artemisia.icu/file/PYSOShkw.png)
 
-# 相关问题及解决方案
+<Collapse title='相关问题及解决方案'>
+一、Rerfer与Url不匹配
 
-## Rerfer与Url不匹配
-
-### 原因一：您填写并启用了plugin.config.js文件中的KEY
+原因一：您填写并启用了`plugin.config.js`文件中的KEY
 
 ![img](https://tc.artemisia.icu/file/65imRvJ4.png)
 
-如果按照NotionNext官方插件所给方式注入会导致启动不了（即您填写了plugin.conmfig.js文件中的KEY），导致识别到页面基本dom加载完才执行，但是js引入gpt的时机太晚了，页面加载完好久才想起来加载js文件，也不执行。
+如果按照NotionNext官方插件所给方式注入会导致启动不了（即您填写了`plugin.conmfig.js`文件中的KEY），导致识别到页面基本dom加载完才执行，但是js引入gpt的时机太晚了，页面加载完好久才想起来加载js文件，也不执行。
 
-### 原因二：浏览器缓存
+原因二：浏览器缓存
 
 验证：切入无痕模式看洪墨AI是否正常工作。
 
@@ -179,17 +178,17 @@ let tianliGPT_key = '你的项目KEY';
 
   Chrome浏览器
 
-  - Windows/Linux:按住Ctrl键，然后按F5或点击刷新按钮。
-  - Mac:按住Cmd+Shift，然后按R键或点击刷新按钮。
+  - Windows/Linux:按住<kbd>Ctrl</kbd>键，然后按<kbd>F5</kbd>或点击刷新按钮。
+  - Mac:按住<kbd>Cmd</kbd>+<kbd>Shift</kbd>，然后按<kbd>R</kbd>键或点击刷新按钮。
 
   Firefox浏览器
 
-  - Windows/Linux:按住Ctrl键，然后按F5，或按Ctrl+Shift+R。
-  - Mac:按住Cmd+Shift，然后按R键，或点击刷新按钮。
+  - Windows/Linux:按住<kbd>Ctrl</kbd>键，然后按F5，或按<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>。
+  - Mac:按住<kbd>Cmd</kbd>+<kbd>Shift</kbd>，然后按<kbd>R</kbd>键，或点击刷新按钮。
 
   Edge浏览器
 
-  - Windows/Linux:按住Ctrl键，然后按F5或点击刷新按钮。
+  - Windows/Linux:按住<kbd>Ctrl</kbd>键，然后按F5或点击刷新按钮。
 
 - 如何查看请求头？
 
@@ -201,27 +200,27 @@ let tianliGPT_key = '你的项目KEY';
 
   若您的博文对应地址不在上图红框中，那么说明您请求头错误
 
-### 原因三：浏览器广告屏蔽插件
+原因三：浏览器广告屏蔽插件
 
 一些浏览器广告插件（例如AdGuard），导致产生”Rerfer与Url不匹配”报错
 
-### 解决方法：
+解决方法：
 
 **请先删除您之前在plugin.config.js文件中的KEY（没填就不用管）**
 
-尝试手动执行一下gpt
+1. 尝试手动执行一下gpt
 
-在引入js的代码后面手动执行一次：tianliGPT.runTianliGPT()，
+2. 在引入js的代码后面手动执行一次：tianliGPT.runTianliGPT()，
 
-但是由于加载js可能需要时间，为了避免tianliGPT.runTianliGPT()执行的时候js还没有下载完，你需要循环执行或者延迟执行。
+3. 但是由于加载js可能需要时间，为了避免tianliGPT.runTianliGPT()执行的时候js还没有下载完，你需要循环执行或者延迟执行。
 
-------
+---
 
 **懒得搞就直接添加下方代码↓**
 
-如果提示“Rerfer与Url不匹配”的字样，请您在custom.js文件中添加如下代码：
+如果提示“Rerfer与Url不匹配”的字样，请您在`custom.js`文件中添加如下代码：
 
-```jsx
+```jsx title="custom.js"
 if (typeof tianliGPT_key !== 'undefined' && tianliGPT_key) {
   postchat_checkSystemType();
   window.tianliGPT.checkURLAndRun();
@@ -230,22 +229,23 @@ if (typeof tianliGPT_key !== 'undefined' && tianliGPT_key) {
 
 **原因三的解决方法：关闭屏蔽插件或者添加您博客域名的白名单**
 
-## 伪静态导致的Tokens滥用
+二、伪静态导致的Tokens滥用
 
-### 原因：
+原因：
 
 开启伪静态如果产生多个url被识别成多个文章的情况，需统一url形式，从而确保一个文章一个url。
 
-### 解决方法：
+解决方法：
 
 关闭伪静态或者将通识符URL规则由`*/post/*` 改为`*/post/*.html` 类似结构即可，记得刷新浏览器缓存。
+</Collapse>
 
 <Aside> 
 ❤️特别感谢张洪Heo大佬及TianliGPT群聊、NotionNext项目Tg群中小伙伴的解答和帮助
 </Aside>
 
-# 参考文章及引用
+## 参考文章及引用
 
-- [NotionNext NotionNext开发先导 | NotionNext帮助手册](https://docs.tangly1024.com/article/how-to-develop-with-notion-next)
+- [NotionNext手册](https://docs.tangly1024.com/article/how-to-develop-with-notion-next)
 - [通用教程 | TianliGPT](https://docs_s.tianli0.top/theme/custom.html)
 - [文章摘要变量 | 洪墨AI](https://ai.zhheo.com/docs/variant.html)

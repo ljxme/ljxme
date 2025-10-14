@@ -2,7 +2,7 @@
 title: 'GitHub有趣项目推荐（二）'
 description: '分享一些有趣的GitHub项目'
 publishDate: '2025-10-07'
-heroImage: { src: './cover.jpg', alt: 'an image targetting my article' }
+heroImage: { src: './cover.jpg', alt: 'an image targetting my article', color: '' }
 tags:
   - 推荐
   - GitHub
@@ -10,28 +10,28 @@ comment: true
 language: '中文'
 ---
 
-# 总览项目
+import { GithubCard } from 'astro-pure/advanced'
 
-## 1.资料类
+## 总览项目
 
-1. libpku：北大课程资料民间整理
+**资料类**
 
-## 2.工具类
+- libpku：北大课程资料民间整理
 
-1. CloudflareTempEmail：免费搭建临时邮件服务,用一些免费域名搞搞临时邮箱😂
-2. CloudMail：使用Vue3开发的响应式邮箱服务，支持邮件发送，无需服务器可部署到Cloudflare平台🎉
-3. NextChat：一键免费部署你的私人ChatGPT网页应用，支持Claude,GPT4&GeminiPro模型。
-4. GameLove：夹带私货哈哈，可以解决访问国外游戏网站加载慢，图片加载不出来的问题
+**工具类**
 
-# 使用项目
+- CloudflareTempEmail：免费搭建临时邮件服务,用一些免费域名搞搞临时邮箱😂
+- CloudMail：使用Vue3开发的响应式邮箱服务，支持邮件发送，无需服务器可部署到Cloudflare平台🎉
+- NextChat：一键免费部署你的私人ChatGPT网页应用，支持Claude,GPT4&GeminiPro模型。
+- GameLove：夹带私货哈哈，可以解决访问国外游戏网站加载慢，图片加载不出来的问题
 
 ## 资料类
 
 ### libpku
 
-[GitHub - lib-pku/libpku: 贵校课程资料民间整理](https://github.com/lib-pku/libpku)
+<GithubCard repo='lib-pku/libpku' />
 
-**介绍：** 引自[原文](https://github.com/lib-pku/libpku?tab=readme-ov-file#preface)：
+**介绍：** 引自原文 [^注释]
 
 来到一所大学，从第一次接触许多课，直到一门一门完成，这个过程中我们时常收集起许多资料和情报。
 
@@ -45,46 +45,48 @@ language: '中文'
 
 **我希望只要是前人走过的弯路，后人就不必再走。** 这是我的信念，也是我建立这个项目的原因。
 
-**使用：** 访问https://lib-pku.github.io，点击资料链接即可下载。
+**使用：** 访问https://lib-pku.github.io ， 点击资料链接即可下载。
 
 ## 工具类
 
 ### CloudflareTempEmail
 
-[GitHub - dreamhunter2333/cloudflare_temp_email: CloudFlare free temp domain email 免费收发 临时域名邮箱 支持附件 IMAP SMTP TelegramBot](https://github.com/dreamhunter2333/cloudflare_temp_email)
+<GithubCard repo='dreamhunter2333/cloudflare_temp_email' />
 
-**介绍：**Cloudflare临时邮箱，可以用来免费搭建临时邮件服务
+**介绍：** Cloudflare临时邮箱，可以用来免费搭建临时邮件服务
 
-**使用：\**推荐\**通过用户界面部署**，详见[临时邮箱文档](https://temp-mail-docs.awsl.uk/zh/guide/quick-start.html)（官方文档已经很详尽了，不重复造轮子😮）
+**使用：** 推荐  **通过用户界面部署**，详见[临时邮箱文档](https://temp-mail-docs.awsl.uk/zh/guide/quick-start.html)（官方文档已经很详尽了，不重复造轮子😮）
 
 也可以来试试我搭建好的服务https://tempmail.artemisia.icu/
 
 ### CloudMail
 
-[GitHub - eoao/cloud-mail: cloudflare email 邮箱  临时邮箱 邮件发送 mail](https://github.com/eoao/cloud-mail)
+<GithubCard repo='eoao/cloud-mail' />
 
-**介绍：**可以用自己的付费域名来搭建此服务，例如我的”me@artemisia.icu”，欢迎交流😘
+**介绍：** 可以用自己的付费域名来搭建此服务，例如我的”me@artemisia.icu”，欢迎交流😘
 
-**使用：**推荐[**小白保姆教程-界面部署**](https://doc.skymail.ink/guide/via-ui)，还是不重复造轮子哈哈。
+**使用：** 推荐[**小白保姆教程-界面部署**](https://doc.skymail.ink/guide/via-ui)，还是不重复造轮子哈哈。
 
-也可以使用我搭建好的服务https://email.artemisia.icu/，为了防止滥用所以加了注册码，注册码可以通过上面的邮箱联系我领取。
+也可以使用我搭建好的服务https://email.artemisia.icu/ ，为了防止滥用所以加了注册码，注册码可以通过上面的邮箱联系我领取。
 
 ### NextChat
 
-[GitHub - ChatGPTNextWeb/NextChat: ✨ Light and Fast AI Assistant. Support: Web | iOS | MacOS | Android |  Linux | Windows](https://github.com/ChatGPTNextWeb/NextChat)
+<GithubCard repo='ChatGPTNextWeb/NextChat' />
 
-**介绍：**一个AI聊天项目，可以无聊时打发打发时间，页面UI看着很精致
+**介绍：** 一个AI聊天项目，可以无聊时打发打发时间，页面UI看着很精致
 
-**使用：**主要需要的就是AI大模型的APIkey，详见官方的[中文文档](https://github.com/ChatGPTNextWeb/NextChat/blob/main/README_CN.md)，依旧不重复造轮子哈哈
+**使用：** 主要需要的就是AI大模型的APIkey，详见官方的[中文文档](https://github.com/ChatGPTNextWeb/NextChat/blob/main/README_CN.md)，依旧不重复造轮子哈哈
 
 ### GameLove
 
-[GitHub - artemisia1107/GameLove: 热爱游戏，至死不渝](https://github.com/artemisia1107/GameLove)
+<GithubCard repo='ljxme/GameLove' />
 
-介绍：本项目是我参考[GitHub520](https://github.com/521xueweihan/GitHub520)，改成了加速国外游戏平台的域名，虽然部分逻辑有AI的功劳哈哈，不过还是能用，目前项目仍处于测试阶段，欢迎提交issue，PR等等。更多项目详见[**自建项目**](https://artemisia.icu/allprojects#2762e9397d1c80fdb7d7e725767c8160)
+介绍：本项目是我参考[GitHub520](https://github.com/521xueweihan/GitHub520)，改成了加速国外游戏平台的域名，虽然部分逻辑有AI的功劳哈哈，不过还是能用，目前项目仍处于测试阶段，欢迎提交issue，PR等等。更多详见[**项目**](https://blog.ljx.icu/projects)
 
 使用：推荐使用[SwitchHosts](https://github.com/oldj/SwitchHosts)来管理hosts（最好以管理员权限运行），详见[README.md](https://github.com/artemisia1107/GameLove/blob/main/README.md)（引用自己的轮子哈哈🤪）
 
-# 项目总结
+## 项目总结
 
-> 本次依旧带来的是5个项目，一个高校的课程资料，还有4个工具类的项目，其中的两个邮箱服务个人试了几天还是不错的，AI服务需要APIkey，我的GameLove项目只能说是改编他人项目，感谢开源哈哈，让我能学习他人的代码来弥补自己的不足🥲
+>本次依旧带来的是5个项目，一个高校的课程资料，还有4个工具类的项目，其中的两个邮箱服务个人试了几天还是不错的，AI服务需要APIkey，我的GameLove项目只能说是改编他人项目，感谢开源哈哈，让我能学习他人的代码来弥补自己的不足🥲
+
+[^注释]: [原文](https://github.com/lib-pku/libpku?tab=readme-ov-file#preface)

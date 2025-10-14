@@ -54,7 +54,7 @@ function insertAIDiv(selector) {
 
     const aiTitleTextDiv = document.createElement('div');
     aiTitleTextDiv.className = 'sparkLite-title-text'; // 修改类名
-    aiTitleTextDiv.textContent = 'AI摘要';
+    aiTitleTextDiv.textContent = "Li's AI Summary";
     aiTitleDiv.appendChild(aiTitleTextDiv);
 
     const aiTagDiv = document.createElement('div');
@@ -215,6 +215,9 @@ var sparkLite = { // 重命名对象
         // 检查用户是否已定义 sparkLite_typingAnimate
         if (typeof sparkLite_typingAnimate !== "undefined" && !sparkLite_typingAnimate) { // 修改变量名
             element.innerHTML = text;
+            // 确保摘要容器高度自适应
+            element.style.maxHeight = "none";
+            element.style.overflow = "visible";
             return;
         }
 
@@ -224,6 +227,9 @@ var sparkLite = { // 重命名对象
         const punctuationDelayMultiplier = 6;
 
         element.style.display = "block";
+        // 确保摘要容器高度自适应
+        element.style.maxHeight = "none";
+        element.style.overflow = "visible";
         element.innerHTML = "生成中..." + '<span class="blinking-cursor"></span>';
 
         let animationRunning = true;
