@@ -377,13 +377,23 @@ function renderTalks() {
         const match = e.match(/<div class="talk_content_text">([\s\S]*?)<\/div>/);
         const textContent = match ? match[1] : "";
         const n = document.querySelector(".wl-editor");
-        n.value = `> ${textContent}\n\n`;
-        n.focus();
-        btf.snackbarShow("已为您引用该说说，不删除空格效果更佳");
-        // const n = document.querySelector(".atk-textarea");
-        // n.value = `> ${e}\n\n`;
-        // n.focus();
-        // btf.snackbarShow("已为您引用该说说，不删除空格效果更佳");
+        if (n) {
+            n.value = `> ${textContent}\n\n`;
+            n.focus();
+            // 使用类似友链页面的提示机制
+            document.dispatchEvent(new CustomEvent('toast', {
+                detail: {
+                    message: '已为您引用该说说，不删除空格效果更佳 ✨'
+                }
+            }));
+        } else {
+            // 如果找不到评论输入框，也显示提示
+            document.dispatchEvent(new CustomEvent('toast', {
+                detail: {
+                    message: '未找到评论输入框，请确保页面已完全加载 ⚠️'
+                }
+            }));
+        }
     };
     
 
