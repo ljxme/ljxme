@@ -1,0 +1,117 @@
+---
+import type { SiteMeta } from 'astro-pure/types'
+import { Button } from 'astro-pure/user'
+import { cn } from 'astro-pure/utils'
+import PageLayout from '@/layouts/BaseLayout.astro'
+import { Comment, PageInfo } from '@/components/waline'
+import { integ } from '@/site-config'
+
+interface Props {
+  title: string
+  meta?: Partial<SiteMeta>
+  view?: boolean
+  comment?: boolean
+  back?: string
+  highlightColor?: string
+}
+
+const { 
+  title, 
+  meta = {}, 
+  view, 
+  comment: enableComment, 
+  back = '/', 
+  highlightColor,
+  ...props 
+} = Astro.props
+
+// 构建完整的 meta 信息
+const fullMeta: SiteMeta = {
+  title,
+  description: `${title} - 留言板页面`,
+  ...meta
+}
+---
+
+<PageLayout meta={fullMeta} {highlightColor} {...props}>
+  <!-- 返回按钮 -->
+  <Button title='返回' href={back} variant='back' />
+  
+  <!-- 主内容区域 -->
+  <main class='mt-6 w-full'>
+    <!-- 页面头部 -->
+    <header id='content-header' class='animate mb-8'>
+      <h1 class='text-2xl font-medium sm:mb-2 sm:text-3xl text-center'>
+        {title}
+      </h1>
+      
+      <!-- 页面信息（浏览量、评论等） -->
+      {(view || enableComment) && (
+        <div class='flex justify-center mt-4'>
+          <PageInfo {view} comment={enableComment} class='italic text-muted-foreground' />
+        </div>
+      )}
+    </header>
+
+    <!-- 页面内容 -->
+    <article 
+      id='board-content' 
+      class={cn(
+        'animate w-full max-w-none',
+        'min-h-[60vh]', // 确保有足够的最小高度
+        integ.typography.class
+      )}
+    >
+      <slot />
+    </article>
+
+    <!-- 底部内容插槽 -->
+    <section id='board-bottom' class='animate mt-8'>
+      <slot name='bottom'>
+        <!-- 默认评论区域 -->
+        {enableComment && (
+          <div class='max-w-4xl mx-auto'>
+            <Comment class='mt-6' />
+          </div>
+        )}
+      </slot>
+    </section>
+  </main>
+
+  <!-- 页面底部额外内容 -->
+  <slot name='page-bottom' />
+</PageLayout>
+
+<style>
+  /* 为 board 页面优化的样式 */
+  #board-content {
+    /* 确保内容区域有足够的空间 */
+    width: 100%;
+    max-width: none;
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    #board-content {
+      padding: 0 0.5rem;
+    }
+  }
+
+  /* 为瀑布流布局提供更好的容器 */
+  #board-content :global(#talk) {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* 优化限制提示的样式 */
+  #board-content :global(.limit) {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 1rem;
+    color: var(--muted-foreground);
+    font-style: italic;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+</style>

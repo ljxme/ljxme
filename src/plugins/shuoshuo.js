@@ -124,6 +124,11 @@ function renderTalks() {
                 let items = list.map(item => formatTalk(item, url));
                 items.forEach(item => talkContainer.appendChild(generateTalkElement(item)));
                 waterfall('#talk');
+                // 应用瀑布流布局优化
+                setTimeout(() => {
+                    optimizeMasonryLayout();
+                    addResizeListener();
+                }, 100);
             } else {
                 console.error('Data is not an array:', list);
             }
@@ -371,6 +376,108 @@ function renderTalks() {
         talkItem.appendChild(talkBottom);
 
         return talkItem;
+    };
+
+    /**
+     * 瀑布流布局优化函数
+     * 根据内容长度动态调整卡片排列
+     */
+    const optimizeMasonryLayout = () => {
+        const container = document.getElementById('talk');
+        const items = container.querySelectorAll('.talk_item');
+        
+        if (items.length === 0) return;
+
+        // 等待所有图片加载完成后再进行布局优化
+        const images = container.querySelectorAll('img');
+        let loadedImages = 0;
+        
+        const checkLayout = () => {
+            loadedImages++;
+            if (loadedImages >= images.length) {
+                performLayout();
+            }
+        };
+
+        const performLayout = () => {
+            // 检测是否支持 CSS Grid
+            if (CSS.supports('display', 'grid')) {
+                // 使用 CSS Grid 的 masonry 特性（如果浏览器支持）
+                if (CSS.supports('grid-template-rows', 'masonry')) {
+                    container.style.gridTemplateRows = 'masonry';
+                } else {
+                    // 降级方案：使用 JavaScript 模拟瀑布流
+                    simulateMasonryLayout(container, items);
+                }
+            }
+        };
+
+        // 为每个图片添加加载监听器
+        if (images.length > 0) {
+            images.forEach(img => {
+                if (img.complete) {
+                    checkLayout();
+                } else {
+                    img.addEventListener('load', checkLayout);
+                    img.addEventListener('error', checkLayout);
+                }
+            });
+        } else {
+            performLayout();
+        }
+    };
+
+    /**
+     * JavaScript 模拟瀑布流布局
+     */
+    const simulateMasonryLayout = (container, items) => {
+        // 获取容器宽度和列数
+        const containerWidth = container.offsetWidth;
+        const itemWidth = 300; // 最小卡片宽度
+        const gap = 16; // 间距
+        const columns = Math.floor((containerWidth + gap) / (itemWidth + gap));
+        
+        if (columns <= 1) return; // 单列时不需要特殊处理
+
+        // 创建列高度数组
+        const columnHeights = new Array(columns).fill(0);
+        
+        items.forEach((item, index) => {
+            // 找到最短的列
+            const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
+            
+            // 计算位置
+            const x = shortestColumnIndex * (itemWidth + gap);
+            const y = columnHeights[shortestColumnIndex];
+            
+            // 设置绝对定位
+            item.style.position = 'absolute';
+            item.style.left = `${x}px`;
+            item.style.top = `${y}px`;
+            item.style.width = `${itemWidth}px`;
+            
+            // 更新列高度
+            columnHeights[shortestColumnIndex] += item.offsetHeight + gap;
+        });
+        
+        // 设置容器高度
+        const maxHeight = Math.max(...columnHeights);
+        container.style.height = `${maxHeight}px`;
+        container.style.position = 'relative';
+    };
+
+    /**
+     * 添加窗口大小变化监听器
+     * 确保布局在响应式变化时能够重新优化
+     */
+    const addResizeListener = () => {
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                optimizeMasonryLayout();
+            }, 250);
+        });
     };
 
     const goComment = (e) => {

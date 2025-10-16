@@ -1,10 +1,10 @@
 ---
-import PageLayout from '@/layouts/CommonPage.astro'
+import BoardLayout from '@/layouts/BoardLayout.astro'
 import Signature from 'preset/components/signature/Signature.astro'
 import shuoshuo from '../../plugins/shuoshuo.js?url';
 ---
 
-<PageLayout title='留言板' comment>
+<BoardLayout title='留言板' comment>
 <div style="text-align:center; line-height:1.8; padding:20px 0;">
   <h2 style="font-size:26px; margin-bottom:12px;">欢迎来到留言板</h2>
   <p style="font-size:16px; color:#444;">您可以在这里与我和他人畅所欲言 🎤</p>
@@ -18,4 +18,4 @@ import shuoshuo from '../../plugins/shuoshuo.js?url';
 
 <Signature mode="once-on-view" threshold={0.8} />
 
-</PageLayout>
+</BoardLayout>
