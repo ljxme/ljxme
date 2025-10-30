@@ -56,8 +56,8 @@ jobs:
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
           git add .
-          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | tr -d '\n' | tr -d '\r')
-          git commit -m "${COMMIT_MSG} ==> [$(date +"%Y-%m-%d %H:%M:%S")]"
+          COMMIT_MSG=$(printf "%s" "${{ github.event.head_commit.message }}" | tr -d '\n' | tr -d '\r')
+          git commit -m "$COMMIT_MSG ==> [$(date +"%Y-%m-%d %H:%M:%S")]"
           git push --force --quiet "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" master:page
           echo "✅ 已推送至 GitHub page 分支"
 
