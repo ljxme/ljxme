@@ -101,7 +101,6 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
   )
 }
 
-
 {/* SparkLite AI 摘要工具 - 仅在博客页面显示 */}
 <script src={customJs} is:inline></script>
 {Astro.url.pathname.includes('/blog/') && (
@@ -109,11 +108,21 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
 )}
 {/* SparkLite AI 摘要工具样式 */}
 <link rel='stylesheet' href={gptCss} />
+
 {/* 说说样式 */}
 <link rel='stylesheet' href={shuoshuoCss} />
+
 {/* APlayer 样式 */}
 <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" media="all" onload="this.media=&quot;all&quot;">
 <script src="https://fastly.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js" is:inline></script>
 <script src="https://fastly.jsdelivr.net/npm/meting@2.0.1/dist/Meting.min.js" is:inline></script>
+
 {/* 统计分析 */}
 <script defer src="https://analytics.ljx.icu/tracker.min.js" data-website-id="ljxblog" is:inline></script>
+
+{/* Netease Mini Player */}
+<!-- 引入 Netease Mini Player 样式 -->
+<link rel="stylesheet" href="https://ljx-music-api.netlify.app/netease-mini-player-v2.css">
+
+<!-- 引入 Netease Mini Player JS 文件 -->
+<script src="https://ljx-music-api.netlify.app/netease-mini-player-v2.js" is:inline></script>
