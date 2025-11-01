@@ -161,4 +161,20 @@ const { class: className } = Astro.props
   :global(.dark) #waline :global(.wl-reaction img) {
     filter: invert(75%);
   }
+
+  /* background image */
+  #waline :global(.wl-editor) {
+    background-image: url('https://tc.ljx.icu/file/0rU7eiJx.png');
+    background-size: 25%;
+    background-repeat: no-repeat;
+    background-position: right bottom;
+    background-color: rgba(255, 255, 255, 0);
+    resize: vertical;
+    transition: background-position 0.2s ease-in-out;
+  }
+
+  #waline :global(.wl-editor:focus) {
+    background-position-x: 800px;
+    background-position-y: 1000px;
+  }
 </style>
