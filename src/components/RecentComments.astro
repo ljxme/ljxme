@@ -1,0 +1,55 @@
+---
+import { fetchRecentComments, formatCommentTime, stripHtml, truncateText } from '@/plugins/recentcomment';
+import { Icon } from 'astro-pure/user';
+
+// 获取最新评论数据
+const comments = await fetchRecentComments(5);
+---
+
+<div class="recent-comments">
+  <div class="recent-comments-title">
+    <Icon name="list" />
+    <span>最新评论</span>
+  </div>
+  
+  <div class="comment-list">
+    {comments.length > 0 ? (
+      comments.map((comment) => (
+        <div class="comment-item">
+          <div class="comment-avatar">
+            <img src={comment.avatar} alt={comment.nick} loading="lazy" />
+          </div>
+          <div class="comment-content">
+            <div class="comment-meta">
+              <span class="comment-author">{comment.nick}</span>
+              <span class="comment-time">{formatCommentTime(comment.time)}</span>
+            </div>
+            <div class="comment-text" set:html={truncateText(stripHtml(comment.comment), 100)} />
+            <a href={comment.url ? comment.url.replace(/\/$/, '') : '#'} class="comment-link">查看详情 →</a>
+          </div>
+        </div>
+      ))
+    ) : (
+      <div class="comment-empty">暂无评论数据</div>
+    )}
+  </div>
+</div>
+
+<script>
+  // 客户端清理HTML标签
+  document.addEventListener('astro:page-load', () => {
+    const commentTexts = document.querySelectorAll('.comment-text');
+    commentTexts.forEach(element => {
+      // 确保链接在新窗口打开
+      const links = element.querySelectorAll('a');
+      links.forEach(link => {
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+      });
+    });
+  });
+</script>
+
+<style is:global>
+  @import '@/assets/styles/rc.css';
+</style>

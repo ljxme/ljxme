@@ -4,12 +4,13 @@ import { Image } from 'astro:assets'
 import { Quote } from 'astro-pure/advanced'
 import { PostPreview } from 'astro-pure/components/pages'
 import { getBlogCollection, sortMDByDate } from 'astro-pure/server'
-import { Button, Icon, Label, Collapse, Card } from 'astro-pure/user'
+import { Button, Icon, Label, Card } from 'astro-pure/user'
 // import { Card } from 'astro-pure/user'
 import PageLayout from '@/layouts/BaseLayout.astro'
 // import ProjectCard from '@/components/home/ProjectCard.astro' 设置站点项目时记得打开,其他的类似
 import Section from '@/components/home/Section.astro'
 // import SkillLayout from '@/components/home/SkillLayout.astro'
+import RecentComments from '@/components/RecentComments.astro'
 import avatar from '@/assets/avatar.png'
 import config from '@/site-config'
 
@@ -66,28 +67,16 @@ const allPostsByDate = sortMDByDate(allPosts).slice(0, MAX_POSTS)
       -->
     </section>
 
-    <div id='content' class='animate flex flex-col gap-y-10 md:w-4/5 lg:w-5/6'>
+    <div id='content' class='animate flex flex-col md:flex-row gap-y-10 md:gap-x-6 md:w-4/5 lg:w-5/6'>
+      <div class='flex flex-col gap-y-10 md:w-2/3'>
       <Section title='公告'>
         <Card
           as='div'
           heading='展板'
-          subheading='留言板页面还需优化，以及之前博客的项目还需要迁移😫'
+          subheading='更新下网站布局🤓'
           date='2025-10-14'
         >
         </Card>
-        <Collapse title='网站访问统计'>
-          <div class="space-y-2 text-sm leading-relaxed">
-            <p>
-              😮Total Page View <span id="vercount_value_page_pv" class="font-semibold">Loading...</span>
-            </p>
-            <p>
-              😮Total Visits <span id="vercount_value_site_pv" class="font-semibold">Loading...</span>
-            </p>
-            <p>
-              😮Site Total Visitors <span id="vercount_value_site_uv" class="font-semibold">Loading...</span>
-            </p>
-          </div>
-        </Collapse>
         <Button title='More about me' class='w-fit self-end' href='/about' variant='ahead' />
       </Section>
       {
@@ -104,6 +93,26 @@ const allPostsByDate = sortMDByDate(allPosts).slice(0, MAX_POSTS)
           </Section>
         )
       }
+      </div>
+      
+      <!-- 右侧边栏 -->
+      <div class='md:w-1/3 md:mt-0'>
+          <RecentComments />
+          <div class="mt-4 border-t pt-4">
+            <div class="text-base font-medium mb-2">网站访问统计</div>
+            <div class="space-y-2 text-sm leading-relaxed">
+              <p>
+                😮Total Page View <span id="vercount_value_page_pv" class="font-semibold">Loading...</span>
+              </p>
+              <p>
+                😮Total Visits <span id="vercount_value_site_pv" class="font-semibold">Loading...</span>
+              </p>
+              <p>
+                😮Site Total Visitors <span id="vercount_value_site_uv" class="font-semibold">Loading...</span>
+              </p>
+            </div>
+          </div>
+      </div>
 
       {
         /* <Section title='Experience'> 经验
