@@ -103,7 +103,7 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
 
 {/* SparkLite AI 摘要工具 */}
 <script src={customJs} is:inline></script>
-{Astro.url.pathname.includes('/blog/') && !Astro.url.pathname.match(/\/blog\/\d+\/$/) && (
+{Astro.url.pathname.includes('/blog/') && !(/\/blog\/\d+\/$/.test(Astro.url.pathname)) && (
   <script src={gptJs} is:inline></script>
 )}
 {/* SparkLite AI 摘要工具样式 */}
