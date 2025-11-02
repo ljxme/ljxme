@@ -168,14 +168,8 @@
     
     // 按钮事件 - 取消跳转
     document.getElementById('back-btn').addEventListener('click', () => {
-      // 取消跳转，返回到来源页面
-      if (document.referrer) {
-        // 如果有来源页面，则返回来源页面
-        window.location.href = document.referrer;
-      } else {
-        // 如果没有来源页面，则返回首页
-        window.location.href = '/';
-      }
+      // 取消跳转，直接关闭当前页面
+      window.close();
     });
     // 按钮事件 - 继续访问
     document.getElementById('continue-btn').addEventListener('click', () => {
