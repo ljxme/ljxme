@@ -67,6 +67,16 @@ function insertAIDiv(selector) {
     aiExplanationDiv.className = 'sparkLite-explanation'; // 修改类名
     aiExplanationDiv.innerHTML = '生成中...' + '<span class="blinking-cursor"></span>';
     aiDiv.appendChild(aiExplanationDiv);
+    
+    // 添加额外说明文字
+    const aiDisclaimerDiv = document.createElement('div');
+    aiDisclaimerDiv.className = 'sparkLite-disclaimer';
+    aiDisclaimerDiv.innerHTML = '本摘要由AI生成，仅供参考，内容准确性请以原文为准。';
+    aiDisclaimerDiv.style.fontSize = '12px';
+    aiDisclaimerDiv.style.color = '#888';
+    aiDisclaimerDiv.style.marginTop = '8px';
+    aiDisclaimerDiv.style.padding = '0 10px';
+    aiDiv.appendChild(aiDisclaimerDiv);
 
     // 将创建的元素插入到目标元素的顶部
     targetElement.insertBefore(aiDiv, targetElement.firstChild);
