@@ -14,6 +14,9 @@ import RecentComments from '@/components/RecentComments.astro'
 import avatar from '@/assets/avatar.png'
 import config from '@/site-config'
 
+// 导入诗歌背景样式
+import '@/assets/styles/poem-background.css'
+
 // const languages = ['Html', 'JavaScript', 'CSS', 'Shell']
 // const frontend = ['TypeScript', 'Vite', 'Webpack', 'Astro']
 // const backend = ['Vercel', 'Waline']
@@ -25,6 +28,21 @@ const allPostsByDate = sortMDByDate(allPosts).slice(0, MAX_POSTS)
 
 <PageLayout meta={{ title: '首页' }} highlightColor='#FFF8DC'>
   <main class='flex w-full flex-col items-center'>
+    <!-- 诗歌背景组件 -->
+    <div class="poem-background">
+        <p>常闻南华经，巧劳智忧愁</p>
+        <p>不如无能者，饱食但遨游</p>
+        <p>自来浔阳郡，四序忽已周</p>
+        <p>不分物黑白，但与时沉浮</p>
+        <p>朝餐夕安寝，用是为身谋</p>
+        <p>此外即闲放，时寻山水幽</p>
+        <p>常闻南华经，巧劳智忧愁</p>
+        <p>春游慧远寺，秋上庾公楼</p>
+        <p>或吟诗一章，或饮茶一瓯</p>
+        <p>身心一无系，浩浩如虚舟</p>
+        <p>富贵亦有苦，苦在心危忧</p>
+        <p>贫贱亦有乐，乐在身自由</p>
+    </div>
     <section class='animate mb-10 flex flex-col items-center gap-y-7' id='content-header'>
       <Image
         src={avatar}
