@@ -92,7 +92,7 @@ function renderTalks() {
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ page: 1, pageSize: 10 })
+                body: JSON.stringify({ page: 1, pageSize: 15 })
             })
                 .then(res => res.json())
                 .then(data => {
