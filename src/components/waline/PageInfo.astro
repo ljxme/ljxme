@@ -1,6 +1,6 @@
 ---
 import { cn } from 'astro-pure/utils'
-import Pageview from '@/components/waline/Pageview.astro'
+import PageComments from '@/components/waline/PageComments.astro'
 
 interface Props {
   view?: boolean
@@ -27,4 +27,4 @@ const path = Astro.url.pathname
   }
 </div>
 
-{view && !comment && <Pageview />}
+{view && !comment && <PageComments />}

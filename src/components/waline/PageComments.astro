@@ -1,0 +1,24 @@
+---
+import config from '@/site-config'
+---
+
+<script
+  is:inline
+  type="module"
+  data-astro-rerun
+  define:vars={{ npmCDN: config.npmCDN, walineServer: config.integ.waline.server }}
+>
+  async function loadCommentCount() {
+    try {
+      const { commentCount } = await import(`${npmCDN}/@waline/client@v3/dist/comment.js`)
+      commentCount({
+        serverURL: walineServer,
+        path: window.location.pathname
+      })
+    } catch (e) {
+      console.error('Failed to load Waline comment count:', e)
+    }
+  }
+
+  loadCommentCount()
+</script>
