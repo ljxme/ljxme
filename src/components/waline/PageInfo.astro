@@ -1,6 +1,7 @@
 ---
 import { cn } from 'astro-pure/utils'
 import Pageview from '@/components/waline/Pageview.astro'
+import config from '@/site-config'
 
 interface Props {
   view?: boolean
@@ -28,3 +29,37 @@ const path = Astro.url.pathname
 </div>
 
 {view && !comment && <Pageview />}
+{comment && (
+  <script
+    is:inline
+    type='module'
+    data-astro-rerun
+    define:vars={{ npmCDN: config.npmCDN, walineServer: config.integ.waline.server }}
+  >
+    /**
+     * 加载并更新 Waline 评论数
+     * - 动态引入 Waline 的 `commentCount` 脚本
+     * - 自动扫描页面中的 `.waline-comment-count` 元素
+     * - 依赖元素上的 `data-path`，由服务器端渲染传入 `Astro.url.pathname`
+     * - 返回的 abort 句柄用于在超时后中止请求，避免长时间占用网络
+     */
+    async function loadCommentCount() {
+      try {
+        const { commentCount } = await import(
+          `${npmCDN}/@waline/client@v3/dist/comment.js`
+        )
+        const abort = commentCount({
+          serverURL: walineServer
+        })
+        return abort
+      } catch (e) {
+        console.error('Failed to load Waline comment count:', e)
+        return () => {}
+      }
+    }
+
+    const abort = await loadCommentCount()
+    // 500ms 后若仍未完成，则中止以避免占用网络资源
+    setTimeout(() => abort(), 500)
+  </script>
+)}
