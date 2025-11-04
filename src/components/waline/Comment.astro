@@ -46,6 +46,7 @@ const { class: className } = Astro.props
         el: '#waline',
         serverURL: walineConfig.server || '',
         emoji,
+        path: Astro.url.pathname,
         reaction: ['/icons/heart-item.svg'],
         ...walineConfig.additionalConfigs
       })
