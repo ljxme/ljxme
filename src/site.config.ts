@@ -165,7 +165,7 @@ export const integ: IntegrationUserConfig = {
   waline: {
     enable: true,
     // Server service link
-    server: 'https://waline.ljx.icu',
+    server: 'https://waline.ljx.icu/',
     // Refer https://waline.js.org/en/guide/features/emoji.html
     emoji: ['bmoji',"ljxme","heybox_cube","heybox_heniang","linedog"],
     // Refer https://waline.js.org/en/reference/client/props.html
