@@ -98,7 +98,7 @@ jobs:
       # - 获取访问令牌（请在 DogeCloud 控制台创建并保存到仓库 Secrets）：https://docs.dogecloud.com/cdn/api-access-token
       # - 提交刷新任务接口（目录刷新 type=dir）：https://docs.dogecloud.com/cdn/api-refresh-add
       # 为避免接口变更导致失败，这里直接使用预先创建的访问令牌 `DOGE_ACCESS_TOKEN`
-      - name: ♻️ Refresh DogeCloud CDN Directory
+      - name: ♻️ Refresh CDN Directory
         if: success()
         env:
           # 在 GitHub 仓库设置中添加 Secrets：DOGE_ACCESS_KEY、DOGE_SECRET_KEY
