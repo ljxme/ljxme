@@ -16,9 +16,7 @@ import config from '@/site-config'
       if (el) {
         pageview.pageviewCount({
           serverURL: walineServer,
-          path: window.location.pathname.endsWith('/')
-            ? window.location.pathname
-            : window.location.pathname + '/', 
+          path: window.location.pathname
         })
       }
     } catch (e) {

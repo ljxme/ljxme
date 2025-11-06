@@ -58,10 +58,8 @@ export default defineConfig({
     // sitemap(),
     // mdx(),
     AstroPureIntegration(config)
-    // (await import('@playform/compress')).default({
-    //   SVG: false,
-    //   Exclude: ['index.*.js']
-    // }),
+    // @playform/compress have potential build issue with this template
+    // (await import('@playform/compress')).default({ SVG: false, Exclude: ['index.*.js'] })
 
     // Temporary fix vercel adapter
     // static build method is not needed
@@ -107,13 +105,5 @@ export default defineConfig({
   },
   experimental: {
     contentIntellisense: true
-  },
-  vite: {
-    plugins: [
-      //   visualizer({
-      //     emitFile: true,
-      //     filename: 'stats.html'
-      //   })
-    ]
   }
 })
