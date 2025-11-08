@@ -12,6 +12,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import readline from 'node:readline'
 
 const ROOT = process.cwd()
 const BLOG_DIR = path.join(ROOT, 'src', 'content', 'blog')
@@ -23,6 +24,12 @@ const SUMMARY_MAX_LEN = 500
  * 0：仅错误；1：信息（生成与裁剪等）；2：调试（详细输出）
  */
 type LogLevel = 0 | 1 | 2
+
+/**
+ * 已有摘要的覆盖策略
+ * ask：逐篇询问；always：总是覆盖；never：从不覆盖（跳过写入）
+ */
+type OverwritePolicy = 'ask' | 'always' | 'never'
 
 // 运行时日志等级（默认 1），由配置读取后在 run() 中设定
 let currentLogLevel: LogLevel = 1
@@ -221,6 +228,95 @@ function log(level: LogLevel, message: string): void {
 }
 
 /**
+ * 判断 frontmatter 中是否已有 summary 字段
+ * @param frontmatter frontmatter 字符串（包含分隔线）
+ * @returns 是否存在 summary
+ */
+function hasSummaryInFrontmatter(frontmatter: string): boolean {
+  if (!frontmatter) return false
+  return /(^|\n)\s*summary\s*:/i.test(frontmatter)
+}
+
+/**
+ * 从 frontmatter 中读取现有 summary 文本（仅单行）用于提示预览
+ * @param frontmatter frontmatter 字符串
+ * @returns 摘要文本（去除引号与首尾空白）
+ */
+function readSummaryFromFrontmatter(frontmatter: string): string {
+  if (!frontmatter) return ''
+  const lines = frontmatter.split(/\r?\n/)
+  const endIdx = lines.findIndex((l, i) => i > 0 && l.trim() === '---')
+  const inner = endIdx > -1 ? lines.slice(1, endIdx) : lines.slice(1)
+  for (const l of inner) {
+    const m = l.match(/^\s*summary\s*:\s*(.*)$/i)
+    if (m) {
+      return m[1].trim().replace(/^['"]/, '').replace(/['"]$/, '')
+    }
+  }
+  return ''
+}
+
+/**
+ * 从配置文件注释读取覆盖策略（AISUMMARY_OVERWRITE_EXISTING）
+ * 支持 ask/always/never（大小写不敏感）
+ */
+function readOverwritePolicyFromCustom(): OverwritePolicy | null {
+  const customPath = path.join(ROOT, 'src', 'plugins', 'aisummary.config.js')
+  if (!fs.existsSync(customPath)) return null
+  const content = fs.readFileSync(customPath, 'utf-8')
+  const m = content.match(/^\s*\/\/\s*AISUMMARY_OVERWRITE_EXISTING\s*[:=]\s*(\w+)\s*$/mi)
+  if (!m) return null
+  const v = m[1].toLowerCase()
+  if (v === 'ask' || v === 'always' || v === 'never') return v as OverwritePolicy
+  if (['yes', 'y', 'true', '1'].includes(v)) return 'always'
+  if (['no', 'n', 'false', '0'].includes(v)) return 'never'
+  return null
+}
+
+/**
+ * 从环境变量读取覆盖策略（AISUMMARY_OVERWRITE_EXISTING）
+ * 支持 ask/always/never 及 yes/no/true/false/1/0
+ */
+function readOverwritePolicyFromEnv(): OverwritePolicy | null {
+  const raw = (process.env.AISUMMARY_OVERWRITE_EXISTING || '').trim().toLowerCase()
+  if (!raw) return null
+  if (raw === 'ask' || raw === 'always' || raw === 'never') return raw as OverwritePolicy
+  if (['yes', 'y', 'true', '1'].includes(raw)) return 'always'
+  if (['no', 'n', 'false', '0'].includes(raw)) return 'never'
+  return null
+}
+
+/**
+ * 获取覆盖策略，默认：交互式终端使用 ask，非交互终端使用 never
+ * @param isInteractive 当前是否为交互式 TTY
+ */
+function getOverwritePolicy(isInteractive: boolean): OverwritePolicy {
+  const c = readOverwritePolicyFromCustom()
+  if (c) return c
+  const e = readOverwritePolicyFromEnv()
+  if (e) return e
+  return isInteractive ? 'ask' : 'never'
+}
+
+/**
+ * 交互式询问是否覆盖现有摘要（逐篇）
+ * @param question 提示文本
+ * @param defaultYes 默认答案（true 为 yes，false 为 no）
+ */
+async function promptYesNo(question: string, defaultYes = false): Promise<boolean> {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  const suffix = defaultYes ? ' [Y/n] ' : ' [y/N] '
+  return await new Promise<boolean>((resolve) => {
+    rl.question(question + suffix, (ans) => {
+      rl.close()
+      const v = (ans || '').trim().toLowerCase()
+      if (!v) return resolve(defaultYes)
+      resolve(v === 'y' || v === 'yes')
+    })
+  })
+}
+
+/**
  * 针对提交到摘要 API 的正文清洗：移除代码块/行内代码/图片/链接标记/HTML 等，压缩空白。
  * 注意：不做句式整形与标点替换，只保留可读纯文本，适合 API 处理。
  * @param body 原始正文（可能包含 Markdown/HTML）
@@ -241,6 +337,21 @@ function sanitizeBodyForAPI(body: string): string {
     .replace(/\r?\n+/g, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim()
+}
+
+/**
+ * 安全截取文本前若干字符用于日志预览（不影响摘要逻辑）。
+ * 处理：替换换行为空格、压缩连续空白，避免日志过长或难以阅读。
+ * @param text 原始文本
+ * @param max 最大预览字符数（默认 120）
+ * @returns 适合日志输出的短预览字符串
+ */
+function previewText(text: string, max = 120): string {
+  const s = (text || '')
+    .replace(/\r?\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+  return s.length > max ? s.slice(0, max) + '…' : s
 }
 
 /**
@@ -272,6 +383,7 @@ function findMarkdownEntries(dir: string): string[] {
  * 提取“主” frontmatter 与正文。
  * 只提取第一个以 `---` 包裹的 frontmatter 区块，
  * 自动兼容没有空行的情况。
+ * 注意：摘要生成与 API 提交仅使用正文（body），不提交 frontmatter。
  */
 function splitFrontmatterAndBody(content: string): { frontmatter: string; body: string } {
   // 去除文件开头可能的 BOM 和多余空行
@@ -300,6 +412,28 @@ function splitFrontmatterAndBody(content: string): { frontmatter: string; body: 
 
   const body = tail.replace(/^\r?\n*/, '') // 去掉多余空行
   return { frontmatter: fm, body }
+}
+
+/**
+ * 仅提取正文，忽略文件起始处的 frontmatter 区块（`---` 包裹）。
+ * 用途：摘要生成与 API 提交，只保留文章正文。
+ * 兼容：前导 BOM、frontmatter 后紧邻另一个 frontmatter 的异常情况。
+ * @param content 整个 MD/MDX 文件内容
+ * @returns 去除 frontmatter 后的纯正文字符串
+ */
+function extractBodyOnly(content: string): string {
+  // 去除文件开头可能的 BOM 和多余空行
+  let s = String(content || '').replace(/^\uFEFF?/, '').trimStart()
+  const re = /^---\r?\n[\s\S]*?\r?\n---(?=\r?\n|$)/
+  const m = re.exec(s)
+  if (!m) return s
+  let tail = s.slice(m.index + m[0].length)
+  // 若 frontmatter 后紧跟另一个 frontmatter，继续跳过
+  const second = re.exec(tail)
+  if (second && second.index === 0) {
+    tail = tail.slice(second[0].length)
+  }
+  return tail.replace(/^\r?\n*/, '')
 }
 
 /**
@@ -577,8 +711,10 @@ function readTitleFromFrontmatter(frontmatter: string): string {
 async function run(): Promise<void> {
   // 初始化日志与并发参数
   currentLogLevel = getLogLevel()
-  const concurrency = getConcurrency()
+  let concurrency = getConcurrency()
   const cleanBeforeAPI = getCleanBeforeAPI()
+  const isInteractive = !!process.stdin.isTTY && !!process.stdout.isTTY
+  const overwritePolicy = getOverwritePolicy(isInteractive)
 
   const files = findMarkdownEntries(BLOG_DIR)
   if (!files.length) {
@@ -593,6 +729,13 @@ async function run(): Promise<void> {
   log(2, `调试：跳过页面，仅处理文章目录：${BLOG_DIR}`)
   log(1, `待处理文章数：${files.length}，字数限制：${wordLimit}，并发：${concurrency}`)
   log(2, `调试：提交给 API 的内容清洗开关：${cleanBeforeAPI ? 'true' : 'false'}`)
+  log(2, `调试：已有摘要覆盖策略：${overwritePolicy}`)
+
+  // 若采取逐篇询问策略，避免并发导致交互混乱，降至 1
+  if (overwritePolicy === 'ask' && concurrency > 1) {
+    log(1, `交互式覆盖策略启用：并发由 ${concurrency} 调整为 1 以便逐篇确认`)
+    concurrency = 1
+  }
 
   /**
    * 处理单个 Markdown 文件：生成摘要并写入 frontmatter
@@ -603,10 +746,30 @@ async function run(): Promise<void> {
     try {
       const content = fs.readFileSync(file, 'utf8')
       const { frontmatter, body } = splitFrontmatterAndBody(content)
+      const bodyOnly = extractBodyOnly(content)
       const title = readTitleFromFrontmatter(frontmatter)
-      const limitedBody = limitBody(body, limit)
+      const limitedBody = limitBody(bodyOnly, limit)
 
-      if (body.length > limitedBody.length) {
+      // 已有摘要时，按策略处理是否覆盖
+      if (hasSummaryInFrontmatter(frontmatter)) {
+        const existing = readSummaryFromFrontmatter(frontmatter)
+        if (overwritePolicy === 'never') {
+          log(1, `跳过已有摘要：${path.relative(ROOT, file)}（预览：${previewText(existing, 80)}）`)
+          return
+        }
+        if (overwritePolicy === 'ask') {
+          const q = `文件已含摘要，是否覆盖？${path.relative(ROOT, file)}\n当前摘要预览：${previewText(existing, 80)}\n>`
+          const yes = await promptYesNo(q, false)
+          if (!yes) {
+            log(1, `用户选择跳过覆盖：${path.relative(ROOT, file)}`)
+            return
+          }
+          log(1, `用户选择覆盖已有摘要：${path.relative(ROOT, file)}`)
+        }
+        // always：直接覆盖，不提示
+      }
+
+      if (bodyOnly.length > limitedBody.length) {
         log(1, `正文超长，已裁剪到 ${limit} 字：${path.relative(ROOT, file)}`)
       }
 
@@ -615,6 +778,9 @@ async function run(): Promise<void> {
       if (cleanBeforeAPI) {
         log(2, `调试：正文已清洗后提交 API：${path.relative(ROOT, file)}`)
       }
+      log(2, `调试：API 仅提交正文（忽略 frontmatter）：${path.relative(ROOT, file)}`)
+      // 预览提交给 API 的正文片段，确认不包含 frontmatter
+      log(2, `调试：API 提交文本预览（前 120 字）：${previewText(contentForAPI, 120)}`)
       const apiSummary = hasCustomAPI ? await callSummaryAPI(title, contentForAPI, limit) : null
       let summaryRaw = apiSummary ?? ''
       let summary = sanitizeSummaryText(summaryRaw, SUMMARY_MAX_LEN)

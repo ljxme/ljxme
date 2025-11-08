@@ -27,6 +27,11 @@
 // 作用：调用 API 前去除 Markdown/代码块/HTML，仅保留纯文本；若服务希望原始 Markdown，请设为 false
 // AISUMMARY_CLEAN_BEFORE_API=true
 
+// [AISUMMARY_OVERWRITE_EXISTING] 已有摘要的覆盖策略
+// 可选：ask（逐篇询问）、always（总是覆盖）、never（从不覆盖，跳过写入）
+// 说明：当文章 frontmatter 中已存在 summary 字段时，脚本按此策略处理是否重写。
+// AISUMMARY_OVERWRITE_EXISTING=ask
+
 // 说明：以上为注释形式的键值配置，供离线脚本解析，不在浏览器中使用
 
 // AISummary 静态摘要配置：
