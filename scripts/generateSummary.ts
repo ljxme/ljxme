@@ -213,18 +213,32 @@ function getConcurrency(): number {
 }
 
 /**
- * 日志输出（根据 currentLogLevel 控制）
- * @param level 日志等级（0 错误；1 信息；2 调试）
- * @param message 文本消息
+ * 统一日志输出入口（根据 currentLogLevel 控制）
+ * 等级 0（错误）始终输出；等级 1（信息）和 2（调试）受 currentLogLevel 控制。
+ * @param level 日志等级：0 错误；1 信息；2 调试
+ * @param message 要输出的文本消息
  */
 function log(level: LogLevel, message: string): void {
+  const label = level === 0 ? '❌ 错误' : level === 1 ? 'ℹ️ 信息' : '🐞 调试'
+  const time = level === 2 ? ` ${formatTime()}` : ''
+  const line = `${label}${time ? ' |' + time : ''} | ${message}`
   if (level === 0) {
-    console.error(message)
+    console.error(line)
     return
   }
   if (level <= currentLogLevel) {
-    console.log(message)
+    console.log(line)
   }
+}
+
+/**
+ * 格式化当前时间为 HH:MM:SS，用于调试级日志的时间标记。
+ * @returns 形如 "12:34:56" 的时间字符串
+ */
+function formatTime(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 /**
@@ -305,7 +319,7 @@ function getOverwritePolicy(isInteractive: boolean): OverwritePolicy {
  */
 async function promptYesNo(question: string, defaultYes = false): Promise<boolean> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-  const suffix = defaultYes ? ' [Y/n] ' : ' [y/N] '
+  const suffix = defaultYes ? ' [Y/N] ' : ' [y/n] '
   return await new Promise<boolean>((resolve) => {
     rl.question(question + suffix, (ans) => {
       rl.close()
@@ -317,6 +331,29 @@ async function promptYesNo(question: string, defaultYes = false): Promise<boolea
 }
 
 /**
+ * 移除 MDX/Astro 组件与 import/export 语句，避免摘要受组件干扰。
+ * 处理内容：
+ * - 删除 MDX 中的 `import ...` 和 `export ...` 行（逐行）
+ * - 删除自闭合大写组件标签：`<Component ... />`
+ * - 删除成对大写组件标签及其中内容：`<Component ...> ... </Component>`
+ * 说明：组件名以大写字母开头视为 Astro/MDX 组件；保留普通文本与 Markdown 内容。
+ * @param text 原文字符串
+ * @returns 移除组件与导入导出后的文本
+ */
+function stripAstroAndMDXComponents(text: string): string {
+  if (!text) return ''
+  let s = String(text)
+  // 移除 import/export 行（整行）
+  s = s.replace(/^[ \t]*import[^\n]*;?\s*$/gm, '')
+  s = s.replace(/^[ \t]*export[^\n]*;?\s*$/gm, '')
+  // 移除自闭合组件标签：<Component ... />
+  s = s.replace(/<([A-Z][A-Za-z0-9_.-]*)\b[^>]*\/>/g, '')
+  // 移除成对组件标签及其中内容：<Component ...> ... </Component>
+  s = s.replace(/<([A-Z][A-Za-z0-9_.-]*)\b[^>]*>[\s\S]*?<\/\1>/g, '')
+  return s
+}
+
+/**
  * 针对提交到摘要 API 的正文清洗：移除代码块/行内代码/图片/链接标记/HTML 等，压缩空白。
  * 注意：不做句式整形与标点替换，只保留可读纯文本，适合 API 处理。
  * @param body 原始正文（可能包含 Markdown/HTML）
@@ -324,7 +361,8 @@ async function promptYesNo(question: string, defaultYes = false): Promise<boolea
  */
 function sanitizeBodyForAPI(body: string): string {
   if (!body) return ''
-  return String(body)
+  let s = stripAstroAndMDXComponents(String(body))
+  return s
     .replace(/```[\s\S]*?```/g, '')
     .replace(/`[^`]*`/g, '')
     .replace(/!\[[^\]]*\]\([^\)]+\)/g, '')
@@ -526,7 +564,7 @@ function looksLikeCode(text: string): boolean {
  */
 function localGenerateSummary(title: string, body: string, maxLen = SUMMARY_MAX_LEN): string {
   // 初步清洗正文，得到纯文本
-  let clean = body
+  let clean = stripAstroAndMDXComponents(body)
     .replace(/```[\s\S]*?```/g, '')
     .replace(/`[^`]*`/g, '')
     .replace(/!\[[^\]]*\]\([^\)]+\)/g, '')
@@ -690,7 +728,7 @@ async function callSummaryAPI(title: string, body: string, limit: number): Promi
     return typeof (data as any).summary === 'string' ? (data as any).summary.trim() : null
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error('AI 摘要 API 调用失败：', msg)
+    log(0, 'AI 摘要 API 调用失败：' + msg)
     return null
   }
 }
@@ -711,6 +749,7 @@ function readTitleFromFrontmatter(frontmatter: string): string {
 async function run(): Promise<void> {
   // 初始化日志与并发参数
   currentLogLevel = getLogLevel()
+  log(1, `日志等级已设置为 ${currentLogLevel}（${currentLogLevel === 0 ? '错误' : currentLogLevel === 1 ? '信息' : '调试'}）`)
   let concurrency = getConcurrency()
   const cleanBeforeAPI = getCleanBeforeAPI()
   const isInteractive = !!process.stdin.isTTY && !!process.stdout.isTTY
@@ -726,10 +765,10 @@ async function run(): Promise<void> {
   const hasCustomAPI = !!(cfg.api || process.env.AI_SUMMARY_API)
 
   // 调试说明：脚本仅处理 blog 目录的文章，不处理页面文件
-  log(2, `调试：跳过页面，仅处理文章目录：${BLOG_DIR}`)
+  log(2, `跳过页面，仅处理文章目录：${BLOG_DIR}`)
   log(1, `待处理文章数：${files.length}，字数限制：${wordLimit}，并发：${concurrency}`)
-  log(2, `调试：提交给 API 的内容清洗开关：${cleanBeforeAPI ? 'true' : 'false'}`)
-  log(2, `调试：已有摘要覆盖策略：${overwritePolicy}`)
+  log(2, `提交给 API 的内容清洗开关：${cleanBeforeAPI ? 'true' : 'false'}`)
+  log(2, `已有摘要覆盖策略：${overwritePolicy}`)
 
   // 若采取逐篇询问策略，避免并发导致交互混乱，降至 1
   if (overwritePolicy === 'ask' && concurrency > 1) {
@@ -776,11 +815,11 @@ async function run(): Promise<void> {
       // 生成摘要：优先 API；无/失败则本地规则
       const contentForAPI = cleanBeforeAPI ? sanitizeBodyForAPI(limitedBody) : limitedBody
       if (cleanBeforeAPI) {
-        log(2, `调试：正文已清洗后提交 API：${path.relative(ROOT, file)}`)
+        log(2, `正文已清洗后提交 API：${path.relative(ROOT, file)}`)
       }
-      log(2, `调试：API 仅提交正文（忽略 frontmatter）：${path.relative(ROOT, file)}`)
+      log(2, `API 仅提交正文（忽略 frontmatter）：${path.relative(ROOT, file)}`)
       // 预览提交给 API 的正文片段，确认不包含 frontmatter
-      log(2, `调试：API 提交文本预览（前 120 字）：${previewText(contentForAPI, 120)}`)
+      log(2, `API 提交文本预览（前 120 字）：${previewText(contentForAPI, 120)}`)
       const apiSummary = hasCustomAPI ? await callSummaryAPI(title, contentForAPI, limit) : null
       let summaryRaw = apiSummary ?? ''
       let summary = sanitizeSummaryText(summaryRaw, SUMMARY_MAX_LEN)

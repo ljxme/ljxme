@@ -1,6 +1,6 @@
-// AISummary（静态版）
+// AISummary
 console.log(
-  '%c AISummary (Static) %c Author: Ljxme',
+  '%cAISummary v1.0.0 %c https://blog.ljx.icu/blog/aisummary-blog/',
   'color:#fff;background:linear-gradient(90deg,#ff8acb,#ff5ebc,#ff1493);padding:5px 12px;border-radius:4px 0 0 4px;',
   'color:#000;background:linear-gradient(90deg,#ff1493,#ffb6c1,#fff);padding:5px 14px 5px 8px;border-radius:0 4px 4px 0;'
 )
