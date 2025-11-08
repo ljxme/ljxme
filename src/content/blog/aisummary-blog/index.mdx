@@ -1,0 +1,177 @@
+---
+title: '本地实现Astro文章AI摘要'
+description: '纯静态的ai文章摘要'
+publishDate: '2025-11-08'
+heroImage: { src: './cover.jpg', alt: 'an image targetting my article', color: '#564C42' }
+tags:
+  - 主题美化
+  - AiSummary
+  - TypeScript
+  - CSS
+  - Astro
+comment: true
+language: '中文'
+summary: "本文介绍了如何在 Astro 博客中实现离线生成的 AI 摘要功能。作者结合Spark-Lite 模型，构建了一个可本地运行的摘要生成方案，避免了每次访问都请求远程 API 的低效方式。文章详细说明了代理服务器的搭建、Vercel 环境变量配置、以及 aisummary.js、aisummary.css、generateSummary.ts 等核心脚本的使用与整合。通过此方法，博客可在构建时直接写入摘要，既节省资源，又提升访问速度，实现了纯静态化的智能摘要体验。
+"
+---
+
+## 起因
+
+import { Spoiler } from 'astro-pure/user'
+
+在之前的NotionNext架构博客使用过一两周 [**TianliGPT**](https://ai.zhheo.com/) 的AI摘要服务，虽然只需10￥就有足够的TOKEN余额，对于我这种小博客肯定是绰绰有余，但感觉还是不够自定义 ~~（想完全自建使用）~~ <Spoiler>详见[《讨论NotionNext如何配置AI摘要》](https://blog.ljx.icu/blog/notionnext-ai-summary/)</Spoiler>
+
+之后呢给博客迁移到了 **Astro** 架构，看到了 [konoXIN的文章](https://www.konoxin.top/posts/db7b3418) ，大佬的AI摘要实现思路也很完美，试了一周感觉不错，不过就是有点小小的不足，因为他的摘要是存储在 Index DB 里的，虽然占用的空间小，并且也足够存储生成的摘要，但每个人在访问文章时都会请求一次API还是太那啥了 ~~（即使TOKEN无限用）~~ 
+
+思考了几天，也试了试，还是想本地生成文章摘要再放置在文章的 `Frontmatter` 块末尾，于是结合 [@Liushen](https://www.liushen.fun/) 和 [@konoXIN](https://www.konoxin.top/) 的思路，捣鼓了几天，初步实现了我的需求<Spoiler>应该不会有啥大毛病吧</Spoiler>
+
+## 前置
+
+API这部分就直接采用 [konoXIN文章](https://www.konoxin.top/posts/db7b3418) 里的代码了（如有侵权可以与我联系）
+
+### 申请星火Spark-Lite
+
+1. 访问 [星火大模型API](https://xinghuo.xfyun.cn/sparkapi)
+2. 下滑页面到如下位置，选择 `Spark-Lite`，点击立即调用
+
+![图1](https://tc.ljx.icu/file/imgs/0KfXRyDl.png)
+
+3. 点击创建新应用，之后侧边栏点击 `Spark Lite` ，选择领取无限量即可
+
+![图2](https://tc.ljx.icu/file/imgs/iTpaQIZb.png)
+
+4. 之后右侧会出现你的 `APPID` 、 `APISecret` 、 `APIKey` , 需要记住保存好
+
+![图2](https://tc.ljx.icu/file/imgs/3RlcJ1UM.png)
+
+### 搭建 Vercel API
+
+import { Button } from 'astro-pure/user'
+
+- 一键部署到Vercel：<Button as='a' href='https://vercel.com/new/clone?repository-url=https://github.com/ljxme/spark-ai-summary&project-name=spark-ai-summary&repository-name=spark-ai-summary' target="_blank" title='Deploy with Vercel' variant='ahead' class='not-prose' />
+- Fork后自行导入：<Button as='a' href='https://github.com/ljxme/spark-ai-summary' target="_blank" title='Fork Github Project' variant='ahead' class='not-prose' />
+
+1. 点击上方任一按钮导入项目成功后，进入该项目在 Vercel 上的仪表盘 **Dashboard** 选项
+2. 在项目仪表盘中找到 **Settings** 选项
+3. 在 **Settings** 下找到 **Environment Variables** 部分
+4. 在这里添加你的 `SPARK_APPID` , `SPARK_API_KEY` 和 `SPARK_API_SECRET` ，对应如下表：
+
+    | Spark Lite Websocket | VercelServer |
+    | -------------------- | ------------ |
+    | `APPID` | `SPARK_APPID` |
+    | `APIKey` | `SPARK_API_KEY` |
+    | `APISecret` | `SPARK_API_SECRET` |
+
+5. 配置完环境变量后需重新部署一次项目
+
+项目部署后，Vercel 会提供一个类似 `https://[your-project-name].vercel.app` 的域名。代理函数可以通过 `/api/spark-proxy` 接口访问。
+
+如果需要想改为自己的子域名，需要在域名控制台解析一下，让其可以在国内访问
+
+## 引入
+
+- 代码片段Gist开源地址：[Static-AiSummary for Astro-Theme-Pure](https://gist.github.com/ljxme/851d9ff9684dff74e52c6027d79dfac2)
+- GitHub源码下载：[static-aisummary](https://github.com/ljxme/static-aisummary/releases)
+
+import { Steps } from 'astro-pure/user'
+
+<Steps>
+1. 在 `src/plugins` 路径下添加脚本文件 [`aisummary.js`](https://gist.github.com/ljxme/851d9ff9684dff74e52c6027d79dfac2#file-aisummary-js)
+2. 在 `src/assets/styles` 路径下添加样式文件 [`aisummary.css`](https://gist.github.com/ljxme/851d9ff9684dff74e52c6027d79dfac2#file-aisummary-css)
+3. 在 `scripts/` 路径下添加脚本文件 [`generateSummary.ts`](https://gist.github.com/ljxme/851d9ff9684dff74e52c6027d79dfac2#file-generatesummary-ts)
+4. 在 `src/plugins` 路径下添加配置文件 [`aisummary.config.js`](https://gist.github.com/ljxme/851d9ff9684dff74e52c6027d79dfac2#file-aisummary-config-js)
+5. 在 `src/components/BaseHead.astro` 和 `src/layouts/BlogPost.astro` 中添加初始化代码
+
+   ```astro title="BaseHead.astro"
+   ---
+   import aisummaryConfig from '../plugins/aisummary.config.js?url';// [!code highlight]
+   import aisummary from '../plugins/aisummary.js?url';/ [!code highlight]
+   import aisummaryCss from '../assets/styles/aisummary.css?url';// [!code highlight]
+   ---
+   
+   <!-- [!code highlight:8] -->
+   {/* AISummary 工具 */}
+   <script src={aisummaryConfig} is:inline></script>
+   {Astro.url.pathname.startsWith('/blog/')
+     && !/^\/blog\/\d+\/?$/.test(Astro.url.pathname)
+     && <script src={aisummary} is:inline></script>}
+   {/* AISummary 样式 */}
+   <link rel='stylesheet' href={aisummaryCss} />
+   ```
+
+   ```astro title="BlogPost.astro"
+   <PageLayout
+     meta={{ articleDate, description, ogImage: socialImage, title }}
+     highlightColor={primaryColor}
+     back='/blog'
+   >
+     <!-- [!code highlight:20] -->
+     {/* AISummary AI摘要 */}
+     {data.summary && (
+       <div class='aisummary-container'>
+         <div class='aisummary-title'>
+           <i class='aisummary-title-icon'>
+             <svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'>
+               <title>机器人</title>
+               <g stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'>
+                 <path d='M34.717885,5.03561087 C36.12744,5.27055371 37.079755,6.60373651 36.84481,8.0132786 L35.7944,14.3153359 L38.375,14.3153359 C43.138415,14.3153359 47,18.1768855 47,22.9402569 L47,34.4401516 C47,39.203523 43.138415,43.0650727 38.375,43.0650727 L9.625,43.0650727 C4.861585,43.0650727 1,39.203523 1,34.4401516 L1,22.9402569 C1,18.1768855 4.861585,14.3153359 9.625,14.3153359 L12.2056,14.3153359 L11.15519,8.0132786 C10.920245,6.60373651 11.87256,5.27055371 13.282115,5.03561087 C14.69167,4.80066802 16.024865,5.7529743 16.25981,7.16251639 L17.40981,14.0624532 C17.423955,14.1470924 17.43373,14.2315017 17.43948,14.3153359 L30.56052,14.3153359 C30.56627,14.2313867 30.576045,14.1470924 30.59019,14.0624532 L31.74019,7.16251639 C31.975135,5.7529743 33.30833,4.80066802 34.717885,5.03561087 Z M38.375,19.4902885 L9.625,19.4902885 C7.719565,19.4902885 6.175,21.0348394 6.175,22.9402569 L6.175,34.4401516 C6.175,36.3455692 7.719565,37.89012 9.625,37.89012 L38.375,37.89012 C40.280435,37.89012 41.825,36.3455692 41.825,34.4401516 L41.825,22.9402569 C41.825,21.0348394 40.280435,19.4902885 38.375,19.4902885 Z M14.8575,23.802749 C16.28649,23.802749 17.445,24.9612484 17.445,26.3902253 L17.445,28.6902043 C17.445,30.1191812 16.28649,31.2776806 14.8575,31.2776806 C13.42851,31.2776806 12.27,30.1191812 12.27,28.6902043 L12.27,26.3902253 C12.27,24.9612484 13.42851,23.802749 14.8575,23.802749 Z M33.1425,23.802749 C34.57149,23.802749 35.73,24.9612484 35.73,26.3902253 L35.73,28.6902043 C35.73,30.1191812 34.57149,31.2776806 33.1425,31.2776806 C31.71351,31.2776806 30.555,30.1191812 30.555,28.6902043 L30.555,26.3902253 C30.555,24.9612484 31.71351,23.802749 33.1425,23.802749 Z' fill='#444444' fill-rule='nonzero'></path>
+               </g>
+             </svg>
+           </i>
+           <div class='aisummary-title-text'>Li's AI Summary</div>
+           <div class='aisummary-tag' id='aisummary-tag'>Li's AI</div>
+         </div>
+         <div class='aisummary-explanation' data-ai-summary={data.summary}>{data.summary}</div>
+         <div class='aisummary-disclaimer'>本摘要由AI生成，仅供参考，内容准确性请以原文为准。</div>
+       </div>
+     )}
+   
+   </PageLayout>
+   ```
+
+</Steps>
+
+## 配置
+
+主要集中在 `aisummary.config.js` 文件进行配置和修改变量，列表如下（文件中也有详细注释说明）：
+
+### 供离线脚本读取的配置项
+
+| 配置项                            | 示例值                                       | 说明 |
+| :------------------------------- | :------------------------------------------ | :----------------------------------- |
+| **AI_SUMMARY_API**               | `https://your-api-server/api/spark-proxy` | 摘要服务地址 |
+| **AI_SUMMARY_KEY**               | `your-api-key`                              | 摘要服务密钥         |
+| **AISUMMARY_WORD_LIMIT**         | `8000`                                      | 提交与处理的最大字数     |
+| **AISUMMARY_LOG_LEVEL**          | `2`                                         | 运行日志等级 |
+| **AISUMMARY_CONCURRENCY**        | `2`                                         | 并发执行摘要生成任务数 |
+| **AISUMMARY_CLEAN_BEFORE_API**   | `true`                                      | 是否在调用 API 前清洗正文 |
+| **AISUMMARY_OVERWRITE_EXISTING** | `ask`                                       | 已有摘要的覆盖策略       |
+
+说明：使用前文 **Spark-Lite** 模型搭建Vercel代理服务器不需配置 `AI_SUMMARY_KEY` 变量，可保持空值
+
+### 供博客页面使用的配置项
+
+| 配置项                            | 示例值                                       | 说明 |
+| :------------------------------- | :------------------------------------------ | :----------------------------------- |
+| **aisummaryTypingAnimate**       | `true`                                      | 是否开启打字机动画   |
+| **aisummaryPostSelector**        | `#content`                                  | 文章内容容器选择器  |
+
+**如何知道 `aisummaryPostSelector` ?** 
+
+进入任一博客文章页面，按下 <kbd>F12</kbd> 进入开发者控制台，再按下 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> ，并选取 **正文部分** 进行如下步骤复制后即为 `aisummaryPostSelector` 的值
+
+![图3](https://tc.ljx.icu/file/imgs/y9uxBuyu.png)
+
+## 使用
+
+1. 确保 `aisummary.config.js` 文件里变量配置正确
+2. 在项目主目录运行 `npx tsx scripts/generateSummary.ts` 即可
+
+## 后记
+
+Vercel代理服务器部分的代码基本来自于 [@konoXIN](https://www.konoxin.top/) ，主要修改的本地脚本的部分，感觉代码有点乱，还需要再整理一下
+
+## 参考
+
+- [本地实现HEXO文章AI摘要](https://blog.liushen.fun/posts/40702a0d/)
+- [hexo基于TianliGPT使用免费的Spark-Lite制作AI摘要](https://www.konoxin.top/posts/db7b3418)
