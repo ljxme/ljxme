@@ -3,6 +3,7 @@ import { Button, Collapse, Spoiler, Timeline } from 'astro-pure/user'
 import PageLayout from '@/layouts/CommonPage.astro'
 import Substats from '@/components/about/Substats.astro'
 import ToolSection from '@/components/about/ToolSection.astro'
+import { MediumZoom } from 'astro-pure/advanced'
 
 const headings = [
   { depth: 2, slug: 'hobbies', text: '爱好' },
@@ -139,6 +140,12 @@ const headings = [
         description: 'Minecraft Mod Development',
         href: 'https://www.jetbrains.com/idea/',
         icon: import('@/assets/tools/intellij-idea.svg?raw')
+      },
+      {
+        name: 'PyCharm',
+        description: 'Python Learning',
+        href: 'https://www.jetbrains.com/pycharm/',
+        icon: import('@/assets/tools/pycharm.svg?raw')
       }
     ]}
   />
@@ -303,16 +310,17 @@ const headings = [
     <li>网站字体: <a href='https://github.com/lxgw/' target='_blank'>霞鹜文楷Bright</a></li>
   </ul>
   <Collapse title='网站优化结果'>
-    <figure class='mt-4'>
-      <img
-        src='https://tc.ljx.icu/file/imgs/lTEDvghx.png'
-        alt='还在优化中🥲'
-        loading='lazy'
-        class='rounded shadow max-w-sm md:max-w-md mx-auto my-0'
-      />
-      <figcaption class='mt-2 text-sm text-gray-600 text-center'>
-        <a href='/images/youhua.png' target='_blank'>点击查看详细大图</a>
-      </figcaption>
-    </figure>
+      <figure class='mt-4'>
+        <img
+          src='https://tc.ljx.icu/file/imgs/lTEDvghx.png'
+          alt='还在优化中🥲'
+          loading='lazy'
+          class='zoomable rounded shadow max-w-sm md:max-w-md mx-auto my-0'
+        />
+        <figcaption class='mt-2 text-sm text-gray-600 text-center'>
+          <a href='/images/youhua.png' target='_blank'>点击查看详细大图</a>
+        </figcaption>
+      </figure>
+    <MediumZoom />
   </Collapse>
 </PageLayout>
