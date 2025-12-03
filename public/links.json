@@ -87,6 +87,18 @@
           "intro": "随机前往开往的成员博客",
           "link": "https://www.travellings.cn/go.html",
           "avatar": "https://www.travellings.cn/assets/travelling.png"
+        },
+        {
+          "name": "LINUX DO",
+          "intro": "新的理想型社区",
+          "link": "https://linux.do",
+          "avatar": "/images/linuxdo.png"
+        },
+        {
+          "name": "Astro",
+          "intro": "The web framework for content-driven websites",
+          "link": "https://astro.build",
+          "avatar": "/images/astro.png"
         }
       ]
     }
