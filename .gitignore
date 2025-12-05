@@ -2,6 +2,9 @@
 dist/
 .astro/
 
+### AI ###
+.trae/
+
 ### Vercel ###
 .vercel/
 
