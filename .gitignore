@@ -23,8 +23,6 @@ dist/
 
 ### Node ###
 # package-lock file is generated when running npm commands
-package-lock.json
-yarn.lock
 pnpm-lock.yaml
 
 # logs
