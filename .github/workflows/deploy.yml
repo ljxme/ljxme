@@ -14,41 +14,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ 检出仓库代码
-      - name: Checkout repository
+      # Check out repository code
+      - name: 🔍 Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ 设置 Node 环境（自动缓存 npm）
-      - name: Setup Node.js
+      # Setup Node & pnpm environment
+      - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+      
+      - name: 🔧 Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false   # Write own installation logic
 
-      # 3️⃣ 安装依赖（带自动重试）
-      - name: Install dependencies
+      # Install dependencies with retry
+      - name: 📦 Install dependencies
         run: |
           echo "📦 正在安装依赖..."
           for i in 1 2 3; do
-            npm ci && break || (echo "❌ 安装失败，${i} 秒后重试第 $((i+1)) 次..." && sleep $((i * 5)))
+            pnpm install --frozen-lockfile && break || (echo "❌ 安装失败，${i} 秒后重试第 $((i+1)) 次..." && sleep $((i * 5)))
           done
           echo "✅ 依赖安装完成"
 
-      # 4️⃣ 删除旧构建产物（防止残留）
-      - name: Clean old build
+      # Clean old build artifacts (prevent residual files)
+      - name: 🧹 Clean old build artifacts
         run: |
           echo "🧹 清理旧构建目录..."
           rm -rf dist .astro
           echo "✅ 清理完成"
 
-      # 5️⃣ 构建 Astro 静态文件
-      - name: Build Astro project
+      # Build Astro static files
+      - name: 🏗️ Build Astro project
         run: |
           echo "🏗️ 正在构建 Astro 项目..."
-          npm run build
+          pnpm run build
           echo "✅ 构建完成"
 
-      # 6️⃣ 部署到 page 分支（GitHub Pages 或静态仓库）
+      # Deploy to page branch (GitHub Pages or static repository)
       - name: 📦 Deploy to page branch
         run: |
           cd dist
@@ -62,21 +67,21 @@ jobs:
           echo "✅ 已推送至 GitHub page 分支"
 
 
-      # 7️⃣ 同步到 CNB 仓库（带 GitHub commit 信息）
+      # Sync to CNB repository (with GitHub commit message)
       - name: 🌐 Sync to CNB repository
         run: |
           cd dist
           git branch -M main
           git remote add cnb "https://${{ secrets.CNB_USERNAME }}:${{ secrets.CNB_TOKEN }}@cnb.cool/ljxme/lisblogsourcecode.git"
           git fetch cnb || true
-          # 获取当前 GitHub 提交信息
+          # Get current GitHub commit message
           COMMIT_MSG=$(git log -1 --pretty=%s)
           GITHUB_COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
           git commit --allow-empty -m "🔄 Sync from GitHub: ${COMMIT_MSG}\n🔗 ${GITHUB_COMMIT_URL}"
           git push --force --quiet cnb main
           echo "✅ 已同步至 CNB 仓库（带 GitHub 提交信息）"
 
-      # 8️⃣ SSH 登录服务器并执行拉取
+      # Deploy to server via SSH (with GitHub commit message)
       - name: 🔧 SSH Deploy to Server
         uses: appleboy/ssh-action@v1
         with:
@@ -93,16 +98,16 @@ jobs:
             git pull --depth=1
             echo "✅ 已拉取 page 分支最新内容"
 
-      # 9️⃣ 刷新 DogeCloud CDN 目录缓存
-      # 文档参考：
-      # - 获取访问令牌（请在 DogeCloud 控制台创建并保存到仓库 Secrets）：https://docs.dogecloud.com/cdn/api-access-token
-      # - 提交刷新任务接口（目录刷新 type=dir）：https://docs.dogecloud.com/cdn/api-refresh-add
-      # 为避免接口变更导致失败，这里直接使用预先创建的访问令牌 `DOGE_ACCESS_TOKEN`
+      # Refresh DogeCloud CDN directory cache (with GitHub commit message)
+      # Documentation:
+      # - Get access token (create in DogeCloud console and save to repo Secrets): https://docs.dogecloud.com/cdn/api-access-token
+      # - Submit refresh task API (directory refresh type=dir): https://docs.dogecloud.com/cdn/api-refresh-add
+      # - To avoid failures caused by interface changes, the pre-created access token is used directly `DOGE_ACCESS_TOKEN`
       - name: ♻️ Refresh CDN Directory
         id: refresh_cdn
         if: success()
         env:
-          # 在 GitHub 仓库设置中添加 Secrets：DOGE_ACCESS_KEY、DOGE_SECRET_KEY
+          # Add Secrets in GitHub repo settings: DOGE_ACCESS_KEY, DOGE_SECRET_KEY
           DOGE_ACCESS_KEY: ${{ secrets.DOGE_ACCESS_KEY }}
           DOGE_SECRET_KEY: ${{ secrets.DOGE_SECRET_KEY }}
         run: |
