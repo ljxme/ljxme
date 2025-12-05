@@ -3,11 +3,11 @@ name: 🚀 Build & Deploy Astro Blog
 on:
   push:
     branches:
-      - main  # 当 main 分支有更新时触发构建
-  workflow_dispatch:  # 支持手动触发
+      - main
+  workflow_dispatch:
 
 permissions:
-  contents: write  # 👈 允许推送到仓库分支
+  contents: write
 
 jobs:
   build-deploy:
@@ -23,19 +23,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      
-      - name: 🔧 Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false   # Write own installation logic
+          cache: npm
 
       # Install dependencies with retry
       - name: 📦 Install dependencies
         run: |
           echo "📦 正在安装依赖..."
           for i in 1 2 3; do
-            pnpm install --frozen-lockfile && break || (echo "❌ 安装失败，${i} 秒后重试第 $((i+1)) 次..." && sleep $((i * 5)))
+            npm ci && break || (echo "❌ 安装失败，${i} 秒后重试第 $((i+1)) 次..." && sleep $((i * 5)))
           done
           echo "✅ 依赖安装完成"
 
