@@ -9,7 +9,7 @@ import config from '@/site-config'
   data-astro-rerun
   define:vars={{ npmCDN: config.npmCDN, walineServer: config.integ.waline.server }}
 >
-  async function loadPageview() {
+  async function loadPageView() {
     try {
       const pageview = await import(`${npmCDN}/@waline/client@v3/dist/pageview.js`)
       const el = document.querySelector('.waline-pageview-count')
@@ -24,7 +24,7 @@ import config from '@/site-config'
     }
   }
 
-  const abort = await loadPageview()
+  const abort = await loadPageView()
   // After 500ms, if the network request has not been completed, cancel this operation
   setTimeout(() => abort(), 500)
 </script>
