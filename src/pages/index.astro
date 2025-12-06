@@ -8,7 +8,7 @@ import { Button, Card, Icon, Label } from 'astro-pure/user'
 import PageLayout from '@/layouts/BaseLayout.astro'
 import TextBackground from '@/components/custom/TextBackground.astro'
 import Vercount from '@/components/custom/Vercount.astro'
-// import ProjectCard from '@/components/home/ProjectCard.astro' 设置站点项目时记得打开,其他的类似
+import ProjectCard from '@/components/home/ProjectCard.astro'
 import Section from '@/components/home/Section.astro'
 // import SkillLayout from '@/components/home/SkillLayout.astro'
 import RecentComments from '@/components/RecentComments.astro'
@@ -103,87 +103,25 @@ if (imagePath && !images[imagePath])
         <RecentComments />
         <Vercount />
       </div>
+    </div>
 
-      {
-        /* <Section title='Experience'> 经验
-      <Card
-        heading='Lorem Ipsum'
-        subheading='Sit amet consectetur'
-        date='Dec 2022 - Nov 2023'
-        imagePath='/src/assets/about-astro.png'
-        altText='Lorem, ipsum dolor sit'
-        imageClass='h-12 w-auto md:-start-16'
-      >
-        <ul class='ms-4 list-disc text-muted-foreground'>
-          <li>
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Dolore debitis recusandae, ut
-            molestiae laboriosam pariatur!
-
-            <li>Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestiae, pariatur!</li>
-          </li>
-        </ul>
-      </Card>
-      <Card
-        heading='Lorem Ipsum'
-        subheading='Sit amet consectetur'
-        date='Dec 2022 - Nov 2023'
-        imagePath='/src/assets/about-astro.png'
-        altText='Lorem, ipsum dolor sit'
-        imageClass='h-12 w-auto md:-start-16'
-      />
-    </Section> */
-      }
-      <!--教育经历
-      <Section title='Education'>
-        <Card
-          as='a'
-          heading='Lorem ipsum'
-          subheading='Lorem ipsum dolor sit amet, vidit suscipit at mei.'
-          date='August 2021 - July 2025'
-          href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-        >
-          {
-            /* <ul class='ms-4 list-disc text-muted-foreground'>
-          <li>
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Dolore debitis recusandae, ut
-            molestiae laboriosam pariatur!
-          </li>
-          <li>Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestiae, pariatur!</li>
-        </ul> */
-          }
-        </Card>
-      </Section>
-      -->
-      <!-- 项目经历
+    <div class='animate mt-10 flex flex-col gap-y-10 md:w-4/5 lg:w-5/6'>
       <Section title='Website List'>
         <div class='grid grid-cols-1 gap-3 sm:grid-cols-2'>
           <ProjectCard
-            href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-            heading='Lorem ipsum'
-            subheading='dolor sit amet, oratio ornatus explicari pro ex'
-            imagePath='/src/assets/projects/alex-tyson-2BAXJ7ha74s-unsplash.jpg'
+            href='https://hot.ljx.icu'
+            heading='Daily Hot'
+            subheading='Gather hot spots on the whole network, and see all the popular ones'
+            imagePath='/src/assets/projects/daily-hot.png'
           />
           <ProjectCard
-            href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-            heading='Lorem ipsum'
-            subheading='dolor sit amet, oratio ornatus explicari pro ex'
-            imagePath='/src/assets/projects/angelica-teran-Bk9hpaXHK4o-unsplash.jpg'
-          />
-          <ProjectCard
-            href='https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-            heading='Lorem ipsum'
-            subheading='dolor sit amet, oratio ornatus explicari pro ex'
-            imagePath='/src/assets/projects/kseniia-zapiatkina-yATU3rg8tNI-unsplash.jpg'
-          />
-          <ProjectCard
-            href='/projects'
-            heading='More projects'
-            subheading='Check out more projects'
-            imagePath='/src/assets/projects/wen-qiao-g_w8I64FiO0-unsplash.jpg'
+            href='https://mm.ljx.icu'
+            heading='Gossip'
+            subheading='Share gossip with the world, and see what others think'
+            imagePath='/src/assets/projects/mm.png'
           />
         </div>
       </Section>
-      -->
 
       <!-- 认证经历
       <Section title='Certifications'>
@@ -205,6 +143,7 @@ if (imagePath && !images[imagePath])
       </Section>
       -->
     </div>
+
     <Quote class='mt-12' />
   </main>
 </PageLayout>
