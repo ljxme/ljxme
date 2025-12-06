@@ -149,9 +149,9 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
 <link rel='stylesheet' href={shuoshuoCss} />
 
 {/* APlayer 样式 */}
-<link rel='stylesheet' href='/scripts/vendor/APlayer.min.css' media='all' />
-<script src='/scripts/vendor/APlayer.min.js' defer is:inline></script>
-<script src='/scripts/vendor/Meting.min.js' defer is:inline></script>
+<link rel='stylesheet' href={`${config.npmCDN}/aplayer@1.10.1/dist/APlayer.min.css`} media='all' />
+<script src={`${config.npmCDN}/aplayer@1.10.1/dist/APlayer.min.js`} defer is:inline></script>
+<script src={`${config.npmCDN}/meting@2.0.10/dist/Meting.min.js`} defer is:inline></script>
 
 {/* 统计分析 */}
 <script defer src='https://analytics.ljx.icu/tracker.min.js' data-website-id='ljxblog' is:inline
