@@ -33,7 +33,7 @@ const CONFIG = {
   // API 配置
   api: process.env.AI_SUMMARY_API || 'https://api.openai.com/v1/chat/completions',
   token: process.env.AI_SUMMARY_KEY || '',
-  model: process.env.AI_SUMMARY_MODEL || 'gpt-3.5-turbo',
+  model: process.env.AI_SUMMARY_MODEL || 'lite',
   
   // Prompt
   prompt: process.env.AI_SUMMARY_PROMPT || `你是一个博客文章摘要生成工具，只需根据我发送的内容生成摘要。
@@ -42,7 +42,7 @@ const CONFIG = {
 请用中文作答，去除特殊字符，输出内容开头为“这篇文章”。`,
 
   // 最大 Token 数 (用于截取文章内容)
-  maxToken: 5000,
+  maxToken: parseInt(process.env.AISUMMARY_MAX_TOKEN || '5000', 10),
 
   // 最小内容长度 (用于判断是否跳过)
   minContentLength: parseInt(process.env.AISUMMARY_MIN_CONTENT_LENGTH || '50', 10),
@@ -65,22 +65,11 @@ const CONFIG = {
 
 // 日志工具
 const logger = {
-  error: (...args: any[]) => console.error(' ❌ ', ...args),
-  info: (...args: any[]) => CONFIG.logger >= 1 && console.log(' ℹ️ ', ...args),
-  success: (...args: any[]) => CONFIG.logger >= 1 && console.log(' ✅ ', ...args),
-  debug: (...args: any[]) => CONFIG.logger >= 2 && console.log(' 🐛 ', ...args),
+  error: (...args: any[]) => console.error('[ai-summary-error]:', ...args),
+  info: (...args: any[]) => CONFIG.logger >= 1 && console.log('[ai-summary-info]:', ...args),
+  success: (...args: any[]) => CONFIG.logger >= 1 && console.log('[ai-summary-success]:', ...args),
+  debug: (...args: any[]) => CONFIG.logger >= 2 && console.log('[ai-summary-debug]:', ...args),
 };
-
-// 简单的 Token 估算 (1中文=2token, 1英文=1token) - 仅用于截取
-function estimateTokens(text: string): number {
-  let count = 0;
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
-    if (code > 0x7f) count += 2;
-    else count += 1;
-  }
-  return count;
-}
 
 // 截取文本以适应 Token 限制
 function truncateText(text: string, maxTokens: number): string {
@@ -309,6 +298,7 @@ async function processFile(filePath: string) {
     }
 
     logger.info(`正在处理: ${relativePath}`);
+    const startTime = Date.now();
     
     if (CONFIG.sleepTime > 0) {
       await new Promise(resolve => setTimeout(resolve, CONFIG.sleepTime));
@@ -318,6 +308,8 @@ async function processFile(filePath: string) {
     const description = typeof parsed.data.description === 'string' ? parsed.data.description : '';
     const result = await generateSummary(parsed.content, { title, description });
     
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
     if (result.status === 'ok' && result.summary) {
       // 更新 Frontmatter
       parsed.data[CONFIG.summaryField] = result.summary;
@@ -328,11 +320,11 @@ async function processFile(filePath: string) {
       const newContent = matter.stringify(parsed.content, parsed.data);
       
       await fs.writeFile(filePath, newContent, 'utf-8');
-      logger.success(`摘要已生成: ${relativePath}`);
+      logger.success(`摘要已生成: ${relativePath} (耗时: ${duration}s)`);
     } else if (result.status === 'skipped') {
       logger.debug(`跳过 (内容过短): ${relativePath}`);
     } else {
-      logger.error(`生成失败: ${relativePath} - ${result.reason || '未知原因'}`);
+      logger.error(`生成失败: ${relativePath} - ${result.reason || '未知原因'} (耗时: ${duration}s)`);
     }
 
   } catch (error: any) {
@@ -348,6 +340,7 @@ async function main() {
   }
 
   logger.info('开始生成 AI 摘要...');
+  const totalStartTime = Date.now();
   logger.info(`API: ${CONFIG.api}`);
   logger.info(`Model: ${CONFIG.model}`);
   logger.info(`并发数: ${CONFIG.concurrency}`);
@@ -368,7 +361,8 @@ async function main() {
 
   await Promise.all(tasks);
 
-  logger.info('✨ 全部处理完成。');
+  const totalDuration = ((Date.now() - totalStartTime) / 1000).toFixed(2);
+  logger.info(`✨ 全部处理完成。总耗时: ${totalDuration}s`);
 }
 
 main().catch(err => {
