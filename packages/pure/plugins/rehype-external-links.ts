@@ -44,10 +44,14 @@ export default function rehypeExternalLinks(options: ExternalLinkOptions = {}) {
         let checkHref = href
         if (href.startsWith('/safego')) {
           try {
-            const safeGoUrl = new URL(href)
+            const safeGoUrl = new URL(href, 'https://example.com')
             const targetUrl = safeGoUrl.searchParams.get('url')
-            if (targetUrl) checkHref = targetUrl
-          } catch {}
+            if (targetUrl) {
+              checkHref = targetUrl
+            }
+          } catch (e) {
+            console.error('[rehype-external-links] Failed to parse safego url:', href, e)
+          }
         }
 
         const protocol = checkHref.startsWith('//')
