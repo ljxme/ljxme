@@ -19,7 +19,8 @@
     "lint": "eslint --fix 'src/**/*.{js,ts,jsx,tsx,astro}'",
     "yijiansilian": "bun lint && bun sync && bun check && bun format",
     "clean": "rm -rf .astro .vercel dist",
-    "cache:avatars": "tsx preset/scripts/cacheAvatars.ts"
+    "cache:avatars": "tsx preset/scripts/cacheAvatars.ts",
+    "gen:summary": "tsx scripts/generate-summary.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.5",
@@ -35,10 +36,15 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@astrojs/markdown-remark": "^6.3.10",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
     "@typescript-eslint/parser": "^8.47.0",
+    "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
     "eslint-plugin-astro": "^1.5.0",
+    "glob": "^13.0.0",
+    "gray-matter": "^4.0.3",
+    "p-limit": "^7.2.0",
     "prettier": "^3.6.2",
     "prettier-plugin-astro": "^0.14.1",
     "tsx": "^4.21.0"
