@@ -1,13 +1,16 @@
 ---
-title: '随身WiFi刷Linux领京东豆'
-description: '随身WiFi的一种用途'
+title: 随身WiFi刷Linux领京东豆
+description: 随身WiFi的一种用途
 publishDate: '2024-08-18'
-heroImage: { src: './cover.jpg', alt: 'an image targetting my article' }
+heroImage:
+  src: ./cover.jpg
+  alt: an image targetting my article
 tags:
   - 工具
 comment: true
-language: '中文'
-summary: '文章介绍了如何通过使用随身WiFi刷Linux系统来获取京东豆的方法，首先，需要选择一款适合的随身WiFi芯片，如高通410或中兴微，并确保主板上能识别出相应的“Qualcomm”或“zxlc”字样，接着，安装必要的软件工具，包括随身WiFi助手、Debian固件、OpenWRT固件、SSH连接工具MobaXterm等，通过这些工具，用户可以将随身WiFi连接到电脑，进行固件的刷写和救砖操作，最后，通过切换网络和登录IP，用户能够访问到随身WiFi后台，实现刷Linux系统并获得京东豆的目的。'
+language: 中文
+summary: >-
+  本文介绍了如何通过随身WiFi刷Linux系统并获取京东豆的详细步骤。首先，需要查看随身WiFi芯片型号，然后下载必要的工具和固件。接着进行基础配置，包括解压文件、查看基本信息、安装驱动、开启ADB等。之后进行设备备份，以便在设备变砖时使用。最后，通过SSH连接工具刷入Debian系统，并更新驱动。完成这些步骤后，可以访问同局域网内的任何设备，但需要解决一些BUG和更新服务器源。最后，安装Docker并启动服务，以实现刷入Linux系统的目的。
 ---
 
 ## 1，查看随身WiFi芯片型号

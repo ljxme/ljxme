@@ -1,7 +1,7 @@
 ---
 title: '本地实现Astro文章AI摘要'
 description: '纯静态的ai文章摘要'
-publishDate: '2025-11-08'
+publishDate: '2025-12-18'
 heroImage: { src: './cover.jpg', alt: 'an image targetting my article' }
 tags:
   - 主题美化
@@ -12,7 +12,7 @@ tags:
 comment: true
 language: '中文'
 draft: true
-summary: '本文介绍了如何在 Astro 博客中实现离线生成的 AI 摘要功能。作者结合Spark-Lite 模型，构建了一个可本地运行的摘要生成方案，避免了每次访问都请求远程 API 的低效方式。文章详细说明了代理服务器的搭建、Vercel 环境变量配置、以及 aisummary.js、aisummary.css、generateSummary.ts 等核心脚本的使用与整合。通过此方法，博客可在构建时直接写入摘要，既节省资源，又提升访问速度，实现了纯静态化的智能摘要体验。'
+summary: '纯静态生成并写入 Frontmatter 的 Astro 文章 AI 摘要方案'
 ---
 
 ## 起因
@@ -23,7 +23,7 @@ import { Spoiler } from 'astro-pure/user'
 
 之后呢给博客迁移到了 **Astro** 架构，看到了 [konoXIN的文章](https://www.konoxin.top/posts/db7b3418) ，大佬的AI摘要实现思路也很完美，试了一周感觉不错，不过就是有点小小的不足，因为他的摘要是存储在 Index DB 里的，虽然占用的空间小，并且也足够存储生成的摘要，但每个人在访问文章时都会请求一次API还是太那啥了 ~~（即使TOKEN无限用）~~ 
 
-思考了几天，也试了试，还是想本地生成文章摘要再放置在文章的 `Frontmatter` 块末尾，于是结合 [@Liushen](https://www.liushen.fun/) 和 [@konoXIN](https://www.konoxin.top/) 的思路，捣鼓了几天，初步实现了我的需求<Spoiler>应该不会有啥大毛病吧</Spoiler>
+思考了几天，也试了试，还是想本地生成文章摘要再放置在文章的 `Frontmatter` 块末尾，于是结合 [@Liushen](https://www.liushen.fun/) 和 [@konoXIN](https://www.konoxin.top/) 的思路，捣鼓了几天<Spoiler>实则是摸鱼~</Spoiler>，初步实现了我的需求<Spoiler>应该不会有啥大毛病吧</Spoiler>
 
 ## 前置
 
@@ -85,7 +85,7 @@ import { Steps } from 'astro-pure/user'
    ```astro title="BaseHead.astro"
    ---
    import aisummaryConfig from '../plugins/aisummary.config.js?url';// [!code highlight]
-   import aisummary from '../plugins/aisummary.js?url';/ [!code highlight]
+   import aisummary from '../plugins/aisummary.js?url';// [!code highlight]
    import aisummaryCss from '../assets/styles/aisummary.css?url';// [!code highlight]
    ---
    
@@ -133,7 +133,7 @@ import { Steps } from 'astro-pure/user'
 
 ## 配置
 
-主要集中在 `aisummary.config.js` 文件进行配置和修改变量，列表如下（文件中也有详细注释说明）：
+主要集中在 `aisummary.config.js` 和 `.env` 文件进行配置和修改变量，列表如下（文件中也有详细注释说明）：
 
 ### 供离线脚本读取的配置项
 
@@ -141,11 +141,9 @@ import { Steps } from 'astro-pure/user'
 | :------------------------------- | :------------------------------------------ | :----------------------------------- |
 | **AI_SUMMARY_API**               | `https://your-api-server/api/spark-proxy` | 摘要服务地址 |
 | **AI_SUMMARY_KEY**               | `your-api-key`                              | 摘要服务密钥         |
-| **AISUMMARY_WORD_LIMIT**         | `8000`                                      | 提交与处理的最大字数     |
-| **AISUMMARY_LOG_LEVEL**          | `2`                                         | 运行日志等级 |
+| **AI_SUMMARY_MODEL**             | `lite`                                      | 模型名称 |
 | **AISUMMARY_CONCURRENCY**        | `2`                                         | 并发执行摘要生成任务数 |
-| **AISUMMARY_CLEAN_BEFORE_API**   | `true`                                      | 是否在调用 API 前清洗正文 |
-| **AISUMMARY_OVERWRITE_EXISTING** | `ask`                                       | 已有摘要的覆盖策略       |
+| **AISUMMARY_COVER_ALL**          | `false`                                       | 是否重新生成所有摘要       |
 
 说明：使用前文 **Spark-Lite** 模型搭建Vercel代理服务器不需配置 `AI_SUMMARY_KEY` 变量，可保持空值
 
@@ -164,8 +162,9 @@ import { Steps } from 'astro-pure/user'
 
 ## 使用
 
-1. 确保 `aisummary.config.js` 文件里变量配置正确
-2. 在项目主目录运行 `npx tsx scripts/generateSummary.ts` 即可
+1. 补全缺失库 `npm install -D xxx`
+2. 确保 `aisummary.config.js` 和 `.env` 文件里变量配置正确
+3. 在项目主目录运行 `npx tsx scripts/generate-summary.ts` 即可
 
 ## 后记
 
