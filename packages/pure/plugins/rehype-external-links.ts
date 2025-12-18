@@ -60,7 +60,10 @@ export default function rehypeExternalLinks(options: ExternalLinkOptions = {}) {
             ? checkHref.slice(0, checkHref.indexOf(':'))
             : ''
 
-        if (checkHref.startsWith('//') || (isAbsoluteUrl(checkHref) && protocols.includes(protocol))) {
+        if (
+          checkHref.startsWith('//') ||
+          (isAbsoluteUrl(checkHref) && protocols.includes(protocol))
+        ) {
           node.properties = {
             ...node.properties,
             rel: 'nofollow noopener noreferrer',
