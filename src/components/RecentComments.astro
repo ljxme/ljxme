@@ -1,18 +1,18 @@
 ---
 import { Icon } from 'astro-pure/user'
 import config from '@/site-config'
-import {
-  fetchRecentComments,
-  formatCommentTime,
-  stripHtml,
-  truncateText
-} from '@/plugins/recentcomment'
+// import {
+//   fetchRecentComments,
+//   formatCommentTime,
+//   stripHtml,
+//   truncateText
+// } from '@/plugins/recentcomment'
 
 const limit = 5
 const refreshMs = 60_000
 
 // 获取最新评论数据
-const comments = await fetchRecentComments(limit)
+// const comments = await fetchRecentComments(limit)
 ---
 
 <div class='recent-comments' data-recent-comments data-limit={limit} data-refresh-ms={refreshMs}>
@@ -22,7 +22,8 @@ const comments = await fetchRecentComments(limit)
   </div>
 
   <div class='comment-list'>
-    {
+    <div class='comment-empty'>加载中...</div>
+    <!-- {
       comments.length > 0 ? (
         comments.map((comment) => (
           <div class='comment-item'>
@@ -44,7 +45,7 @@ const comments = await fetchRecentComments(limit)
       ) : (
         <div class='comment-empty'>暂无评论数据</div>
       )
-    }
+    } -->
   </div>
 </div>
 
