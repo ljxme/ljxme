@@ -246,6 +246,14 @@ const refreshMs = 60_000
     disposers.clear()
   }
 
+  const start = () => boot()
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true })
+  } else {
+    start()
+  }
+
   document.addEventListener('astro:page-load', boot)
   document.addEventListener('astro:before-swap', disposeAll)
 </script>
