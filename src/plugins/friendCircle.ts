@@ -36,12 +36,19 @@ export class FriendCircle {
   load() {
     this.loadMoreArticles()
     this.loadMoreBtn.addEventListener('click', this.loadMoreArticles.bind(this))
-    window.onclick = (event) => {
-      const modal = document.getElementById('modal')
-      if (event.target === modal) {
-        this.hideModal()
+
+    document.addEventListener('click', (event) => {
+      const modal = document.getElementById('fclite-modal')
+      if (modal && modal.classList.contains('modal-open')) {
+        const modalContent = modal.querySelector('.modal-content')
+        const target = event.target as HTMLElement
+        if (modalContent && !modalContent.contains(target)) {
+          if (!target.closest('.author-click')) {
+            this.hideModal()
+          }
+        }
       }
-    }
+    })
   }
 
   init(config: Partial<Config>) {
@@ -179,7 +186,8 @@ export class FriendCircle {
       </div>
     `
     card.querySelectorAll('.author-click').forEach((el) => {
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation()
         this.showAuthorArticles(article.author, article.avatar, article.link)
       })
     })
@@ -207,10 +215,9 @@ export class FriendCircle {
       })
   }
 
-  // Enable modal
   showAuthorArticles(author: string, avatar: string, link: string | URL) {
     if (!document.getElementById('fclite-modal')) {
-      const modal = this.createElement('div', { id: 'modal', className: 'modal' })
+      const modal = this.createElement('div', { id: 'fclite-modal', className: 'modal' })
       modal.innerHTML = `
       <div class="modal-content">
         <div class="modal-header">
@@ -220,9 +227,14 @@ export class FriendCircle {
         <div id="modal-articles-container"></div>
       </div>
       `
+
       this.root.appendChild(modal)
+
+      modal.querySelector('.modal-content')?.addEventListener('click', (e) => {
+        e.stopPropagation()
+      })
     }
-    this.modal = document.getElementById('modal') as HTMLElement
+    this.modal = document.getElementById('fclite-modal') as HTMLElement
     const modalArticlesContainer = document.getElementById(
       'modal-articles-container'
     ) as HTMLElement
@@ -236,7 +248,7 @@ export class FriendCircle {
       modalArticlesContainer.insertAdjacentHTML('beforeend', articleTemplate)
     })
 
-    this.modal.style.display = 'block'
+    this.modal.style.display = 'flex'
     setTimeout(() => {
       this.modal.classList.add('modal-open')
     }, 10)
