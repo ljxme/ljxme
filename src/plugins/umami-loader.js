@@ -1,12 +1,12 @@
 var currentDomain = window.location.hostname;
 
-if (currentDomain.includes('[站点1]')) {
+if (currentDomain.includes('blog.ljx.icu')) {
     var script = document.createElement('script');
-    script.src = 'https://[你的站点]/script.js'; // 这个需要你自己看着改改
-    script.setAttribute('data-website-id', '[站点1的网站ID，也就是跟踪代码后面一串]');
+    script.src = 'https://umami.ljx.icu/script.js'; // 这个需要你自己看着改改
+    script.setAttribute('data-website-id', 'ad11c7a4-dbb8-42ff-8f60-7c225d9e9ffd');
     script.async = true; // 将script的async属性设置为true，实现异步加载
     document.head.appendChild(script);
-    console.log('========成功加载 [站点1] 统计分析工具代码========');
+    console.log('========成功加载 [Umami] 统计分析工具代码========');
 } else if (currentDomain.includes('[站点2]')) {
     var script = document.createElement('script');
     script.src = 'https://你的站点/script.js';
