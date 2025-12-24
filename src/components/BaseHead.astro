@@ -7,7 +7,7 @@ import aisummaryCss from '../assets/styles/aisummary.css?url'
 import shuoshuoCss from '../assets/styles/shuoshuo.css?url'
 import aisummaryConfig from '../plugins/aisummary.config.js?url'
 import aisummary from '../plugins/aisummary.js?url'
-import umamiLoader from '../plugins/umami-loader.ts?url'
+import umamiLoader from '../plugins/umami-loader.js?url'
 
 type Props = SiteMeta
 
@@ -163,4 +163,4 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
 <script src={`${config.npmCDN}/instant.page@5.2.0/instantpage.js`} type='module' is:inline></script>
 
 {/* Umami statistics */}
-<script src={umamiLoader} type='module' defer is:inline />
+<script src={umamiLoader} defer is:inline></script>
