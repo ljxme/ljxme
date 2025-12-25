@@ -160,16 +160,18 @@ const { class: className } = Astro.props
     filter: invert(75%);
   }
 
-  /* waline 评论系统关键部分，不然会出现提示框均在同一位置的问题 */
-
+  /* waline style extension */
+  /* comment information extension*/
   #waline :global(.wl-header) {
     overflow: visible;
+  }
+  /* fix overflow */
+  #waline :global(.wl-panel) {
+    overflow: hidden;
   }
   #waline :global(.wl-header-item) {
     position: relative;
   }
-
-  /* 将星号直接添加到 label 元素伪类上，使其紧贴文字左侧 */
   #waline :global(label[for='wl-nick'])::before,
   #waline :global(label[for='wl-mail'])::before {
     content: '*';
@@ -177,70 +179,4 @@ const { class: className } = Astro.props
     margin-right: 4px;
     font-weight: 600;
   }
-
-
-  /* end */
-
-  /* #waline :global(.wl-header-item:nth-child(1)):before {
-    content: '输入QQ号会自动获取昵称和头像🐧';
-  }
-
-  #waline :global(.wl-header-item:nth-child(2)):before {
-    content: '收到回复将通过邮箱提醒您📧';
-  }
-
-  #waline :global(.wl-header-item:nth-child(3)):before {
-    content: '可以通过昵称访问您的网站🔗';
-  }
-
-  #waline :global(.wl-header-item:focus-within::before) {
-    display: block;
-    animation: fadeIn 0.3s ease-in-out;
-  } */
-
-  /* 主内容区 */
-  /* #waline :global(.wl-header-item::before) {
-    display: none;
-    position: absolute;
-    top: -31px;
-    white-space: nowrap;
-    border-radius: 8px;
-    left: 60%;
-    transform: translate(-50%);
-    padding: 4px 12px;
-    background: rgba(194, 166, 97, 0.85);
-    color: #fff;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(4px);
-    z-index: 100;
-  } */
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translate(-50%, 5px);
-    }
-    to {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-  }
-
-  /* background image */
-
-  /* #waline :global(.wl-editor) {
-    background-image: url('https://tc.ljx.icu/file/imgs/bX7aRYbU.png');
-    background-size: 15%;
-    background-repeat: no-repeat;
-    background-position: right bottom;
-    background-color: var(--waline-bg-color);
-    resize: vertical;
-    transition: background-position 0.2s ease-in-out;
-  }
-
-  #waline :global(.wl-editor:focus) {
-    background-position-x: 800px;
-    background-position-y: 1000px;
-  }  */
 </style>
