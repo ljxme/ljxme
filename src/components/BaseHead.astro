@@ -135,26 +135,26 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
   )
 }
 
-{/* AISummary 工具 */}
+{/* AISummary */}
 <script src={aisummaryConfig} defer is:inline></script>
 {
   Astro.url.pathname.startsWith('/blog/') && !/^\/blog\/\d+\/?$/.test(Astro.url.pathname) && (
     <script src={aisummary} defer is:inline />
   )
 }
-{/* AISummary 样式 */}
+{/* AISummary Style */}
 <link rel='stylesheet' href={aisummaryCss} />
 
-{/* 说说样式 */}
+{/* Shuoshuo Style */}
 <link rel='stylesheet' href={shuoshuoCss} />
 
-{/* APlayer 样式 */}
+{/* APlayer Style */}
 <link rel='stylesheet' href={`${config.npmCDN}/aplayer@1.10.1/dist/APlayer.min.css`} media='all' />
 <script src={`${config.npmCDN}/aplayer@1.10.1/dist/APlayer.min.js`} defer is:inline></script>
 <script src={`${config.npmCDN}/meting@2.0.2/dist/Meting.min.js`} defer is:inline></script>
 
-{/* 统计分析 */}
-<script defer src='https://analytics.ljx.icu/tracker.min.js' data-website-id='ljxblog' is:inline
+{/* Analytics */}
+<script src='https://analytics.ljx.icu/tracker.min.js' data-website-id='ljxblog' defer is:inline
 ></script>
 
 {/* Netease Mini Player */}
@@ -162,5 +162,5 @@ const socialImageURL = new URL(ogImage ? ogImage : '/images/social-card.png', As
 {/* Page Preload */}
 <script src={`${config.npmCDN}/instant.page@5.2.0/instantpage.js`} type='module' is:inline></script>
 
-{/* Umami statistics */}
+{/* Umami Analytics */}
 <script src={umamiLoader} defer is:inline></script>
