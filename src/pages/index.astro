@@ -34,26 +34,26 @@ if (imagePath && !images[imagePath])
   <main class='flex w-full flex-col items-center'>
     <!-- 诗歌背景组件 -->
     <TextBackground variant='poem' />
-      <section class='animate mb-10 flex flex-col items-center gap-y-7' id='content-header'>
-        <Image
-          src={images[imagePath]()}
-          alt={config.logo.alt || 'Logo'}
-          class='h-28 w-auto rounded-full border p-1'
-          loading='eager'
-          fetchpriority='high'
-        />
+    <section class='animate mb-10 flex flex-col items-center gap-y-7' id='content-header'>
+      <Image
+        src={images[imagePath]()}
+        alt={config.logo.alt || 'Logo'}
+        class='h-28 w-auto rounded-full border p-1'
+        loading='eager'
+        fetchpriority='high'
+      />
 
-        <div class='flex flex-col items-center gap-y-4'>
-          <h1 class='text-3xl font-medium'>{config.author}</h1>
-          <div class='flex flex-wrap justify-center gap-x-7 gap-y-3'>
-            <Label title='中国•湖北'>
-              <Icon name='location' class='size-5' slot='icon' />
-            </Label>
-            <Label title='GitHub' as='a' href='https://github.com/ljxme' target='_blank'>
-              <Icon name='github' class='size-5' slot='icon' />
-            </Label>
-          </div>
+      <div class='flex flex-col items-center gap-y-4'>
+        <h1 class='text-3xl font-medium'>{config.author}</h1>
+        <div class='flex flex-wrap justify-center gap-x-7 gap-y-3'>
+          <Label title='中国•湖北'>
+            <Icon name='location' class='size-5' slot='icon' />
+          </Label>
+          <Label title='GitHub' as='a' href='https://github.com/ljxme' target='_blank'>
+            <Icon name='github' class='size-5' slot='icon' />
+          </Label>
         </div>
+      </div>
       <!-- 
       {/* Get template */}
       <a
@@ -70,21 +70,16 @@ if (imagePath && !images[imagePath])
         <p class='font-medium text-muted-foreground'>Get Template</p>
       </a>
       -->
-      </section>
+    </section>
 
-    <div
-      id='content'
-      class='animate flex flex-col gap-y-10 md:w-4/5 lg:w-5/6'
-    >
+    <div id='content' class='animate flex flex-col gap-y-10 md:w-4/5 lg:w-5/6'>
       <div class='flex flex-col gap-y-10'>
         <Section title='关于'>
           <p class='text-muted-foreground'>Student</p>
           <p class='text-muted-foreground'>
             The blade follows the mind,leaving no trace in the wind.
           </p>
-          <p class='text-muted-foreground'>
-            Each flip and fold reveals the way in stillness.
-          </p>
+          <p class='text-muted-foreground'>Each flip and fold reveals the way in stillness.</p>
           <Button title='More about me' class='w-fit self-end' href='/about' variant='ahead' />
         </Section>
         {
