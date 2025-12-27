@@ -6,7 +6,7 @@ export const vercount: { enable: boolean; script: string } = {
 }
 
 export const theme: ThemeUserConfig = {
-  // === Basic configuration ===
+  // [Basic]
   /** Title for your website. Will be used in metadata and as browser tab title. */
   title: "梨尽兴 | Li's Blog",
   /** Will be used in index page & copyright declaration */
@@ -77,11 +77,6 @@ export const theme: ThemeUserConfig = {
         link: 'https://beian.mps.gov.cn/#/query/webSearch?code=51170302000216',
         style: 'text-sm'
       },
-      {
-        title: 'Travelling',
-        link: 'https://www.travellings.cn/go.html',
-        style: 'text-sm'
-      },
       // Privacy Policy link
       {
         title: 'Site Policy',
@@ -99,6 +94,7 @@ export const theme: ThemeUserConfig = {
     }
   },
 
+  // [Content]
   content: {
     /** External links configuration */
     externalLinks: {
@@ -118,8 +114,8 @@ export const theme: ThemeUserConfig = {
 }
 
 export const integ: IntegrationUserConfig = {
-  // Links management
-  // See: https://astro-pure.js.org/docs/integrations/links
+  // [Links]
+  // https://astro-pure.js.org/docs/integrations/links
   links: {
     // Friend logbook
     logbook: [
@@ -143,20 +139,26 @@ export const integ: IntegrationUserConfig = {
     // Cache avatars in `public/avatars/` to improve user experience.
     cacheAvatar: true
   },
-  // Enable page search function
+  // [Search]
   pagefind: true,
   // Add a random quote to the footer (default on homepage footer)
   // See: https://astro-pure.js.org/docs/integrations/advanced#web-content-render
+  // [Quote]
   quote: {
+    // - Hitokoto
     // https://developer.hitokoto.cn/sentence/#%E8%AF%B7%E6%B1%82%E5%9C%B0%E5%9D%80
     // server: 'https://v1.hitokoto.cn/?c=i',
-    // target: (data) => (data as { hitokoto: string }).hitokoto || 'Error'
+    // target: `(data) => (data.hitokoto || 'Error')`
+    // - Quoteable
     // https://github.com/lukePeavey/quotable
+    // server: 'http://api.quotable.io/quotes/random?maxLength=60',
+    // target: `(data) => data[0].content || 'Error'`
+    // - DummyJSON
     server: 'https://v1.hitokoto.cn/?c=i',
-    target: `(data) => data.hitokoto || 'Error'`
+    target: `(data) => (data.hitokoto || 'Error')`
   },
-  // UnoCSS typography
-  // See: https://unocss.dev/presets/typography
+  // [Typography]
+  // https://unocss.dev/presets/typography
   typography: {
     class: 'prose text-base',
     // The style of blockquote font, normal or italic (default to italic in typography)
@@ -164,8 +166,9 @@ export const integ: IntegrationUserConfig = {
     // The style of inline code block, code or modern (default to code in typography)
     inlineCodeBlockStyle: 'modern'
   },
+  // [Lightbox]
   // A lightbox library that can add zoom effect
-  // See: https://astro-pure.js.org/docs/integrations/others#medium-zoom
+  // https://astro-pure.js.org/docs/integrations/others#medium-zoom
   mediumZoom: {
     enable: true, // disable it will not load the whole library
     selector: '.prose .zoomable',
