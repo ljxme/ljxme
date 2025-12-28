@@ -2,18 +2,8 @@
 import { Icon } from 'astro-pure/user'
 import config from '@/site-config'
 
-// import {
-//   fetchRecentComments,
-//   formatCommentTime,
-//   stripHtml,
-//   truncateText
-// } from '@/plugins/recentcomment'
-
 const limit = 5
 const refreshMs = 60_000
-
-// 获取最新评论数据
-// const comments = await fetchRecentComments(limit)
 ---
 
 <div class='recent-comments' data-recent-comments data-limit={limit} data-refresh-ms={refreshMs}>
@@ -130,7 +120,6 @@ const refreshMs = 60_000
     }
 
     listEl.appendChild(frag)
-    enhanceLinks(root)
   }
 
   const updateTimesOnly = (root) => {
@@ -175,10 +164,14 @@ const refreshMs = 60_000
         }
       } catch (e) {
         if (e?.name === 'AbortError') return
+        console.error('Recent comments error:', e)
+        const listEl = root.querySelector('.comment-list')
+        if (listEl) {
+          listEl.innerHTML = `<div class="comment-empty error">加载失败: ${e.message}</div>`
+        }
       }
     }
 
-    enhanceLinks(root)
     tick()
 
     const timer = window.setInterval(() => {
