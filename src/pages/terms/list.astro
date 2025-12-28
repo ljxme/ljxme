@@ -1,4 +1,5 @@
 ---
+import { MediumZoom } from 'astro-pure/advanced'
 import { Button, CardList, Collapse } from 'astro-pure/user'
 import { cn } from 'astro-pure/utils'
 import PageLayout from '@/layouts/BaseLayout.astro'
@@ -30,7 +31,7 @@ const meta = {
             src='https://tc.ljx.icu/file/imgs/AkM2pC1N.png'
             alt='域名证书'
             loading='lazy'
-            class='rounded shadow max-w-sm md:max-w-md mx-auto my-0'
+            class='rounded shadow max-w-sm md:max-w-md mx-auto my-0 zoomable'
           />
           <figcaption class='mt-2 text-sm text-gray-600 text-center'>域名证书</figcaption>
         </figure>
@@ -39,7 +40,7 @@ const meta = {
             src='https://tc.ljx.icu/file/imgs/akDSAVDu.png'
             alt='ICP备案查询'
             loading='lazy'
-            class='rounded shadow mx-auto my-0'
+            class='rounded shadow mx-auto my-0 zoomable'
           />
           <figcaption class='mt-2 text-sm text-gray-600 text-center'>ICP备案查询</figcaption>
         </figure>
@@ -48,10 +49,11 @@ const meta = {
             src='https://tc.ljx.icu/file/imgs/DddAzfN8.png'
             alt='公安备案查询'
             loading='lazy'
-            class='rounded shadow mx-auto my-0'
+            class='rounded shadow mx-auto my-0 zoomable'
           />
           <figcaption class='mt-2 text-sm text-gray-600 text-center'>公安备案查询</figcaption>
         </figure>
+        <MediumZoom />
       </Collapse>
     </div>
   </main>
