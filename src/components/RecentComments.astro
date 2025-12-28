@@ -69,17 +69,6 @@ const refreshMs = 60_000
     return s.endsWith('/') ? s.slice(0, -1) : s
   }
 
-  const enhanceLinks = (root) => {
-    const commentTexts = root.querySelectorAll('.comment-text')
-    commentTexts.forEach((element) => {
-      const links = element.querySelectorAll('a')
-      links.forEach((link) => {
-        link.setAttribute('target', '_blank')
-        link.setAttribute('rel', 'noopener noreferrer')
-      })
-    })
-  }
-
   const buildKey = (items) =>
     items.map((c) => `${c.nick ?? ''}|${c.time ?? ''}|${c.url ?? ''}|${c.avatar ?? ''}`).join('||')
 
