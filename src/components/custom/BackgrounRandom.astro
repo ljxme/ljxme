@@ -1,3 +1,6 @@
+{
+  /* The original code comes from https://github.com/Anmol-TheDev/potfolio2.0/blob/main/src/components/BackgroundArt.astro */
+}
 <div
   class='pointer-events-none fixed bottom-0 left-0 right-0 top-0 print:hidden'
   style='mask-image: radial-gradient(circle, transparent, black); -webkit-mask-image: radial-gradient(circle, transparent, black);'
@@ -9,7 +12,6 @@
   const r180 = Math.PI
   const r90 = Math.PI / 2
   const r15 = Math.PI / 12
-  const color = '#88888825'
 
   const MIN_BRANCH = 30
   const len = 6
@@ -76,7 +78,6 @@
     height: window.innerHeight
   }
   const { ctx } = initCanvas(canvas, size.width, size.height)
-  const { width, height } = canvas
 
   let steps: Array<() => void> = []
   let prevSteps: Array<() => void> = []
@@ -118,6 +119,11 @@
   }
 
   const start = (): void => {
+    const { width, height } = canvas
+    const style = getComputedStyle(document.documentElement)
+    const primary = style.getPropertyValue('--primary').trim()
+    const color = `hsl(${primary} / 0.15)`
+
     ctx.clearRect(0, 0, width, height)
     ctx.lineWidth = 1
     ctx.strokeStyle = color
@@ -140,4 +146,13 @@
     initCanvas(canvas, size.width, size.height)
     start()
   })
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class') {
+        start()
+      }
+    })
+  })
+  observer.observe(document.documentElement, { attributes: true })
 </script>
