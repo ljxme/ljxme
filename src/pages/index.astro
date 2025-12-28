@@ -6,7 +6,6 @@ import { PostPreview } from 'astro-pure/components/pages'
 import { getBlogCollection, sortMDByDate } from 'astro-pure/server'
 import { Button, Icon, Label } from 'astro-pure/user'
 import PageLayout from '@/layouts/BaseLayout.astro'
-import TextBackground from '@/components/custom/TextBackground.astro'
 import ProjectCard from '@/components/home/ProjectCard.astro'
 import Section from '@/components/home/Section.astro'
 // import SkillLayout from '@/components/home/SkillLayout.astro'
@@ -32,8 +31,6 @@ if (imagePath && !images[imagePath])
 
 <PageLayout meta={{ title: '首页' }} highlightColor='#FFF8DC'>
   <main class='flex w-full flex-col items-center'>
-    <!-- 诗歌背景组件 -->
-    <TextBackground variant='poem' />
     <section class='animate mb-10 flex flex-col items-center gap-y-7' id='content-header'>
       <Image
         src={images[imagePath]()}

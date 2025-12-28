@@ -10,6 +10,8 @@ import '@/assets/styles/app.css'
 
 import Signature from 'preset/components/signature/Signature.astro'
 
+import BackgrounRandom from '@/components/custom/BackgrounRandom.astro'
+
 interface Props {
   meta: SiteMeta
   highlightColor?: string
@@ -29,6 +31,7 @@ const {
   </head>
 
   <body class='flex justify-center bg-background text-foreground' {...props}>
+    <BackgrounRandom />
     {
       highlightColor && (
         <div
