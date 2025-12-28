@@ -97,23 +97,6 @@ const siteStart = '2025-10-07T00:00:00'
 
       {/* Site Info */}
       <div class='flex flex-col gap-y-2 items-center sm:items-start'>
-        {/* Vercount Info */}
-        <div class='flex items-center text-xs md:text-sm text-muted-foreground'>
-          {
-            vercountItems.map(({ label, id }, index) => (
-              <>
-                <div class='flex items-center gap-x-1 px-4'>
-                  <span>{label}</span>
-                  <span id={id} class='font-medium text-foreground'>
-                    Loading…
-                  </span>
-                </div>
-
-                {index < vercountItems.length - 1 && <div class='h-3 w-px bg-border' />}
-              </>
-            ))
-          }
-        </div>
         {/* Detail Info */}
         <div class='flex items-center text-xs md:text-sm text-muted-foreground'>
           {/*Total words*/}
@@ -131,6 +114,23 @@ const siteStart = '2025-10-07T00:00:00'
             <span>∑ Time</span>
             <span id='uptime' class='font-medium text-foreground'> Loading… </span>
           </div>
+        </div>
+        {/* Vercount Info */}
+        <div class='flex items-center text-xs md:text-sm text-muted-foreground'>
+          {
+            vercountItems.map(({ label, id }, index) => (
+              <>
+                <div class='flex items-center gap-x-1 px-4'>
+                  <span>{label}</span>
+                  <span id={id} class='font-medium text-foreground'>
+                    Loading…
+                  </span>
+                </div>
+
+                {index < vercountItems.length - 1 && <div class='h-3 w-px bg-border' />}
+              </>
+            ))
+          }
         </div>
       </div>
 
