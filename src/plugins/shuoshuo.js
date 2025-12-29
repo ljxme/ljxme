@@ -125,16 +125,12 @@ function renderTalks() {
     // 图片
     if (Array.isArray(item.images) && item.images.length > 0) {
       const imgDiv = document.createElement('div')
-      imgDiv.className = 'zone_imgbox'
+      imgDiv.className = 'prose'
       item.images.forEach((img) => {
-        const link = document.createElement('a')
-        link.href = img.image_url + '?fmt=webp&q=75'
-        link.setAttribute('data-fancybox', 'gallery')
-        link.className = 'fancybox'
         const imgTag = document.createElement('img')
         imgTag.src = img.image_url + '?fmt=webp&q=75'
-        link.appendChild(imgTag)
-        imgDiv.appendChild(link)
+        imgTag.className = 'zoomable'
+        imgDiv.appendChild(imgTag)
       })
       content += imgDiv.outerHTML
     }

@@ -1,4 +1,5 @@
 ---
+import { MediumZoom } from 'astro-pure/advanced'
 import { Icon } from 'astro-pure/user'
 import BoardLayout from '@/layouts/BoardLayout.astro'
 import TextBackground from '@/components/custom/TextBackground.astro'
@@ -41,4 +42,6 @@ import shuoshuo from '../../plugins/shuoshuo.js?url'
   </style>
 
   <script src={shuoshuo} no-pjax is:inline></script>
+
+  <MediumZoom />
 </BoardLayout>
