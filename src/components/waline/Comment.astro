@@ -26,6 +26,9 @@ const { class: className } = Astro.props
   const walineConfig = config.integ.waline
 
   class Comment extends HTMLElement {
+    observer: MutationObserver | null = null
+    hashChangeListener: (() => void) | null = null
+
     constructor() {
       super()
     }
@@ -50,6 +53,46 @@ const { class: className } = Astro.props
         requiredMeta: ['nick', 'mail'],
         ...walineConfig.additionalConfigs
       })
+
+      /**
+       * Highlight the comment corresponding to the hash
+       * @param hash - The URL hash (e.g. #comment-id)
+       */
+      const highlightComment = (hash: string) => {
+        const id = hash.substring(1)
+        const element = document.getElementById(id)
+        if (element) {
+          if (element.classList.contains('target-blink')) return
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          element.classList.add('target-blink')
+          setTimeout(() => {
+            element.classList.remove('target-blink')
+          }, 2000)
+        }
+      }
+
+      // Observe DOM changes to handle initial load when Waline renders asynchronously
+      this.observer = new MutationObserver(() => {
+        const hash = window.location.hash
+        if (hash) highlightComment(hash)
+      })
+
+      const walineEl = this.querySelector('#waline')
+      if (walineEl) {
+        this.observer.observe(walineEl, { childList: true, subtree: true })
+      }
+
+      this.hashChangeListener = () => {
+        const hash = window.location.hash
+        if (hash) highlightComment(hash)
+      }
+      window.addEventListener('hashchange', this.hashChangeListener)
+    }
+
+    disconnectedCallback() {
+      if (this.observer) this.observer.disconnect()
+      if (this.hashChangeListener)
+        window.removeEventListener('hashchange', this.hashChangeListener)
     }
   }
 
@@ -180,5 +223,21 @@ const { class: className } = Astro.props
   #waline :global(.wl-input) {
     font-size: 0.85em;
     border-radius: 0.25rem;
+  }
+
+  @keyframes waline-blink {
+    0% {
+      background-color: transparent;
+    }
+    50% {
+      background-color: var(--waline-bg-color-hover);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  #waline :global(.target-blink) {
+    animation: waline-blink 1s ease-in-out 2;
   }
 </style>
