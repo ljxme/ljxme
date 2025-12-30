@@ -9,7 +9,7 @@ const CHECK_TIMEOUT = 15000
 const PLimit_NUM = 5
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000
-const SKIP_CHECK_NAMES = ['']
+const SKIP_CHECK_NAMES = [""]
 
 interface FriendLink {
   name: string
@@ -95,9 +95,9 @@ async function checkLink(link: FriendLink): Promise<LinkCheckResult> {
     } catch (e: unknown) {
       lastError = e instanceof Error ? e : new Error(String(e))
       if (i < MAX_RETRIES - 1) {
-        const delay = RETRY_DELAY * 2 ** i
+        const delay = RETRY_DELAY * 2 ** i + Math.floor(Math.random() * 100)
         console.warn(
-          `[Check-Links] Retry ${i + 1} for ${link.name} after ${delay}ms due to: ${lastError.message} 😭`
+          `[Check-Links] Retry attempt (${i + 1}/${MAX_RETRIES}) for ${link.name} after ${delay}ms due to: ${lastError.message} 😭`
         )
         await new Promise((resolve) => setTimeout(resolve, delay))
       }
@@ -123,9 +123,17 @@ async function main() {
     .filter((g) => g.id_name === 'cf-links')
     .flatMap((group) => group.link_list.map((link) => limit(() => checkLink(link))))
 
-  const results = await Promise.all(tasks)
+  const results = await Promise.allSettled(tasks)
 
-  const linkMap = new Map(results.map((r) => [r.link, r]))
+  const linkMap = new Map<string, LinkCheckResult>()
+  
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      linkMap.set(r.value.link, r.value)
+    } else {
+      console.error(`[Check-Links] Unexpected error (${r.reason}) 🤔`)
+    }
+  }
   for (const group of config.friends) {
     for (const link of group.link_list) {
       const res = linkMap.get(link.link)
@@ -137,7 +145,7 @@ async function main() {
 
   await fs.writeFile(DATA_PATH, JSON.stringify(config, null, 2))
 
-  const failed = results.filter((r) => r.status !== 'ok')
+  const failed = Array.from(linkMap.values()).filter(r => r.status !== 'ok')
   if (failed.length > 0) {
     console.error(
       `[Check-Links] Friend link check failed (${failed.length} inactive links checked) 😡:`
