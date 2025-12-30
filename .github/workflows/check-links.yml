@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  check:
+  check-links-and-update:
+    name: Link Check & Upload
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +23,7 @@ jobs:
 
       - name: Run link check
         run: npx tsx scripts/check-links.ts
-    
+
       - name: Upload link.json to bucket
         run: |
           aws s3api put-object \
@@ -34,3 +35,19 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.BITIFUL_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.BITIFUL_SECRET_ACCESS_KEY }}
+
+  trigger-pages-build:
+    name: Trigger Cloudflare Pages build
+    needs: check-links-and-update
+    runs-on: ubuntu-latest
+
+    if: ${{ needs.check-links-and-update.result == 'success' }}
+
+    steps:
+      - name: Update Cloudflare Pages
+        run: |
+            curl -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ secrets.CF_PROJECT_NAME }}/deployments" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
