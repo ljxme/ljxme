@@ -48,7 +48,7 @@ try {
   console.warn('Failed to fetch remote link.json', e)
 }
 
-const enrichedLinkList = friendList.link_list.map(frd => ({
+const enrichedLinkList = friendList.link_list.map((frd) => ({
   ...frd,
   responseTime: remoteData[frd.link] ?? frd.responseTime
 }))
