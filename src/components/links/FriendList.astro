@@ -87,10 +87,10 @@ const getSafeLink = (link: string) => {
                   class:list={[
                     'size-1.5 rounded-full',
                     frd.responseTime < 500
-                      ? 'bg-green-500'
+                      ? 'bg-green-400'
                       : frd.responseTime < 1500
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
+                        ? 'bg-yellow-400'
+                        : 'bg-red-400'
                   ]}
                 />
                 {frd.responseTime}ms

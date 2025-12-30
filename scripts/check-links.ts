@@ -9,7 +9,7 @@ const CHECK_TIMEOUT = 15000
 const PLimit_NUM = 5
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000
-const SKIP_CHECK_NAMES = [""]
+const SKIP_CHECK_NAMES = ['']
 
 interface FriendLink {
   name: string
@@ -55,7 +55,7 @@ async function fetchLink(url: string) {
     return {
       ok: res.ok,
       status: res.status,
-      time,
+      time
     }
   } finally {
     clearTimeout(timer)
@@ -63,9 +63,13 @@ async function fetchLink(url: string) {
 }
 
 const ENV_SKIP_NAMES = process.env.SKIP_CHECK_NAMES?.split(',') || []
-const SKIP_NAMES = new Set((SKIP_CHECK_NAMES).concat(ENV_SKIP_NAMES).map(s => s.trim()).filter(Boolean))
+const SKIP_NAMES = new Set(
+  SKIP_CHECK_NAMES.concat(ENV_SKIP_NAMES)
+    .map((s) => s.trim())
+    .filter(Boolean)
+)
 async function checkLink(link: FriendLink): Promise<LinkCheckResult> {
-  if ( SKIP_NAMES.has(link.name)) {
+  if (SKIP_NAMES.has(link.name)) {
     console.log(`[Check-Links] ${link.name} (${link.link}) skipped 🧹`)
     return {
       name: link.name,
@@ -126,7 +130,7 @@ async function main() {
   const results = await Promise.allSettled(tasks)
 
   const linkMap = new Map<string, LinkCheckResult>()
-  
+
   for (const r of results) {
     if (r.status === 'fulfilled') {
       linkMap.set(r.value.link, r.value)
@@ -145,7 +149,7 @@ async function main() {
 
   await fs.writeFile(DATA_PATH, JSON.stringify(config, null, 2))
 
-  const failed = Array.from(linkMap.values()).filter(r => r.status !== 'ok')
+  const failed = Array.from(linkMap.values()).filter((r) => r.status !== 'ok')
   if (failed.length > 0) {
     console.error(
       `[Check-Links] Friend link check failed (${failed.length} inactive links checked) 😡:`
