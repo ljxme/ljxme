@@ -1,0 +1,82 @@
+---
+interface Props {
+  /** 上联（右侧） */
+  upText?: string[]
+  /** 下联（左侧） */
+  downText?: string[]
+  /** 横批 */
+  horizontalText?: string
+}
+
+const {
+  upText = ['万', '马', '奔', '腾', '开', '胜', '景'],
+  downText = ['百', '花', '齐', '放', '庆', '新', '春'],
+  horizontalText = '马到成功'
+} = Astro.props
+---
+
+<div
+  class='pointer-events-none fixed inset-x-2 top-0 z-50 hidden h-full select-none justify-between px-4 pt-24 pb-10 xl:flex'
+>
+  {/* 左侧 - 下联 */}
+  <div
+    class='couplet-left pointer-events-auto flex flex-col items-center rounded-lg border-2 border-yellow-400 bg-red-700 py-6 shadow-2xl dark:border-yellow-600 dark:bg-red-900'
+  >
+    {
+      downText.map((char) => (
+        <span class='mx-3 font-serif text-4xl font-bold text-yellow-300 dark:text-yellow-500'>
+          {char}
+        </span>
+      ))
+    }
+  </div>
+
+  {/* 右侧 - 上联 */}
+  <div
+    class='couplet-right pointer-events-auto flex flex-col items-center rounded-lg border-2 border-yellow-400 bg-red-700 py-6 shadow-2xl dark:border-yellow-600 dark:bg-red-900'
+  >
+    {
+      upText.map((char) => (
+        <span class='mx-3 font-serif text-4xl font-bold text-yellow-300 dark:text-yellow-500'>
+          {char}
+        </span>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  span {
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .couplet-left {
+    animation: slideInLeft 1s ease-out forwards;
+  }
+
+  .couplet-right {
+    animation: slideInRight 1s ease-out forwards;
+  }
+</style>
