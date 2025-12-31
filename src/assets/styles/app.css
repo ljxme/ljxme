@@ -1,18 +1,4 @@
 /* Font */
-/* 改用CDN的方式加载字体，提升网站加载速度
-@font-face {
-  font-family: 'LXGWWenKai';
-  src: url('/fonts/LXGWWenKaiGBLite-Light.ttf') format('truetype');
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'LXGWWenKai';
-  src: url('/fonts/LXGWWenKaiGBLite-Light.ttf') format('truetype');
-  font-style: italic;
-  font-display: swap;
-}
-*/
 html {
   font-family: 'LXGW Bright Medium';
 }
@@ -20,7 +6,7 @@ html {
 /* Theme */
 :root {
   /* Primary */
-  --primary: 200 29% 45%;
+  --primary:48 35% 45%;
   /* Foreground */
   --foreground: 240 10% 3.9%;
   --muted-foreground: 240 3.8% 28.1%;

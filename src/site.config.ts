@@ -15,6 +15,8 @@ export const theme: ThemeUserConfig = {
   description: 'A place for peace',
   /** The default favicon for your site which should be a path to an image in the `public/` directory. */
   favicon: '/favicon/favicon.ico',
+  /** The default social card image for your site which should be a path to an image in the `public/` directory. */
+  socialCard: '/images/social-card.png',
   /** Specify the default language for this site. */
   locale: {
     lang: 'zh-CN',
@@ -35,7 +37,7 @@ export const theme: ThemeUserConfig = {
 
   // === Global configuration ===
   titleDelimiter: '•',
-  prerender: true,
+  prerender: true, // pagefind search is not supported with prerendering disabled
   npmCDN: 'https://cdn.jsdmirror.com/npm',
 
   // Still in test
@@ -109,7 +111,6 @@ export const theme: ThemeUserConfig = {
     /** Blog page size for pagination (optional) */
     blogPageSize: 8,
     /** Table of Contents configuration */
-    tocCollapse: true,
     // Currently support weibo, x, bluesky
     share: ['weibo', 'x', 'bluesky']
   }
