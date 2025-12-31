@@ -93,6 +93,16 @@
             "hash": "fddd2057cf072df9",
             "path": "/avatars/fddd2057cf072df9.webp"
           }
+        },
+        {
+          "name": "Sans",
+          "intro": "神都是孤独的",
+          "link": "https://enchanting-tartufo-88ef66.netlify.app/",
+          "avatar": "https://codeforces.com/userpic.codeforces.org/5452668/title/c4a6a17cb05008e5.jpg",
+          "avatar_cache": {
+            "hash": "f04475d9bf9dce54",
+            "path": "/avatars/f04475d9bf9dce54.jpg"
+          }
         }
       ]
     },
@@ -104,7 +114,11 @@
           "name": "Shuoer's blog",
           "intro": "Everyday is a new beginning",
           "link": "https://shuoer.top/",
-          "avatar": "https://shuoer.top/favicon/favicon.ico"
+          "avatar": "https://shuoer.top/favicon/favicon.ico",
+          "avatar_cache": {
+            "hash": "0938e2a64e7fec61",
+            "path": "/avatars/0938e2a64e7fec61.ico"
+          }
         }
       ]
     },
