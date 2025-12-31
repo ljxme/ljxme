@@ -313,7 +313,15 @@ import { Spoiler } from 'astro-pure/user'
 如果你的国内站点也是通过 GitHub Actions 来构建拉取的话，需在相关工作流文件加入对 `check-links.yml` 完成状态的检测 <Spoiler>纯静态站点就这点麻烦😡</Spoiler> <Spoiler>或许是我给工作复杂化了🤔？</Spoiler>
 
 ```yml title="deploy.yml"
-on: 
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - public/link.json
+
+  workflow_dispatch:
+  
   workflow_run:
     workflows: ["🔗 Friend Links Check"]
     types:
@@ -469,4 +477,4 @@ const getAvatarSrc = (friend: friend) =>
 
 ## 使用
 
-在 GitHub Actions 中找到 **🔗 Friend Links Check** ，点击 `Run workflow` 并运行，后续会在每天固定时间运行，或者 `links.json` 更新时自动运行❤️
+在 GitHub Actions 中找到 **🔗 Friend Links Check** ，点击 `Run workflow` 并运行，后续会在每天 [固定时间](https://crontab.guru/) 运行，或者 `links.json` 更新时自动运行❤️
