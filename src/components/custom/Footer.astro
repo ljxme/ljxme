@@ -3,8 +3,8 @@ import config from 'virtual:config'
 
 import { getBlogCollection } from 'astro-pure/server'
 
-import { getReadingTime } from '../../utils/reading-time'
-import { Icon } from '../user'
+import { getReadingTime } from 'astro-pure/utils'
+import { Icon } from 'astro-pure/user'
 
 const footerConf = config.footer
 let social = footerConf.social || {}
