@@ -2,9 +2,8 @@
 import config from 'virtual:config'
 
 import { getBlogCollection } from 'astro-pure/server'
-
-import { getReadingTime } from 'astro-pure/utils'
 import { Icon } from 'astro-pure/user'
+import { getReadingTime } from 'astro-pure/utils'
 
 const footerConf = config.footer
 let social = footerConf.social || {}

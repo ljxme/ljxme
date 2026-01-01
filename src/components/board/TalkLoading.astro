@@ -15,21 +15,21 @@ const skeletonItems = [
       skeletonItems.map((item) => (
         <div class='talk-skeleton-item'>
           <div class='talk-skeleton-meta'>
-            <div class='talk-skeleton-avatar skeleton'></div>
+            <div class='talk-skeleton-avatar skeleton' />
             <div class='talk-skeleton-meta-text'>
-              <div class='talk-skeleton-line skeleton' style={`width:${item.meta[0]}%`}></div>
-              <div class='talk-skeleton-line skeleton' style={`width:${item.meta[1]}%`}></div>
+              <div class='talk-skeleton-line skeleton' style={`width:${item.meta[0]}%`} />
+              <div class='talk-skeleton-line skeleton' style={`width:${item.meta[1]}%`} />
             </div>
           </div>
           <div class='talk-skeleton-body'>
             {item.body.map((w) => (
-              <div class='talk-skeleton-line skeleton' style={`width:${w}%`}></div>
+              <div class='talk-skeleton-line skeleton' style={`width:${w}%`} />
             ))}
-            {item.block && <div class='talk-skeleton-block skeleton'></div>}
+            {item.block && <div class='talk-skeleton-block skeleton' />}
           </div>
           <div class='talk-skeleton-footer'>
-            <div class='talk-skeleton-pill skeleton' style={`width:${item.pill}%`}></div>
-            <div class='talk-skeleton-icon skeleton'></div>
+            <div class='talk-skeleton-pill skeleton' style={`width:${item.pill}%`} />
+            <div class='talk-skeleton-icon skeleton' />
           </div>
         </div>
       ))
@@ -164,12 +164,7 @@ const skeletonItems = [
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      hsl(var(--background) / 0.55),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, hsl(var(--background) / 0.55), transparent);
     transform: translateX(-100%);
     animation: skeleton-shimmer 1.15s ease-in-out infinite;
   }
@@ -192,4 +187,3 @@ const skeletonItems = [
     }
   }
 </style>
-

@@ -1,10 +1,10 @@
 import { rehypeHeadingIds } from '@astrojs/markdown-remark'
 // import vercel from '@astrojs/vercel'
 import AstroPureIntegration from 'astro-pure'
-import { defineConfig } from 'astro/config'
-import {fontProviders} from 'astro/config'
+import { defineConfig, fontProviders } from 'astro/config'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
+
 // Local integrations
 import rehypeAutolinkHeadings from './src/plugins/rehype-auto-link-headings.ts'
 import rehypeSafeGo from './src/plugins/rehype-safe-go.ts'
