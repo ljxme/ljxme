@@ -1,0 +1,195 @@
+---
+const skeletonItems = [
+  { meta: [60, 40], body: [95, 90, 70], block: true, pill: 55 },
+  { meta: [55, 35], body: [90, 80, 75], block: false, pill: 50 },
+  { meta: [65, 45], body: [90, 85, 60], block: true, pill: 60 },
+  { meta: [50, 30], body: [95, 75, 85], block: false, pill: 45 },
+  { meta: [60, 40], body: [85, 90, 55], block: true, pill: 55 },
+  { meta: [55, 35], body: [90, 75, 70], block: false, pill: 50 }
+]
+---
+
+<div id='talk-loading' class='talk-loading' aria-live='polite' aria-busy='true'>
+  <div class='talk-skeleton' aria-hidden='true'>
+    {
+      skeletonItems.map((item) => (
+        <div class='talk-skeleton-item'>
+          <div class='talk-skeleton-meta'>
+            <div class='talk-skeleton-avatar skeleton'></div>
+            <div class='talk-skeleton-meta-text'>
+              <div class='talk-skeleton-line skeleton' style={`width:${item.meta[0]}%`}></div>
+              <div class='talk-skeleton-line skeleton' style={`width:${item.meta[1]}%`}></div>
+            </div>
+          </div>
+          <div class='talk-skeleton-body'>
+            {item.body.map((w) => (
+              <div class='talk-skeleton-line skeleton' style={`width:${w}%`}></div>
+            ))}
+            {item.block && <div class='talk-skeleton-block skeleton'></div>}
+          </div>
+          <div class='talk-skeleton-footer'>
+            <div class='talk-skeleton-pill skeleton' style={`width:${item.pill}%`}></div>
+            <div class='talk-skeleton-icon skeleton'></div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .talk-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    width: 100%;
+    padding: 16px 0;
+    user-select: none;
+  }
+  .talk-loading-dots::after {
+    display: inline-block;
+    content: '...';
+    width: 0;
+    overflow: hidden;
+    text-align: left;
+    animation: talk-dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes talk-dots {
+    0% {
+      width: 0;
+    }
+    25% {
+      width: 0.55em;
+    }
+    50% {
+      width: 1.1em;
+    }
+    75% {
+      width: 1.65em;
+    }
+    100% {
+      width: 0;
+    }
+  }
+
+  .talk-skeleton {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 12px 9px;
+    width: 100%;
+  }
+  .talk-skeleton-item {
+    width: calc(33.333% - 6px);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid hsl(var(--border) / 0.6);
+    background: hsl(var(--background) / 0.9);
+    box-shadow: 0 4px 10px hsl(var(--foreground) / 0.03);
+    overflow: hidden;
+  }
+  @media (max-width: 900px) {
+    .talk-skeleton-item {
+      width: calc(50% - 5px);
+    }
+  }
+  @media (max-width: 450px) {
+    .talk-skeleton-item {
+      width: calc(100%);
+    }
+  }
+
+  .talk-skeleton-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed hsl(var(--border) / 0.7);
+  }
+  .talk-skeleton-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    flex: none;
+  }
+  .talk-skeleton-meta-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+  .talk-skeleton-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .talk-skeleton-line {
+    height: 12px;
+    border-radius: 999px;
+  }
+  .talk-skeleton-block {
+    height: 84px;
+    border-radius: 12px;
+    margin-top: 2px;
+  }
+  .talk-skeleton-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed hsl(var(--border) / 0.7);
+  }
+  .talk-skeleton-pill {
+    height: 22px;
+    border-radius: 999px;
+  }
+  .talk-skeleton-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    flex: none;
+  }
+
+  .skeleton {
+    position: relative;
+    background: hsl(var(--muted) / 0.55);
+    overflow: hidden;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--background) / 0.55),
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: skeleton-shimmer 1.15s ease-in-out infinite;
+  }
+  @keyframes skeleton-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton::after {
+      animation: none;
+    }
+    .talk-loading-dots::after {
+      animation: none;
+      width: 1.65em;
+    }
+  }
+</style>
+

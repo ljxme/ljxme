@@ -3,6 +3,7 @@ import { MediumZoom } from 'astro-pure/advanced'
 import { Icon } from 'astro-pure/user'
 import BoardLayout from '@/layouts/BoardLayout.astro'
 import TextBackground from '@/components/custom/TextBackground.astro'
+import TalkLoading from '@/components/board/TalkLoading.astro'
 
 import shuoshuo from '../../plugins/shuoshuo.js?url'
 ---
@@ -19,7 +20,8 @@ import shuoshuo from '../../plugins/shuoshuo.js?url'
   </div>
 
   <div class='mt-4 border-t pt-4'>
-    <div id='talk'></div>
+    <TalkLoading />
+    <div id='talk' class='talk-pending'></div>
   </div>
   <div class='limit-notice'>
     仅展示最近15条说说
@@ -29,6 +31,10 @@ import shuoshuo from '../../plugins/shuoshuo.js?url'
   </div>
 
   <style>
+    #talk.talk-pending {
+      visibility: hidden;
+      min-height: 180px;
+    }
     .rss-icon {
       width: 1em;
       height: 1em;
