@@ -1,0 +1,1810 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet href="/scripts/pretty-feed-v3.xsl" type="text/xsl"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:h="http://www.w3.org/TR/html4/"><channel><title>梨尽兴 | Li&apos;s Blog</title><description>A place for peace</description><link>https://blog.ljx.icu</link><item><title>自动化友链检测</title><link>https://blog.ljx.icu/blog/auto-check-links</link><guid isPermaLink="true">https://blog.ljx.icu/blog/auto-check-links</guid><description>利用 GitHub Actions 进行自动友链检活</description><pubDate>Wed, 31 Dec 2025 00:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;前言&lt;/h2&gt;
+&lt;p&gt;最近放假闲着没事干，抽了点时间完善了下友链方面的检测，现在可以更清楚地看到朋友们的 &lt;a href=&quot;/links&quot;&gt;站点状态&lt;/a&gt; 了！不过还有点不足, 只检测了状态，并没有做到通知方面的功能，实现方式也比较潦草，后续会不断完善滴！&lt;/p&gt;
+&lt;h3&gt;流程&lt;/h3&gt;
+&lt;p&gt;简单画了个运行的流程图😋&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.ljx.icu/file/3l5dWlk3.svg&quot; alt=&quot;check-links&quot; title=&quot;简易流程草图&quot;&gt;&lt;/p&gt;
+&lt;h2&gt;引入&lt;/h2&gt;
+&lt;h3&gt;check-links.ts文件&lt;/h3&gt;
+&lt;p&gt;创建 &lt;code&gt;scripts/check-links.ts&lt;/code&gt; 文件并写入以下内容：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;import fs from &apos;node:fs/promises&apos;
+import path from &apos;node:path&apos;
+import pLimit from &apos;p-limit&apos;
+
+import links from &apos;../public/links.json&apos; with { type: &apos;json&apos; }
+
+const DATA_PATH = path.resolve(&apos;public/links.json&apos;)
+const CHECK_TIMEOUT = 15000
+const PLimit_NUM = 5
+const MAX_RETRIES = 3
+const RETRY_DELAY = 1000
+const SKIP_CHECK_NAMES = [&apos;&apos;]
+
+interface FriendLink {
+  name: string
+  link: string
+  responseTime?: number
+}
+
+interface FriendGroup {
+  id_name: &apos;cf-links&apos; | &apos;inactive-links&apos; | &apos;special-links&apos;
+  link_list: FriendLink[]
+}
+
+interface FriendLinksConfig {
+  friends: FriendGroup[]
+}
+
+type LinkStatus = &apos;ok&apos; | &apos;timeout&apos; | &apos;error&apos;
+
+interface LinkCheckResult {
+  name: string
+  link: string
+  status?: LinkStatus
+  httpStatus?: number
+  responseTime?: number
+  reason?: string
+}
+
+async function fetchLink(url: string) {
+  const controller = new AbortController()
+  const timer = setTimeout(() =&gt; controller.abort(), CHECK_TIMEOUT)
+
+  try {
+    const start = Date.now()
+    const res = await fetch(url, {
+      method: &apos;HEAD&apos;,
+      signal: controller.signal,
+      redirect: &apos;follow&apos;,
+      cache: &apos;no-store&apos;,
+      headers: { &apos;User-Agent&apos;: &apos;Mozilla/5.0 FriendLinkChecker/1.0&apos; }
+    })
+    const time = Date.now() - start
+
+    return {
+      ok: res.ok,
+      status: res.status,
+      time
+    }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+const ENV_SKIP_NAMES = process.env.SKIP_CHECK_NAMES?.split(&apos;,&apos;) || []
+const SKIP_NAMES = new Set(
+  SKIP_CHECK_NAMES.concat(ENV_SKIP_NAMES)
+    .map((s) =&gt; s.trim())
+    .filter(Boolean)
+)
+async function checkLink(link: FriendLink): Promise&amp;#x3C;LinkCheckResult&gt; {
+  if (SKIP_NAMES.has(link.name)) {
+    console.log(`[Check-Links] ${link.name} (${link.link}) skipped 🧹`)
+    return {
+      name: link.name,
+      link: link.link,
+      status: &apos;ok&apos;,
+      reason: &apos;skip_check&apos;,
+      responseTime: 0
+    }
+  }
+
+  let lastError: Error | null = null
+
+  for (let i = 0; i &amp;#x3C; MAX_RETRIES; i++) {
+    try {
+      const res = await fetchLink(link.link)
+      console.log(`[Check-Links] ${link.name} responded in ${res.time}ms ✨`)
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      return {
+        name: link.name,
+        link: link.link,
+        status: &apos;ok&apos;,
+        httpStatus: res.status,
+        responseTime: res.time
+      }
+    } catch (e: unknown) {
+      lastError = e instanceof Error ? e : new Error(String(e))
+      if (i &amp;#x3C; MAX_RETRIES - 1) {
+        const delay = RETRY_DELAY * 2 ** i + Math.floor(Math.random() * 100)
+        console.warn(
+          `[Check-Links] Retry attempt (${i + 1}/${MAX_RETRIES}) for ${link.name} after ${delay}ms due to: ${lastError.message} 😭`
+        )
+        await new Promise((resolve) =&gt; setTimeout(resolve, delay))
+      }
+    }
+  }
+
+  return {
+    name: link.name,
+    link: link.link,
+    status: lastError?.name === &apos;AbortError&apos; ? &apos;timeout&apos; : &apos;error&apos;,
+    reason: lastError?.message,
+    responseTime: 0
+  }
+}
+
+async function main() {
+  console.log(&apos;[Check-Links] Start checking friend links... ❤️&apos;)
+
+  const config = links as FriendLinksConfig
+  const limit = pLimit(PLimit_NUM)
+
+  const tasks = config.friends
+    .filter((g) =&gt; g.id_name === &apos;cf-links&apos;)
+    .flatMap((group) =&gt; group.link_list.map((link) =&gt; limit(() =&gt; checkLink(link))))
+
+  const results = await Promise.allSettled(tasks)
+
+  const linkMap = new Map&amp;#x3C;string, LinkCheckResult&gt;()
+
+  for (const r of results) {
+    if (r.status === &apos;fulfilled&apos;) {
+      linkMap.set(r.value.link, r.value)
+    } else {
+      console.error(`[Check-Links] Unexpected error (${r.reason}) 🤔`)
+    }
+  }
+  for (const group of config.friends) {
+    for (const link of group.link_list) {
+      const res = linkMap.get(link.link)
+      if (res) {
+        link.responseTime = res.responseTime ?? 0
+      }
+    }
+  }
+
+  await fs.writeFile(DATA_PATH, JSON.stringify(config, null, 2))
+
+  const failed = Array.from(linkMap.values()).filter((r) =&gt; r.status !== &apos;ok&apos;)
+  if (failed.length &gt; 0) {
+    console.error(
+      `[Check-Links] Friend link check failed (${failed.length} inactive links checked) 😡:`
+    )
+    for (const f of failed) {
+      console.error(
+        `[Check-Links] - ${f.name} (${f.link}) =&gt; ${f.status}`,
+        f.reason ? ` | ${f.reason}` : &apos;&apos;
+      )
+    }
+    process.exit(1)
+  }
+
+  console.log(
+    `[Check-Links] All links are healthy and responseTime updated (${results.length} links checked) 😋`
+  )
+}
+
+main()
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;相关配置说明&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;| 配置项             | 默认值  |  说明                                                   |
+| :----------------: | :-----:  | :----------------------------------------------------: |
+| &lt;code&gt;CHECK_TIMEOUT&lt;/code&gt;    | &lt;code&gt;15000&lt;/code&gt;  | 单个链接检测的超时时间，超过该时间视为请求失败         |
+| &lt;code&gt;PLimit_NUM&lt;/code&gt;       | &lt;code&gt;5&lt;/code&gt;      | 并发检测的最大数量，用于限制同时进行的请求数           |
+| &lt;code&gt;MAX_RETRIES&lt;/code&gt;      | &lt;code&gt;3&lt;/code&gt;      | 链接检测失败后的最大重试次数                           |
+| &lt;code&gt;RETRY_DELAY&lt;/code&gt;      | &lt;code&gt;1000&lt;/code&gt;    | 每次重试之间的等待时间                                 |
+| &lt;code&gt;SKIP_CHECK_NAMES&lt;/code&gt; | &lt;code&gt;[&apos;&apos;]&lt;/code&gt;    | 跳过检测的站点名称列表，名称匹配时将不会进行可用性检测 |&lt;/p&gt;
+&lt;p&gt;跳过检测的站点名称列表也支持在后续的 GitHub Actions 变量中进行控制（可同时存在）[填写格式：友链名称1,友链名称2]&lt;/p&gt;
+&lt;h3&gt;check-links.yml文件&lt;/h3&gt;
+&lt;p&gt;创建 &lt;code&gt;.github/workflows/check-links.yml&lt;/code&gt; 并写入以下内容：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;name: 🔗 Friend Links Check
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - &apos;public/links.json&apos;
+  schedule:
+    - cron: &apos;0 8 * * *&apos;
+  workflow_dispatch:
+
+jobs:
+  check-links-and-update:
+    name: Link Check &amp;#x26; Upload
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm install p-limit tsx
+
+      - name: Run link check
+        run: npx tsx scripts/check-links.ts
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;后续的步骤我采用上传至存储桶的方式而非git提交回仓库，主要是怕污染git的提交信息（而且运行一次脚本，本地仓库就要再拉取一次感觉挺麻烦），你也可以改成你想要的方式，或者把git提交这部分直接写进前面的 &lt;code&gt;check-links.ts&lt;/code&gt; 脚本&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;      - name: Upload link.json to bucket
+        run: |
+          aws s3api put-object \
+            --bucket ${{ secrets.BITIFUL_BUCKET_NAME }} \
+            --key link.json \
+            --body public/links.json \
+            --endpoint-url https://${{ secrets.BITIFUL_S3_ENDPOINT }} \
+            --region ${{ secrets.BITIFUL_REGION }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BITIFUL_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BITIFUL_SECRET_ACCESS_KEY }}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这里的存储桶我选择的是 &lt;a href=&quot;https://www.bitiful.com/&quot;&gt;缤纷云&lt;/a&gt; ，相关变量配置在 GitHub Actions 的 secrets 里，变量获取在 &lt;a href=&quot;https://console.bitiful.com&quot;&gt;控制台页面&lt;/a&gt;，对应如下&lt;/p&gt;
+&lt;p&gt;| Secrets 名称                  | 含义说明                              | 示例值                  |
+| :-------------------------: | :-------------------------------: | :----------------------: |
+| &lt;code&gt;BITIFUL_BUCKET_NAME&lt;/code&gt;       | 缤纷云对象存储桶名称（Bucket Name）           | &lt;code&gt;my-static-assets&lt;/code&gt;       |
+| &lt;code&gt;BITIFUL_S3_ENDPOINT&lt;/code&gt;       | 缤纷云 S3 兼容 API Endpoint            | &lt;code&gt;https://s3.bitiful.net&lt;/code&gt; |
+| &lt;code&gt;BITIFUL_REGION&lt;/code&gt;            | 存储桶所在区域（Region）                   | &lt;code&gt;cn-east-1&lt;/code&gt;              |
+| &lt;code&gt;BITIFUL_ACCESS_KEY_ID&lt;/code&gt;     | 缤纷云访问密钥 ID（Access Key ID）         | &lt;code&gt;AKIAxxxxxxxxxxxx&lt;/code&gt;       |
+| &lt;code&gt;BITIFUL_SECRET_ACCESS_KEY&lt;/code&gt; | 缤纷云访问密钥 Secret（Secret Access Key） | &lt;code&gt;xxxxxxxxxxxxxxxxxxxx&lt;/code&gt;   |&lt;/p&gt;
+&lt;p&gt;由于我给博客进行了国内外分流，国外托管到了CF上，加上前面并没有选择git提交的方式，所以检测完友链后需要让其重新构建一遍，以同步进度。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;  trigger-pages-build:
+    name: Trigger Cloudflare Pages build
+    needs: check-links-and-update
+    runs-on: ubuntu-latest
+
+    if: ${{ needs.check-links-and-update.result == &apos;success&apos; }}
+
+    steps:
+      - name: Update Cloudflare Pages
+        run: |
+            curl -X POST \
+            &quot;https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ secrets.CF_PROJECT_NAME }}/deployments&quot; \
+            -H &quot;Authorization: Bearer ${{ secrets.CF_API_TOKEN }}&quot; \
+            -H &quot;Content-Type: application/json&quot; \
+            -d &apos;{}&apos;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;所需变量对应如下：&lt;/p&gt;
+&lt;p&gt;| Secrets 名称        | 含义说明                                    | 示例值                   |
+| :---------------: | :-------------------------------------: | :-------------------------: |
+| &lt;code&gt;CF_ACCOUNT_ID&lt;/code&gt;   | Cloudflare 账户 ID（Account Identifier）    | &lt;code&gt;a1b2c3d4e5f6g7h8i9j0&lt;/code&gt;      |
+| &lt;code&gt;CF_PROJECT_NAME&lt;/code&gt; | Cloudflare Pages 项目名称（Project Name）     | &lt;code&gt;my-pages-site&lt;/code&gt;             |
+| &lt;code&gt;CF_API_TOKEN&lt;/code&gt;    | Cloudflare API Token（用于 Pages / API 操作） | &lt;code&gt;cf_api_token_xxxxxxxxxxxx&lt;/code&gt; |&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;CF_API_TOKE&lt;/code&gt; &lt;strong&gt;只需&lt;/strong&gt; page 的编辑权限就可以了&lt;/p&gt;
+&lt;p&gt;import { Spoiler } from &apos;astro-pure/user&apos;&lt;/p&gt;
+&lt;p&gt;如果你的国内站点也是通过 GitHub Actions 来构建拉取的话，需在相关工作流文件加入对 &lt;code&gt;check-links.yml&lt;/code&gt; 完成状态的检测 纯静态站点就这点麻烦😡 或许是我给工作复杂化了🤔？&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-yml&quot;&gt;on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - public/link.json
+
+  workflow_dispatch:
+  
+  workflow_run:
+    workflows: [&quot;🔗 Friend Links Check&quot;]
+    types:
+      - completed
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;on:
+push:
+branches:
+- main
+paths:
+- &apos;public/links.json&apos;
+schedule:
+- cron: &apos;0 8 * * *&apos;
+workflow_dispatch:&lt;/p&gt;
+&lt;p&gt;jobs:
+check-links-and-update:
+name: Link Check &amp;#x26; Upload
+runs-on: ubuntu-latest&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;steps:
+  - uses: actions/checkout@v4
+
+  - name: Setup Node
+    uses: actions/setup-node@v4
+    with:
+      node-version: 20
+
+  - name: Install deps
+    run: npm install p-limit tsx
+
+  - name: Run link check
+    run: npx tsx scripts/check-links.ts
+
+  - name: Upload link.json to bucket
+    run: |
+      aws s3api put-object \
+        --bucket ${{ secrets.BITIFUL_BUCKET_NAME }} \
+        --key link.json \
+        --body public/links.json \
+        --endpoint-url https://${{ secrets.BITIFUL_S3_ENDPOINT }} \
+        --region ${{ secrets.BITIFUL_REGION }}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.BITIFUL_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.BITIFUL_SECRET_ACCESS_KEY }}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;trigger-pages-build:
+name: Trigger Cloudflare Pages build
+needs: check-links-and-update
+runs-on: ubuntu-latest&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;if: ${{ needs.check-links-and-update.result == &apos;success&apos; }}
+
+steps:
+  - name: Update Cloudflare Pages
+    run: |
+        curl -X POST \
+        &quot;https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/pages/projects/${{ secrets.CF_PROJECT_NAME }}/deployments&quot; \
+        -H &quot;Authorization: Bearer ${{ secrets.CF_API_TOKEN }}&quot; \
+        -H &quot;Content-Type: application/json&quot; \
+        -d &apos;{}&apos;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;#x3C;/details&gt;
+
+## 前端渲染
+
+由于新的 link.json 文件放在了存储桶里，友链的数据需要改为从远端读取
+
+需修改 `src/components/links/FriendList.astro` 文件如下：
+```astro titie=&quot;FriendList.astro&quot;
+---
+//...
+
+interface friend {
+  avatar: string
+  avatar_cache?: AvatarCache
+  name: string
+  intro: string
+  link: string
+  responseTime?: number // [!code ++]
+}
+
+//...
+
+const { title, list: friendList, ...props } = Astro.props
+
+let remoteData: Record&amp;#x3C;string, number&gt; = {} // [!code ++:17]
+try {
+  const res = await fetch(&apos;your own bucket url&apos;)
+  const json = await res.json()
+  for (const group of json.friends) {
+    for (const f of group.link_list) {
+      remoteData[f.link] = f.responseTime
+    }
+  }
+} catch (e) {
+  console.warn(&apos;Failed to fetch remote link.json&apos;, e)
+}
+
+const enrichedLinkList = friendList.link_list.map((frd) =&gt; ({
+  ...frd,
+  responseTime: remoteData[frd.link] ?? frd.responseTime
+}))
+
+const getAvatarSrc = (friend: friend) =&gt;
+  (config.integ?.links?.cacheAvatar ?? false)
+    ? (friend.avatar_cache?.path ?? friend.avatar)
+    : friend.avatar
+---
+{title &amp;#x26;&amp;#x26; &amp;#x3C;h2 id={friendList.id_name}&gt;{title}&amp;#x3C;/h2&gt;}
+&amp;#x3C;div class=&apos;grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3&apos; {...props}&gt;
+  {
+    friendList.link_list.length &gt; 0 ? (
+      shuffle(friendList.link_list).map((frd: friend) =&gt; ( // [!code --]
+      shuffle(enrichedLinkList).map((frd: friend) =&gt; ( // [!code ++]
+        &amp;#x3C;a href={frd.link} target=&apos;_blank&apos; class=&apos;no-underline&apos;&gt;
+          &amp;#x3C;div class=&apos;group relative h-full overflow-hidden rounded-2xl border bg-background px-2.5 py-1.5 transition-colors hover:bg-muted sm:px-4 sm:py-2&apos;&gt;
+            {frd.responseTime !== undefined &amp;#x26;&amp;#x26; ( // [!code ++:15]
+              &amp;#x3C;div class=&apos;absolute right-1.5 top-2 z-1 flex items-center gap-1 rounded-2xl bg-muted/50 px-1.5 py-0 text-[10px] leading-[1rem] text-muted-foreground backdrop-blur-sm transition-colors group-hover:bg-background/50 group-hover:text-foreground&apos;&gt;
+                &amp;#x3C;div
+                  class:list={[
+                    &apos;size-1.5 rounded-full&apos;,
+                    frd.responseTime &amp;#x3C; 500
+                      ? &apos;bg-green-400&apos;
+                      : frd.responseTime &amp;#x3C; 1500
+                        ? &apos;bg-yellow-400&apos;
+                        : &apos;bg-red-400&apos;
+                  ]}
+                /&gt;
+                {frd.responseTime}ms
+              &amp;#x3C;/div&gt;  
+            )}
+            &amp;#x3C;div class=&apos;relative z-10 flex h-full items-center gap-3&apos;&gt;
+			  //...
+            &amp;#x3C;/div&gt;
+            {/* avatar bg */}
+			  //...
+          &amp;#x3C;/div&gt;
+        &amp;#x3C;/a&gt;
+      ))
+    ) : (
+      &amp;#x3C;p&gt;Nothing here.&amp;#x3C;/p&gt;
+    )
+  }
+&amp;#x3C;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;使用&lt;/h2&gt;
+&lt;p&gt;在 GitHub Actions 中找到 &lt;strong&gt;🔗 Friend Links Check&lt;/strong&gt; ，点击 &lt;code&gt;Run workflow&lt;/code&gt; 并运行，后续会在每天 &lt;a href=&quot;https://crontab.guru/&quot;&gt;固定时间&lt;/a&gt; 运行，或者 &lt;code&gt;links.json&lt;/code&gt; 更新时自动运行❤️&lt;/p&gt;</content:encoded><h:img src="/_astro/cover.Bbhm6CY2.png"/><enclosure url="/_astro/cover.Bbhm6CY2.png"/></item><item><title>本地实现Astro文章AI摘要</title><link>https://blog.ljx.icu/blog/aisummary-blog</link><guid isPermaLink="true">https://blog.ljx.icu/blog/aisummary-blog</guid><description>纯静态的ai文章摘要</description><pubDate>Thu, 18 Dec 2025 00:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;起因&lt;/h2&gt;
+&lt;p&gt;import { Spoiler } from &apos;astro-pure/user&apos;&lt;/p&gt;
+&lt;p&gt;在之前的NotionNext架构博客使用过一两周 &lt;a href=&quot;https://ai.zhheo.com/&quot;&gt;&lt;strong&gt;TianliGPT&lt;/strong&gt;&lt;/a&gt; 的AI摘要服务，虽然只需10￥就有足够的TOKEN余额，对于我这种小博客肯定是绰绰有余，但感觉还是不够自定义 ~~（想完全自建使用）~~ 详见&lt;a href=&quot;https://blog.ljx.icu/blog/notionnext-ai-summary/&quot;&gt;《讨论NotionNext如何配置AI摘要》&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;之后呢给博客迁移到了 &lt;strong&gt;Astro&lt;/strong&gt; 架构，看到了 &lt;a href=&quot;https://www.konoxin.top/posts/db7b3418&quot;&gt;konoXIN的文章&lt;/a&gt; ，大佬的AI摘要实现思路也很完美，试了一周感觉不错，不过就是有点小小的不足，因为他的摘要是存储在 Index DB 里的，虽然占用的空间小，并且也足够存储生成的摘要，但每个人在访问文章时都会请求一次API还是太那啥了 ~~（即使TOKEN无限用）~~&lt;/p&gt;
+&lt;p&gt;思考了几天，也试了试，还是想本地生成文章摘要再放置在文章的 &lt;code&gt;Frontmatter&lt;/code&gt; 块末尾，于是结合 &lt;a href=&quot;https://www.liushen.fun/&quot;&gt;@Liushen&lt;/a&gt; 和 &lt;a href=&quot;https://www.konoxin.top/&quot;&gt;@konoXIN&lt;/a&gt; 的思路，捣鼓了几天实则是摸鱼~，初步实现了我的需求应该不会有啥大毛病吧&lt;/p&gt;
+&lt;h2&gt;前置&lt;/h2&gt;
+&lt;p&gt;API这部分就直接采用 &lt;a href=&quot;https://www.konoxin.top/posts/db7b3418&quot;&gt;konoXIN文章&lt;/a&gt; 里的代码了（如有侵权可以与我联系）&lt;/p&gt;
+&lt;h3&gt;申请星火Spark-Lite&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;访问 &lt;a href=&quot;https://xinghuo.xfyun.cn/sparkapi&quot;&gt;星火大模型API&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;下滑页面到如下位置，选择 &lt;code&gt;Spark-Lite&lt;/code&gt;，点击立即调用&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.ljx.icu/file/imgs/0KfXRyDl.png&quot; alt=&quot;图1&quot;&gt;&lt;/p&gt;
+&lt;ol start=&quot;3&quot;&gt;
+&lt;li&gt;点击创建新应用，之后侧边栏点击 &lt;code&gt;Spark Lite&lt;/code&gt; ，选择领取无限量即可&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.ljx.icu/file/imgs/iTpaQIZb.png&quot; alt=&quot;图2&quot;&gt;&lt;/p&gt;
+&lt;ol start=&quot;4&quot;&gt;
+&lt;li&gt;之后右侧会出现你的 &lt;code&gt;APPID&lt;/code&gt; 、 &lt;code&gt;APISecret&lt;/code&gt; 、 &lt;code&gt;APIKey&lt;/code&gt; , 需要记住保存好&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.ljx.icu/file/imgs/3RlcJ1UM.png&quot; alt=&quot;图2&quot;&gt;&lt;/p&gt;
+&lt;h3&gt;搭建 Vercel API&lt;/h3&gt;
+&lt;p&gt;import { Button } from &apos;astro-pure/user&apos;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;一键部署到Vercel：&lt;/li&gt;
+&lt;li&gt;Fork后自行导入：&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;点击上方任一按钮导入项目成功后，进入该项目在 Vercel 上的仪表盘 &lt;strong&gt;Dashboard&lt;/strong&gt; 选项&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在项目仪表盘中找到 &lt;strong&gt;Settings&lt;/strong&gt; 选项&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在 &lt;strong&gt;Settings&lt;/strong&gt; 下找到 &lt;strong&gt;Environment Variables&lt;/strong&gt; 部分&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在这里添加你的 &lt;code&gt;SPARK_APPID&lt;/code&gt; , &lt;code&gt;SPARK_API_KEY&lt;/code&gt; 和 &lt;code&gt;SPARK_API_SECRET&lt;/code&gt; ，对应如下表：&lt;/p&gt;
+&lt;p&gt;| Spark Lite Websocket | VercelServer |
+| -------------------- | ------------ |
+| &lt;code&gt;APPID&lt;/code&gt; | &lt;code&gt;SPARK_APPID&lt;/code&gt; |
+| &lt;code&gt;APIKey&lt;/code&gt; | &lt;code&gt;SPARK_API_KEY&lt;/code&gt; |
+| &lt;code&gt;APISecret&lt;/code&gt; | &lt;code&gt;SPARK_API_SECRET&lt;/code&gt; |&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;配置完环境变量后需重新部署一次项目&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;项目部署后，Vercel 会提供一个类似 &lt;code&gt;https://[your-project-name].vercel.app&lt;/code&gt; 的域名。代理函数可以通过 &lt;code&gt;/api/spark-proxy&lt;/code&gt; 接口访问。&lt;/p&gt;
+&lt;p&gt;如果需要想改为自己的子域名，需要在域名控制台解析一下，让其可以在国内访问&lt;/p&gt;
+&lt;h2&gt;引入&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;代码片段Gist开源地址：&lt;a href=&quot;https://gist.github.com/ljxme/851d9ff9684dff74e52c6027d79dfac2&quot;&gt;Static-AiSummary for Astro-Theme-Pure&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;GitHub源码下载：&lt;a href=&quot;https://github.com/ljxme/static-aisummary/releases&quot;&gt;static-aisummary&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;import { Steps } from &apos;astro-pure/user&apos;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-astro&quot;&gt;---
+import aisummaryConfig from &apos;../plugins/aisummary.config.js?url&apos;;// [!code highlight]
+import aisummary from &apos;../plugins/aisummary.js?url&apos;;// [!code highlight]
+import aisummaryCss from &apos;../assets/styles/aisummary.css?url&apos;;// [!code highlight]
+---
+
+&amp;#x3C;!-- [!code highlight:8] --&gt;
+{/* AISummary 工具 */}
+&amp;#x3C;script src={aisummaryConfig} is:inline&gt;&amp;#x3C;/script&gt;
+{Astro.url.pathname.startsWith(&apos;/blog/&apos;)
+  &amp;#x26;&amp;#x26; !/^\/blog\/\d+\/?$/.test(Astro.url.pathname)
+  &amp;#x26;&amp;#x26; &amp;#x3C;script src={aisummary} is:inline&gt;&amp;#x3C;/script&gt;}
+{/* AISummary 样式 */}
+&amp;#x3C;link rel=&apos;stylesheet&apos; href={aisummaryCss} /&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-astro&quot;&gt;&amp;#x3C;PageLayout
+  meta={{ articleDate, description, ogImage: socialImage, title }}
+  highlightColor={primaryColor}
+  back=&apos;/blog&apos;
+&gt;
+  &amp;#x3C;!-- [!code highlight:20] --&gt;
+  {/* AISummary AI摘要 */}
+  {data.summary &amp;#x26;&amp;#x26; (
+    &amp;#x3C;div class=&apos;aisummary-container&apos;&gt;
+      &amp;#x3C;div class=&apos;aisummary-title&apos;&gt;
+        &amp;#x3C;i class=&apos;aisummary-title-icon&apos;&gt;
+          &amp;#x3C;svg xmlns=&apos;http://www.w3.org/2000/svg&apos; width=&apos;48&apos; height=&apos;48&apos; viewBox=&apos;0 0 48 48&apos;&gt;
+            &amp;#x3C;title&gt;机器人&amp;#x3C;/title&gt;
+            &amp;#x3C;g stroke=&apos;none&apos; stroke-width=&apos;1&apos; fill=&apos;none&apos; fill-rule=&apos;evenodd&apos;&gt;
+              &amp;#x3C;path d=&apos;M34.717885,5.03561087 C36.12744,5.27055371 37.079755,6.60373651 36.84481,8.0132786 L35.7944,14.3153359 L38.375,14.3153359 C43.138415,14.3153359 47,18.1768855 47,22.9402569 L47,34.4401516 C47,39.203523 43.138415,43.0650727 38.375,43.0650727 L9.625,43.0650727 C4.861585,43.0650727 1,39.203523 1,34.4401516 L1,22.9402569 C1,18.1768855 4.861585,14.3153359 9.625,14.3153359 L12.2056,14.3153359 L11.15519,8.0132786 C10.920245,6.60373651 11.87256,5.27055371 13.282115,5.03561087 C14.69167,4.80066802 16.024865,5.7529743 16.25981,7.16251639 L17.40981,14.0624532 C17.423955,14.1470924 17.43373,14.2315017 17.43948,14.3153359 L30.56052,14.3153359 C30.56627,14.2313867 30.576045,14.1470924 30.59019,14.0624532 L31.74019,7.16251639 C31.975135,5.7529743 33.30833,4.80066802 34.717885,5.03561087 Z M38.375,19.4902885 L9.625,19.4902885 C7.719565,19.4902885 6.175,21.0348394 6.175,22.9402569 L6.175,34.4401516 C6.175,36.3455692 7.719565,37.89012 9.625,37.89012 L38.375,37.89012 C40.280435,37.89012 41.825,36.3455692 41.825,34.4401516 L41.825,22.9402569 C41.825,21.0348394 40.280435,19.4902885 38.375,19.4902885 Z M14.8575,23.802749 C16.28649,23.802749 17.445,24.9612484 17.445,26.3902253 L17.445,28.6902043 C17.445,30.1191812 16.28649,31.2776806 14.8575,31.2776806 C13.42851,31.2776806 12.27,30.1191812 12.27,28.6902043 L12.27,26.3902253 C12.27,24.9612484 13.42851,23.802749 14.8575,23.802749 Z M33.1425,23.802749 C34.57149,23.802749 35.73,24.9612484 35.73,26.3902253 L35.73,28.6902043 C35.73,30.1191812 34.57149,31.2776806 33.1425,31.2776806 C31.71351,31.2776806 30.555,30.1191812 30.555,28.6902043 L30.555,26.3902253 C30.555,24.9612484 31.71351,23.802749 33.1425,23.802749 Z&apos; fill=&apos;#444444&apos; fill-rule=&apos;nonzero&apos;&gt;&amp;#x3C;/path&gt;
+            &amp;#x3C;/g&gt;
+          &amp;#x3C;/svg&gt;
+        &amp;#x3C;/i&gt;
+        &amp;#x3C;div class=&apos;aisummary-title-text&apos;&gt;Li&apos;s AI Summary&amp;#x3C;/div&gt;
+        &amp;#x3C;div class=&apos;aisummary-tag&apos; id=&apos;aisummary-tag&apos;&gt;Li&apos;s AI&amp;#x3C;/div&gt;
+      &amp;#x3C;/div&gt;
+      &amp;#x3C;div class=&apos;aisummary-explanation&apos; data-ai-summary={data.summary}&gt;{data.summary}&amp;#x3C;/div&gt;
+      &amp;#x3C;div class=&apos;aisummary-disclaimer&apos;&gt;本摘要由AI生成，仅供参考，内容准确性请以原文为准。&amp;#x3C;/div&gt;
+    &amp;#x3C;/div&gt;
+  )}
+
+&amp;#x3C;/PageLayout&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;配置&lt;/h2&gt;
+&lt;p&gt;主要集中在 &lt;code&gt;aisummary.config.js&lt;/code&gt; 和 &lt;code&gt;.env&lt;/code&gt; 文件进行配置和修改变量，列表如下（文件中也有详细注释说明）：&lt;/p&gt;
+&lt;h3&gt;供离线脚本读取的配置项&lt;/h3&gt;
+&lt;p&gt;| 配置项                            | 示例值                                       | 说明 |
+| :------------------------------- | :------------------------------------------ | :----------------------------------- |
+| &lt;strong&gt;AI_SUMMARY_API&lt;/strong&gt;               | &lt;code&gt;https://your-api-server/api/spark-proxy&lt;/code&gt; | 摘要服务地址 |
+| &lt;strong&gt;AI_SUMMARY_KEY&lt;/strong&gt;               | &lt;code&gt;your-api-key&lt;/code&gt;                              | 摘要服务密钥         |
+| &lt;strong&gt;AI_SUMMARY_MODEL&lt;/strong&gt;             | &lt;code&gt;lite&lt;/code&gt;                                      | 模型名称 |
+| &lt;strong&gt;AISUMMARY_CONCURRENCY&lt;/strong&gt;        | &lt;code&gt;2&lt;/code&gt;                                         | 并发执行摘要生成任务数 |
+| &lt;strong&gt;AISUMMARY_COVER_ALL&lt;/strong&gt;          | &lt;code&gt;false&lt;/code&gt;                                       | 是否重新生成所有摘要       |
+| &lt;strong&gt;AISUMMARY_MAX_TOKEN&lt;/strong&gt;          | &lt;code&gt;5000&lt;/code&gt;                                       | 用于截取文章内容 |
+| &lt;strong&gt;AISUMMARY_MIN_CONTENT_LENGTH&lt;/strong&gt; | &lt;code&gt;50&lt;/code&gt;                                        | 用于判断是否跳过 |&lt;/p&gt;
+&lt;p&gt;说明：使用前文 &lt;strong&gt;Spark-Lite&lt;/strong&gt; 模型搭建Vercel代理服务器不需配置 &lt;code&gt;AI_SUMMARY_KEY&lt;/code&gt; 变量，可保持空值&lt;/p&gt;
+&lt;h3&gt;供博客页面使用的配置项&lt;/h3&gt;
+&lt;p&gt;| 配置项                            | 示例值                                       | 说明 |
+| :------------------------------- | :------------------------------------------ | :----------------------------------- |
+| &lt;strong&gt;aisummaryTypingAnimate&lt;/strong&gt;       | &lt;code&gt;true&lt;/code&gt;                                      | 是否开启打字机动画   |
+| &lt;strong&gt;aisummaryPostSelector&lt;/strong&gt;        | &lt;code&gt;#content&lt;/code&gt;                                  | 文章内容容器选择器  |&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;如何知道 &lt;code&gt;aisummaryPostSelector&lt;/code&gt; ?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;进入任一博客文章页面，按下 F12 进入开发者控制台，再按下 Ctrl + Shift + C ，并选取 &lt;strong&gt;正文部分&lt;/strong&gt; 进行如下步骤复制后即为 &lt;code&gt;aisummaryPostSelector&lt;/code&gt; 的值&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.ljx.icu/file/imgs/y9uxBuyu.png&quot; alt=&quot;图3&quot;&gt;&lt;/p&gt;
+&lt;h2&gt;使用&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;补全缺失库 &lt;code&gt;npm install -D xxx&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;确保 &lt;code&gt;aisummary.config.js&lt;/code&gt; 和 &lt;code&gt;.env&lt;/code&gt; 文件里变量配置正确&lt;/li&gt;
+&lt;li&gt;在项目主目录运行 &lt;code&gt;npx tsx scripts/generate-summary.ts&lt;/code&gt; 即可&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;后记&lt;/h2&gt;
+&lt;p&gt;Vercel代理服务器部分的代码基本来自于 &lt;a href=&quot;https://www.konoxin.top/&quot;&gt;@konoXIN&lt;/a&gt; ，主要修改的本地脚本的部分，感觉代码有点乱，还需要再整理一下&lt;/p&gt;
+&lt;h2&gt;参考&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://blog.liushen.fun/posts/40702a0d/&quot;&gt;本地实现HEXO文章AI摘要&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.konoxin.top/posts/db7b3418&quot;&gt;hexo基于TianliGPT使用免费的Spark-Lite制作AI摘要&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content:encoded><h:img src="/_astro/cover.BFW_RLt0.png"/><enclosure url="/_astro/cover.BFW_RLt0.png"/></item><item><title>通过Waline API获取最新评论并显示</title><link>https://blog.ljx.icu/blog/show-recent-comments</link><guid isPermaLink="true">https://blog.ljx.icu/blog/show-recent-comments</guid><description>基于waline官方文档接口的小运用</description><pubDate>Sun, 02 Nov 2025 00:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;起因&lt;/h2&gt;
+&lt;p&gt;浏览 &lt;a href=&quot;https://waline.js.org/reference/server/api.html&quot;&gt;Waline的官方接口文档&lt;/a&gt; 时发现通过 &lt;code&gt;/api/comment?type=recent&lt;/code&gt; 接口能返回网站最新评论数据，于是“奴役”AI给我写了一个适用当前主题的评论展示组件，目前没出啥大差错🤣&lt;/p&gt;
+&lt;h2&gt;引入&lt;/h2&gt;
+&lt;p&gt;代码片段Gist开源地址：&lt;a href=&quot;https://gist.github.com/ljxme/e08c5d42abc5e5aa3fdda2d16aa5a60a&quot;&gt;Recent Comments for Astro-Theme-Pure&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;recentcomment.ts文件&lt;/h3&gt;
+&lt;p&gt;在 &lt;code&gt;src/plugins&lt;/code&gt; 目录下新建 &lt;code&gt;recentcomment.ts&lt;/code&gt; 文件并填入以下内容（&lt;strong&gt;注意需要替换的部分&lt;/strong&gt;）：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-ts&quot;&gt;/**
+ * 获取并处理最新评论数据
+ * 通过Waline API获取最新评论并格式化显示
+ */
+
+// 定义评论数据接口
+interface WalineComment {
+  nick: string // 评论者昵称
+  comment: string // 评论内容
+  url: string // 评论页面URL
+  avatar: string // 头像URL
+  time: number // 评论时间戳
+  like?: number // 点赞数
+  addr?: string // 地址
+}
+
+// 定义API响应接口
+interface WalineResponse {
+  data: WalineComment[]
+}
+
+/**
+ * 获取最新评论数据
+ * @param limit 获取评论数量限制
+ * @returns 格式化后的评论数据
+ */
+export async function fetchRecentComments(limit: number = 5): Promise&amp;#x3C;WalineComment[]&gt; {
+  try {
+    // &amp;#x3C;Waline后端地址&gt; 请将该部分替换为你自己搭建的Waline后端服务地址 &amp;#x3C;!-- [!code highlight:2] --&gt;
+    const response = await fetch(&apos;https://&amp;#x3C;Waline后端地址&gt;/api/comment?type=recent&apos;)
+    if (!response.ok) {
+      throw new Error(`获取评论失败: ${response.status}`)
+    }
+
+    const data: WalineResponse = await response.json()
+    return data.data.slice(0, limit)
+  } catch (error) {
+    console.error(&apos;获取最新评论出错:&apos;, error)
+    return []
+  }
+}
+
+/**
+ * 格式化评论时间
+ * @param timestamp 时间戳
+ * @returns 格式化后的时间字符串
+ */
+export function formatCommentTime(timestamp: number): string {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+
+  // 一分钟内
+  if (diff &amp;#x3C; 60 * 1000) {
+    return &apos;刚刚&apos;
+  }
+
+  // 一小时内
+  if (diff &amp;#x3C; 60 * 60 * 1000) {
+    return `${Math.floor(diff / (60 * 1000))}分钟前`
+  }
+
+  // 一天内
+  if (diff &amp;#x3C; 24 * 60 * 60 * 1000) {
+    return `${Math.floor(diff / (60 * 60 * 1000))}小时前`
+  }
+
+  // 一周内
+  if (diff &amp;#x3C; 7 * 24 * 60 * 60 * 1000) {
+    return `${Math.floor(diff / (24 * 60 * 60 * 1000))}天前`
+  }
+
+  // 其他情况显示具体日期
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, &apos;0&apos;)}-${String(date.getDate()).padStart(2, &apos;0&apos;)}`
+}
+
+/**
+ * 清理HTML标签
+ * @param html HTML字符串
+ * @returns 清理后的纯文本
+ */
+export function stripHtml(html: string): string {
+  // 使用正则表达式替代DOM操作，可在服务器端运行
+  return html.replace(/&amp;#x3C;[^&gt;]*&gt;/g, &apos;&apos;)
+}
+
+/**
+ * 截断文本
+ * @param text 原始文本
+ * @param length 最大长度
+ * @returns 截断后的文本
+ */
+export function truncateText(text: string, length: number = 100): string {
+  if (text.length &amp;#x3C;= length) return text
+  return text.substring(0, length) + &apos;...&apos;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;rc.css文件&lt;/h3&gt;
+&lt;p&gt;在 &lt;code&gt;src/assets/styles&lt;/code&gt; 目录下新建 &lt;code&gt;rc.css&lt;/code&gt; 文件并填入以下内容：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-css&quot;&gt;/* 最新评论组件样式 */
+.recent-comments {
+  background-color: hsl(var(--background) / var(--un-bg-opacity, 1));
+  border: 1px solid hsl(var(--border) / var(--un-border-opacity, 1));
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.recent-comments-title {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: hsl(var(--foreground) / var(--un-text-opacity, 1));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recent-comments-title svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.comment-item {
+  display: flex;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.comment-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.comment-author {
+  font-weight: 500;
+  color: hsl(var(--foreground) / var(--un-text-opacity, 1));
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comment-time {
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground) / var(--un-text-opacity, 1));
+}
+
+.comment-text {
+  font-size: 0.9rem;
+  color: hsl(var(--muted-foreground) / var(--un-text-opacity, 1));
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.comment-link {
+  display: block;
+  font-size: 0.8rem;
+  color: hsl(var(--primary) / var(--un-text-opacity, 1));
+  margin-top: 0.25rem;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.comment-link:hover {
+  opacity: 0.8;
+}
+
+.comment-empty {
+  text-align: center;
+  padding: 1rem 0;
+  color: hsl(var(--muted-foreground) / var(--un-text-opacity, 1));
+  font-size: 0.9rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .comment-avatar {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .comment-author {
+    font-size: 0.85rem;
+  }
+
+  .comment-time {
+    font-size: 0.75rem;
+  }
+
+  .comment-text {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 2;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;RecentComments.astro文件&lt;/h3&gt;
+&lt;ol start=&quot;3&quot;&gt;
+&lt;li&gt;在目录下 &lt;code&gt;src/components&lt;/code&gt; 目录下新建 &lt;code&gt;RecentComments.astro&lt;/code&gt; 文件并填入以下内容：&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre&gt;&lt;code class=&quot;language-astro&quot;&gt;---
+import { Icon } from &apos;astro-pure/user&apos;
+import {
+  fetchRecentComments,
+  formatCommentTime,
+  stripHtml,
+  truncateText
+} from &apos;@/plugins/recentcomment&apos;
+
+// 获取最新评论数据
+const comments = await fetchRecentComments(5)
+---
+
+&amp;#x3C;div class=&apos;recent-comments&apos;&gt;
+  &amp;#x3C;div class=&apos;recent-comments-title&apos;&gt;
+    &amp;#x3C;Icon name=&apos;list&apos; /&gt;
+    &amp;#x3C;span&gt;最新评论&amp;#x3C;/span&gt;
+  &amp;#x3C;/div&gt;
+
+  &amp;#x3C;div class=&apos;comment-list&apos;&gt;
+    {
+      comments.length &gt; 0 ? (
+        comments.map((comment) =&gt; (
+          &amp;#x3C;div class=&apos;comment-item&apos;&gt;
+            &amp;#x3C;div class=&apos;comment-avatar&apos;&gt;
+              &amp;#x3C;img src={comment.avatar} alt={comment.nick} loading=&apos;lazy&apos; /&gt;
+            &amp;#x3C;/div&gt;
+            &amp;#x3C;div class=&apos;comment-content&apos;&gt;
+              &amp;#x3C;div class=&apos;comment-meta&apos;&gt;
+                &amp;#x3C;span class=&apos;comment-author&apos;&gt;{comment.nick}&amp;#x3C;/span&gt;
+                &amp;#x3C;span class=&apos;comment-time&apos;&gt;{formatCommentTime(comment.time)}&amp;#x3C;/span&gt;
+              &amp;#x3C;/div&gt;
+              &amp;#x3C;div class=&apos;comment-text&apos; set:html={truncateText(stripHtml(comment.comment), 100)} /&gt;
+              &amp;#x3C;a href={comment.url ? comment.url.replace(/\/$/, &apos;&apos;) : &apos;#&apos;} class=&apos;comment-link&apos;&gt;
+                查看详情 →
+              &amp;#x3C;/a&gt;
+            &amp;#x3C;/div&gt;
+          &amp;#x3C;/div&gt;
+        ))
+      ) : (
+        &amp;#x3C;div class=&apos;comment-empty&apos;&gt;暂无评论数据&amp;#x3C;/div&gt;
+      )
+    }
+  &amp;#x3C;/div&gt;
+&amp;#x3C;/div&gt;
+
+&amp;#x3C;script&gt;
+  // 客户端清理HTML标签
+  document.addEventListener(&apos;astro:page-load&apos;, () =&gt; {
+    const commentTexts = document.querySelectorAll(&apos;.comment-text&apos;)
+    commentTexts.forEach((element) =&gt; {
+      // 确保链接在新窗口打开
+      const links = element.querySelectorAll(&apos;a&apos;)
+      links.forEach((link) =&gt; {
+        link.setAttribute(&apos;target&apos;, &apos;_blank&apos;)
+        link.setAttribute(&apos;rel&apos;, &apos;noopener noreferrer&apos;)
+      })
+    })
+  })
+&amp;#x3C;/script&gt;
+
+&amp;#x3C;style is:global&gt;
+  @import &apos;@/assets/styles/rc.css&apos;;
+&amp;#x3C;/style&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;使用&lt;/h2&gt;
+&lt;h3&gt;在Pure主题主页中使用&lt;/h3&gt;
+&lt;p&gt;增添 &lt;code&gt;src/pages/index.astro&lt;/code&gt; 文件内容如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-astro&quot;&gt;---
+import RecentComments from &apos;@/components/RecentComments.astro&apos; //引入组件 # [!code ++]
+---
+
+&amp;#x3C;PageLayout meta={{ title: &apos;首页&apos; }} highlightColor=&apos;#FFF8DC&apos;&gt;
+  &amp;#x3C;main class=&apos;flex w-full flex-col items-center&apos;&gt;
+    &amp;#x3C;div
+      id=&apos;content&apos;
+      class=&apos;animate flex flex-col md:flex-row gap-y-10 md:gap-x-6 md:w-4/5 lg:w-5/6&apos;
+    &gt;
+      &amp;#x3C;!--省略中间代码--&gt;
+      &amp;#x3C;div class=&apos;md:w-1/3 md:mt-0&apos;&gt;
+        # [!code ++]
+        &amp;#x3C;RecentComments /&gt; # [!code ++]
+      &amp;#x3C;/div&gt; # [!code ++]
+      &amp;#x3C;!--省略此后代码--&gt;
+    &amp;#x3C;/div&gt;
+    &amp;#x3C;Quote class=&apos;mt-12&apos; /&gt;
+  &amp;#x3C;/main&gt;
+&amp;#x3C;/PageLayout&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;最小化使用&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-astro&quot;&gt;---
+import RecentComments from &apos;@/components/RecentComments.astro&apos;
+---
+
+&amp;#x3C;RecentComments /&gt;
+&lt;/code&gt;&lt;/pre&gt;</content:encoded><h:img src="/_astro/cover.DiptIRk4.jpg"/><enclosure url="/_astro/cover.DiptIRk4.jpg"/></item><item><title>GitHub有趣项目推荐（二）</title><link>https://blog.ljx.icu/blog/github-repos-2</link><guid isPermaLink="true">https://blog.ljx.icu/blog/github-repos-2</guid><description>分享一些有趣的GitHub项目</description><pubDate>Tue, 07 Oct 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import { GithubCard } from &apos;astro-pure/advanced&apos;&lt;/p&gt;
+&lt;h2&gt;总览项目&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;资料类&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;libpku：北大课程资料民间整理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;工具类&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;CloudflareTempEmail：免费搭建临时邮件服务,用一些免费域名搞搞临时邮箱😂&lt;/li&gt;
+&lt;li&gt;CloudMail：使用Vue3开发的响应式邮箱服务，支持邮件发送，无需服务器可部署到Cloudflare平台🎉&lt;/li&gt;
+&lt;li&gt;NextChat：一键免费部署你的私人ChatGPT网页应用，支持Claude,GPT4&amp;#x26;GeminiPro模型。&lt;/li&gt;
+&lt;li&gt;GameLove：夹带私货哈哈，可以解决访问国外游戏网站加载慢，图片加载不出来的问题&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;资料类&lt;/h2&gt;
+&lt;h3&gt;libpku&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; 引自原文 &lt;a href=&quot;%5B%E5%8E%9F%E6%96%87%5D(https://github.com/lib-pku/libpku?tab=readme-ov-file#preface)&quot;&gt;^注释&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;来到一所大学，从第一次接触许多课，直到一门一门完成，这个过程中我们时常收集起许多资料和情报。&lt;/p&gt;
+&lt;p&gt;有些是需要在网上搜索的电子书，每次见到一门新课程， Google 一下教材名称，有的可以立即找到，有的却是要花费许多眼力；有些是历年试卷或者 A4 纸，前人精心收集制作，抱着能对他人有用的想法公开，却需要在各个群或者私下中摸索以至于从学长手中代代相传；有些是上完一门课才恍然领悟的技巧，原来这门课重点如此，当初本可以更轻松地完成得更好……&lt;/p&gt;
+&lt;p&gt;我也曾很努力地收集各种课程资料，但到最后，某些重要信息的得到却往往依然是纯属偶然。这种状态时常令我感到后怕与不安。我也曾在课程结束后终于有了些许方法与总结，但这些想法无处诉说，最终只能把花费时间与精力才换来的经验耗散在了漫漫的遗忘之中。&lt;/p&gt;
+&lt;p&gt;我为这一年一年，这么多人孤军奋战的重复劳动感到不平。&lt;/p&gt;
+&lt;p&gt;我希望能够将这些隐晦的、不确定的、口口相传的资料和经验，变为公开的、易于获取的和大家能够共同完善、积累的共享资料。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;我希望只要是前人走过的弯路，后人就不必再走。&lt;/strong&gt; 这是我的信念，也是我建立这个项目的原因。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt; 访问https://lib-pku.github.io ， 点击资料链接即可下载。&lt;/p&gt;
+&lt;h2&gt;工具类&lt;/h2&gt;
+&lt;h3&gt;CloudflareTempEmail&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; Cloudflare临时邮箱，可以用来免费搭建临时邮件服务&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt; 推荐 &lt;strong&gt;通过用户界面部署&lt;/strong&gt;，详见&lt;a href=&quot;https://temp-mail-docs.awsl.uk/zh/guide/quick-start.html&quot;&gt;临时邮箱文档&lt;/a&gt;（官方文档已经很详尽了，不重复造轮子😮）&lt;/p&gt;
+&lt;p&gt;也可以来试试我搭建好的服务https://tempmail.artemisia.icu/&lt;/p&gt;
+&lt;h3&gt;CloudMail&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; 可以用自己的付费域名来搭建此服务，例如我的”me@artemisia.icu”，欢迎交流😘&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt; 推荐&lt;a href=&quot;https://doc.skymail.ink/guide/via-ui&quot;&gt;&lt;strong&gt;小白保姆教程-界面部署&lt;/strong&gt;&lt;/a&gt;，还是不重复造轮子哈哈。&lt;/p&gt;
+&lt;p&gt;也可以使用我搭建好的服务https://email.artemisia.icu/ ，为了防止滥用所以加了注册码，注册码可以通过上面的邮箱联系我领取。&lt;/p&gt;
+&lt;h3&gt;NextChat&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; 一个AI聊天项目，可以无聊时打发打发时间，页面UI看着很精致&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt; 主要需要的就是AI大模型的APIkey，详见官方的&lt;a href=&quot;https://github.com/ChatGPTNextWeb/NextChat/blob/main/README_CN.md&quot;&gt;中文文档&lt;/a&gt;，依旧不重复造轮子哈哈&lt;/p&gt;
+&lt;h3&gt;GameLove&lt;/h3&gt;
+&lt;p&gt;介绍：本项目是我参考&lt;a href=&quot;https://github.com/521xueweihan/GitHub520&quot;&gt;GitHub520&lt;/a&gt;，改成了加速国外游戏平台的域名，虽然部分逻辑有AI的功劳哈哈，不过还是能用，目前项目仍处于测试阶段，欢迎提交issue，PR等等。更多详见&lt;a href=&quot;https://blog.ljx.icu/projects&quot;&gt;&lt;strong&gt;项目&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;使用：推荐使用&lt;a href=&quot;https://github.com/oldj/SwitchHosts&quot;&gt;SwitchHosts&lt;/a&gt;来管理hosts（最好以管理员权限运行），详见&lt;a href=&quot;https://github.com/artemisia1107/GameLove/blob/main/README.md&quot;&gt;README.md&lt;/a&gt;（引用自己的轮子哈哈🤪）&lt;/p&gt;
+&lt;h2&gt;项目总结&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;本次依旧带来的是5个项目，一个高校的课程资料，还有4个工具类的项目，其中的两个邮箱服务个人试了几天还是不错的，AI服务需要APIkey，我的GameLove项目只能说是改编他人项目，感谢开源哈哈，让我能学习他人的代码来弥补自己的不足🥲&lt;/p&gt;
+&lt;/blockquote&gt;</content:encoded><h:img src="/_astro/cover.DkvGA1B9.jpg"/><enclosure url="/_astro/cover.DkvGA1B9.jpg"/></item><item><title>GitHub有趣项目推荐（一）</title><link>https://blog.ljx.icu/blog/github-repos-1</link><guid isPermaLink="true">https://blog.ljx.icu/blog/github-repos-1</guid><description>分享一些有趣的GitHub项目</description><pubDate>Mon, 15 Sep 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import { GithubCard } from &apos;astro-pure/advanced&apos;
+import { Button } from &apos;astro-pure/user&apos;&lt;/p&gt;
+&lt;h2&gt;总览项目&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;生活类&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;CookLikeHOC：像老乡鸡那样做饭，🥢像老乡鸡🐔那样做饭。主要部分于2024年完工，非老乡鸡官方仓库。文字来自《老乡鸡菜品溯源报告》，并做归纳、编辑与整理。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;工具类&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;PicSite：PicSite是一个使用Next.js构建的在线图片展示网站。它允许用户浏览相册、查看图片，并提供了简单的搜索功能。&lt;/li&gt;
+&lt;li&gt;CloudFlare-ImgBed：开源文件托管解决方案，支持Docker和无服务器部署，支持 TelegramBot、CloudflareR2、S3等多种存储渠道，支持WebDAV协议和多种RESTful API。&lt;/li&gt;
+&lt;li&gt;Docker-Cloudflare：🚀基于CloudflareWorkers的Docker镜像代理服务。&lt;/li&gt;
+&lt;li&gt;Xget：超高性能、安全的一站式开发者资源访问加速引擎。其性能远超传统加速器，为您提供跨多个平台的统一高效的加速体验，涵盖代码储存库、包管理、AI 推理 API、容器镜像、模型及数据集等。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;生活类&lt;/h2&gt;
+&lt;h3&gt;CookLikeHOC&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; 一个整理自 &lt;a href=&quot;https://www.lxjchina.com.cn/display.asp?id=4226&quot;&gt;《老乡鸡菜品溯源报告》&lt;/a&gt; 的开源食谱&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt; 详见官方网址 https://cooklikehoc.soilzhu.su&lt;/p&gt;
+&lt;h2&gt;工具类&lt;/h2&gt;
+&lt;h3&gt;PicSite&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; 该项目是我在寻找自建博客相册时发现的，star虽然不高，但项目属于能用的（虽然有点小bug哈哈）&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-tsx&quot;&gt;  import fs from &apos;fs&apos;
+  import path from &apos;path&apos;
+  import matter from &apos;gray-matter&apos;
+  import { Album } from &apos;@/types/album&apos;
+  
+  const albumsDirectory = path.join(process.cwd(), &apos;src/content/albums&apos;)
+  // 保证非法日期不会抛 RangeError
+  function safeISO(v: any) {
+    const d = new Date(v)
+    return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString()
+  }
+  
+  export function getAllAlbums(): Album[] {
+    const fileNames = fs.readdirSync(albumsDirectory)
+    return fileNames.map((fileName) =&gt; {
+      const id = fileName.replace(/\\.md$/, &apos;&apos;)
+      const fullPath = path.join(albumsDirectory, fileName)
+      const fileContents = fs.readFileSync(fullPath, &apos;utf8&apos;)
+      const matterResult = matter(fileContents)
+  
+      const date = matterResult.data.date
+        ? safeISO(matterResult.data.date).split(&apos;T&apos;)[0]
+        : &apos;&apos;
+  
+      // 确保所有图片路径都以 &apos;/&apos; 开头
+      const images = matterResult.content
+        .split(&apos;\\n&apos;)
+        .filter(Boolean)
+        .map(line =&gt; {
+          const imagePath = line.trim().replace(&apos;- &apos;, &apos;&apos;)
+          return imagePath.startsWith(&apos;/&apos;) ? imagePath : `/${imagePath}`
+        })
+  
+      // 确保封面图片路径也以 &apos;/&apos; 开头
+      const coverImage = matterResult.data.coverImage
+        ? matterResult.data.coverImage.startsWith(&apos;/&apos;)
+          ? matterResult.data.coverImage
+          : `/${matterResult.data.coverImage}`
+        : &apos;&apos;
+  
+      return {
+        id,
+        name: matterResult.data.name || &apos;&apos;,
+        date,
+        description: matterResult.data.description || &apos;&apos;,
+        coverImage,
+        images,
+      }
+    })
+  }
+  
+  export function getAlbumById(id: string): Album | undefined {
+    const albums = getAllAlbums()
+    return albums.find(album =&gt; album.id === id)
+  }
+  
+  export function searchAlbums(query: string): Album[] {
+    const albums = getAllAlbums()
+    return albums.filter(album =&gt; 
+      album.name.toLowerCase().includes(query.toLowerCase()) ||
+      album.description.toLowerCase().includes(query.toLowerCase())
+    )
+  }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;推荐用Vercel、Netlify、Zeabur、CloudFlarePages等托管平台进行一键部署&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;手动部署：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;克隆仓库：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;git clone &amp;#x3C;https://github.com/Gloridust/picsite.git&gt;
+cd picsite
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;安装依赖：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;npm install
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;本地调试：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;npm run dev
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;构建项目：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;npm run build
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;启动生产服务器：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;npm start
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;现在，您可以通过 &lt;code&gt;http://localhost:3000&lt;/code&gt; 访问您的网站。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;添加相册及描述：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;在 &lt;code&gt;src/content/albums/&lt;/code&gt; 目录下创建一个新的 Markdown 文件，例如 &lt;code&gt;nature.md&lt;/code&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在文件的顶部添加 frontmatter，包括相册的元数据：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-markdown&quot;&gt;---
+id: nature
+name: 自然风光
+date: 2024-03-15
+description: 美丽的自然风光摄影集
+coverImage: images/nature/cover.jpg
+---
+- images/nature/1.jpg
+- images/nature/2.jpg
+- images/nature/3.jpg
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在 &lt;code&gt;public/images/&lt;/code&gt; 目录下创建对应的文件夹（例如 &lt;code&gt;nature&lt;/code&gt;），并将图片文件放入其中。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;确保 &lt;code&gt;coverImage&lt;/code&gt; 路径和图片列表中的路径与实际文件位置相匹配。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;CloudFlare-ImgBed&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; 可用于自建博客图床&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt; 官方文档已经很详细了，我就不重复造轮子了🤓&lt;/p&gt;
+&lt;p&gt;https://cfbed.sanyue.de/guide/introduction.html&lt;/p&gt;
+&lt;h3&gt;Docker-Cloudflare&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; 基于Cloudflare Workers的Docker镜像代理服务，加速Docker。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;1.登录&lt;a href=&quot;https://dash.cloudflare.com/&quot;&gt;Cloudflare Dashboard&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;2.创建新的Worker&lt;/p&gt;
+&lt;p&gt;3.复制&lt;code&gt;worker.js&lt;/code&gt;代码并保存部署，代码如下：&lt;/p&gt;
+&lt;p&gt;https://github.com/niehaoran/docker-cloudflare/blob/main/worker.js&lt;/p&gt;
+&lt;p&gt;4.配置自定义域名&lt;/p&gt;
+&lt;h3&gt;Xget&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;介绍：&lt;/strong&gt; 可以加速GitHub等一众国外资源的下载&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;使用：&lt;/strong&gt; 这里给出CloudFlare自部署和浏览器插件的食用方法，其他方式详见https://github.com/xixu-me/Xget&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;CloudFlare自部署：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Fork该项目后直接在CloudFlare的Workers中部署&lt;/li&gt;
+&lt;li&gt;部署后，你的 Xget 服务将在&lt;code&gt;your-worker-name.your-subdomain.workers.dev&lt;/code&gt;上可用&lt;/li&gt;
+&lt;li&gt;绑定自己的二级域名（可选）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;浏览器插件：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;进入微软插件扩展商店&lt;a href=&quot;https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home&quot;&gt;Microsoft Edge 加载项&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;搜索“Xget Now”安装&lt;/li&gt;
+&lt;li&gt;将Xget域名换成你自部署的域名（必填）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;项目总结&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;这次分享了5个有趣的GitHub开源项目，分为生活类和工具类。生活类项目&quot;CookLikeHOC&quot;，一个基于《老乡鸡菜品溯源报告》整理的食谱。工具类项目包括&quot;PicSite&quot;在线图片展示网站、&quot;CloudFlare-ImgBed&quot;开源文件托管解决方案和&quot;Docker-Cloudflare&quot;Docker镜像代理服务，&quot;Xget&quot;多资源加速代理服务。对PicSite提供了bug修复方案，修改albums.ts文件以解决路径和日期问题&lt;/p&gt;
+&lt;/blockquote&gt;</content:encoded><h:img src="/_astro/cover.DkvGA1B9.jpg"/><enclosure url="/_astro/cover.DkvGA1B9.jpg"/></item><item><title>讨论NotionNext如何配置AI摘要</title><link>https://blog.ljx.icu/blog/notionnext-ai-summary</link><guid isPermaLink="true">https://blog.ljx.icu/blog/notionnext-ai-summary</guid><description>在NotionNext[4.8.6]版本中配置AI Summary的临时方案</description><pubDate>Fri, 22 Aug 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import { Aside, Collapse } from &apos;astro-pure/user&apos;&lt;/p&gt;
+&lt;h2&gt;一、关于AI Summary&lt;/h2&gt;
+&lt;h3&gt;什么是AI Summary&lt;/h3&gt;
+&lt;p&gt;AI Summary（AI摘要）是指使用人工智能技术自动生成文章或内容的简短概述或摘要的功能。在博客平台中，它有以下几个特点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化处理：无需人工编写，AI可以自动分析整篇文章的内容并提取关键信息&lt;/li&gt;
+&lt;li&gt;节省时间：博主不需要手动为每篇文章撰写摘要，提高内容生产效率&lt;/li&gt;
+&lt;li&gt;内容精准：良好的AI模型可以准确把握文章核心观点和重要信息&lt;/li&gt;
+&lt;li&gt;增强用户体验：读者可以通过摘要快速了解文章内容，决定是否继续阅读&lt;/li&gt;
+&lt;li&gt;SEO优化：优质的摘要有助于搜索引擎更好地理解文章内容，提高排名&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在NotionNext等基于Notion的博客系统中，AI Summary通常作为一个可配置的功能，可以自动为文章生成摘要，显示在文章列表或文章页面中，为读者提供快速预览。&lt;/p&gt;
+&lt;h3&gt;是否使用AI Summary&lt;/h3&gt;
+&lt;p&gt;我个人认为当下的AI技术虽蓬勃发展但仍旧有所不足，目前来看AI Summary比较适合于喜欢快速浏览的人，那么此项技术将为您省去大量的冗余时间，通过快速锁定某篇博文的关键词、简要内容来决定是否继续进行浏览。&lt;/p&gt;
+&lt;h2&gt;二、AI Summary在NotionNext项目中的配置&lt;/h2&gt;
+&lt;h3&gt;相关配置文件&lt;/h3&gt;
+&lt;p&gt;在我浏览NotionNext项目的仓库时发现了官网中并未详细介绍的plugin.config.js文件（或许以前介绍过但新版并未有具体说明🤔）具体在conf/plugin.config.js，在里面找到了相关配置代码：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/qkAnqfZk.png&quot; alt=&quot;图片由Polacode插件生成&quot;&gt;&lt;/p&gt;
+&lt;p&gt;图片由Polacode插件生成&lt;/p&gt;
+&lt;p&gt;上方的Algolia，NotionNext官网已经有所介绍—文章搜索方面的引擎，想安装可以戳下方书签。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://docs.tangly1024.com/article/notion-next-algolia&quot;&gt;Algolia搜索引擎 | NotionNext帮助手册&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;而下方的AI文章摘要生成插件并未被介绍，但看着有介绍文档和配置变量就试着尝试了一下，发现似乎没有适配好，会弹出“Rerfer与Url不匹配的字样”&lt;/p&gt;
+&lt;p&gt;去Tg群问了一圈才发现之前的TianliGPT是适配好的，但在其更换为洪墨AI后似乎并未更进？&lt;/p&gt;
+&lt;p&gt;进而加了TianliGPT官群寻求帮助&lt;/p&gt;
+&lt;h2&gt;三、配置洪墨AI（原TianliGPT）&lt;/h2&gt;
+&lt;h3&gt;介绍&lt;/h3&gt;
+&lt;p&gt;由张洪Heo和Tianli大佬搭建，全新的站点增强插件。为网站站长提供网站的AI增强服务。&lt;/p&gt;
+&lt;p&gt;在登录NotionNext项目中提及的https://docs_s.tianli0.top后台后，会被定向至新官网：(AFF链接：https://ai.zhheo.com/console/login?InviteID=17641000)&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://ai.zhheo.com&quot;&gt;洪墨AI - 网站AI摘要、知识库AI客服和搜索插件平台&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;获取KEY&lt;/h3&gt;
+&lt;p&gt;在首页界面，选择“我的项目”→“新建项目”&lt;/p&gt;
+&lt;p&gt;计费类型选择“仅使用摘要生成”&lt;/p&gt;
+&lt;p&gt;填写您的项目名称并选择摘要语言&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/vAEiiKFh.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;p&gt;最后绑定您的网站并创建项目&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/h7TKUWu0.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;p&gt;在首页就能看到我们所需要的KEY了，点击右边图标并保存&lt;/p&gt;
+&lt;h3&gt;启用Token&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;摘要AI 50,000tokens，在默认配置下满足最少50篇文章的摘要生成，无限期有效&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;需要在首页“我的会员”右下角选择“充值Token”，选择第二项，一般10￥差不多能有50篇左右，对于新手博客，或者试试水都很不错，5k字/元还是很划算的。&lt;/p&gt;
+&lt;h3&gt;网站接入（进阶配置）&lt;/h3&gt;
+&lt;p&gt;在洪墨AI后台主页左边栏下方点击“网站接入”即可进入该页面&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/Lw6diK0J.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;p&gt;在这里可以选择插件接入和代码接入，本文作为NotionNext的临时解决方案，选择代码生成器的方式&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://ai.zhheo.com/docs/postChat.html&quot;&gt;洪墨AI的官方文档&lt;/a&gt;有更详细的介绍，这里只是简单赘述，列表如下：&lt;/p&gt;
+&lt;p&gt;| 变量名                    | 含义         |
+| ------------------------- | ------------ |
+| &lt;code&gt;tianliGPT_postSelector&lt;/code&gt;  | 文章选择器   |
+| &lt;code&gt;tianliGPT_postURL&lt;/code&gt;       | URL匹配规则  |
+| &lt;code&gt;tianliGPT_blacklist&lt;/code&gt;     | 黑名单配置   |
+| &lt;code&gt;tianliGPT_wordLimit&lt;/code&gt;     | 字数限制     |
+| &lt;code&gt;tianliGPT_typingAnimate&lt;/code&gt; | 打字动画     |
+| &lt;code&gt;tianliGPT_Title&lt;/code&gt;         | AI摘要标题   |
+| &lt;code&gt;tianliGPT_injectDom&lt;/code&gt;     | 插入位置     |
+| &lt;code&gt;tianliGPT_BeginningText&lt;/code&gt; | 摘要开头文本 |
+| &lt;code&gt;tianliGPT_loadingText&lt;/code&gt;   | 加载提示文本 |
+| &lt;code&gt;tianliGPT_theme&lt;/code&gt;         | 摘要主题     |
+| &lt;code&gt;tianliGPT_key&lt;/code&gt;           | 项目KEY      |&lt;/p&gt;
+&lt;p&gt;但最主要变量如下（其他可借助&lt;a href=&quot;https://ai.zhheo.com/docs/postChat.html&quot;&gt;官方帮助文档&lt;/a&gt;自行配置）：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-jsx&quot;&gt;let tianliGPT_postSelector = &apos;article&apos;;
+let tianliGPT_postURL = &apos;你的通配符URL&apos;;
+let tianliGPT_key = &apos;你的项目KEY&apos;;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;关于通配符URL&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;比如我有博文如下：&lt;/p&gt;
+&lt;p&gt;https://xxx.xxx/technology/111.html&lt;/p&gt;
+&lt;p&gt;https://xxx.xxx/technology/222.html&lt;/p&gt;
+&lt;p&gt;那么我的通配符应为&lt;code&gt;*/technology/*.html&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;详细介绍：&lt;a href=&quot;https://docs_s.tianli0.top/theme/custom.html&quot;&gt;TianliGPT通用教程&lt;/a&gt;or&lt;a href=&quot;https://ai.zhheo.com/docs/variant.html&quot;&gt;洪墨AI摘要变量&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;用处：防止文章在不该出现摘要的地方产生摘要&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;四、接入NotionNext&lt;/h2&gt;
+&lt;h3&gt;在GitHub里做如下改动：&lt;/h3&gt;
+&lt;p&gt;在&lt;code&gt;custom.js&lt;/code&gt;文件中添加如下代码：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-jsx&quot;&gt;let tianliGPT_postSelector = &apos;article&apos;;
+let tianliGPT_postURL = &apos;你的通配符URL&apos;;
+let tianliGPT_key = &apos;你的项目KEY&apos;;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在&lt;code&gt;blog.config.js&lt;/code&gt;文件相对应变量处添加如下值：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-jsx&quot;&gt;  // 自定义外部脚本，外部样式
+  CUSTOM_EXTERNAL_JS: [&apos;&amp;#x3C;https://ai.zhheo.com/static/public/tianli_gpt.min.js&gt;&apos;], // e.g. [&apos;&amp;#x3C;http://xx.com/script.js&apos;,&apos;http://xx.com/script.js&gt;&apos;]
+  CUSTOM_EXTERNAL_CSS: [&apos;&amp;#x3C;https://ai.zhheo.com/static/public/tianli_gpt.min.css&gt;&apos;], // e.g. [&apos;&amp;#x3C;http://xx.com/style.css&apos;,&apos;http://xx.com/style.css&gt;&apos;]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;五、启用洪墨AI&lt;/h2&gt;
+&lt;p&gt;修改好代码后点击提交并重新部署即可（如何重新部署？详见：https://docs.tangly1024.com/article/vercel-redploy ）&lt;/p&gt;
+&lt;p&gt;最后打开您的博客，刷新网页即可在您的博文前看到洪墨AI总结的摘要&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/PYSOShkw.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;p&gt;原因一：您填写并启用了&lt;code&gt;plugin.config.js&lt;/code&gt;文件中的KEY&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/65imRvJ4.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;p&gt;如果按照NotionNext官方插件所给方式注入会导致启动不了（即您填写了&lt;code&gt;plugin.conmfig.js&lt;/code&gt;文件中的KEY），导致识别到页面基本dom加载完才执行，但是js引入gpt的时机太晚了，页面加载完好久才想起来加载js文件，也不执行。&lt;/p&gt;
+&lt;p&gt;原因二：浏览器缓存&lt;/p&gt;
+&lt;p&gt;验证：切入无痕模式看洪墨AI是否正常工作。&lt;/p&gt;
+&lt;p&gt;若刷新后您的请求头仍不正确，即依旧弹出“Rerfer与Url不匹配”的字样，请查看下方的解决方法&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;如何刷新浏览器缓存？&lt;/p&gt;
+&lt;p&gt;Chrome浏览器&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Windows/Linux:按住Ctrl键，然后按F5或点击刷新按钮。&lt;/li&gt;
+&lt;li&gt;Mac:按住Cmd+Shift，然后按R键或点击刷新按钮。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Firefox浏览器&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Windows/Linux:按住Ctrl键，然后按F5，或按Ctrl+Shift+R。&lt;/li&gt;
+&lt;li&gt;Mac:按住Cmd+Shift，然后按R键，或点击刷新按钮。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Edge浏览器&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Windows/Linux:按住Ctrl键，然后按F5或点击刷新按钮。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如何查看请求头？&lt;/p&gt;
+&lt;p&gt;进入网页按”F12”打开控制台，选择“网络”，选择”fetch/XHR”，查找对应程序(应包含”tianli_gpt_main…”字样)并点击，在标头栏向下滚动至请求标头，即可查看Rerfer是否正确。&lt;/p&gt;
+&lt;p&gt;例如：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/BhRzrYbB.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;p&gt;若您的博文对应地址不在上图红框中，那么说明您请求头错误&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;原因三：浏览器广告屏蔽插件&lt;/p&gt;
+&lt;p&gt;一些浏览器广告插件（例如AdGuard），导致产生”Rerfer与Url不匹配”报错&lt;/p&gt;
+&lt;p&gt;解决方法：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;请先删除您之前在plugin.config.js文件中的KEY（没填就不用管）&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;尝试手动执行一下gpt&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在引入js的代码后面手动执行一次：tianliGPT.runTianliGPT()，&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;但是由于加载js可能需要时间，为了避免tianliGPT.runTianliGPT()执行的时候js还没有下载完，你需要循环执行或者延迟执行。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;懒得搞就直接添加下方代码↓&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;如果提示“Rerfer与Url不匹配”的字样，请您在&lt;code&gt;custom.js&lt;/code&gt;文件中添加如下代码：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-jsx&quot;&gt;if (typeof tianliGPT_key !== &apos;undefined&apos; &amp;#x26;&amp;#x26; tianliGPT_key) {
+  postchat_checkSystemType();
+  window.tianliGPT.checkURLAndRun();
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;原因三的解决方法：关闭屏蔽插件或者添加您博客域名的白名单&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;二、伪静态导致的Tokens滥用&lt;/p&gt;
+&lt;p&gt;原因：&lt;/p&gt;
+&lt;p&gt;开启伪静态如果产生多个url被识别成多个文章的情况，需统一url形式，从而确保一个文章一个url。&lt;/p&gt;
+&lt;p&gt;解决方法：&lt;/p&gt;
+&lt;p&gt;关闭伪静态或者将通识符URL规则由&lt;code&gt;*/post/*&lt;/code&gt; 改为&lt;code&gt;*/post/*.html&lt;/code&gt; 类似结构即可，记得刷新浏览器缓存。
+&lt;/p&gt;
+&lt;h2&gt;参考文章及引用&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://docs.tangly1024.com/article/how-to-develop-with-notion-next&quot;&gt;NotionNext手册&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://docs_s.tianli0.top/theme/custom.html&quot;&gt;通用教程 | TianliGPT&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://ai.zhheo.com/docs/variant.html&quot;&gt;文章摘要变量 | 洪墨AI&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content:encoded><h:img src="/_astro/cover.FNGcuztV.jpg"/><enclosure url="/_astro/cover.FNGcuztV.jpg"/></item><item><title>Netlify部署博客</title><link>https://blog.ljx.icu/blog/netlify-blog</link><guid isPermaLink="true">https://blog.ljx.icu/blog/netlify-blog</guid><description>用netlify来部署简易博客</description><pubDate>Wed, 20 Aug 2025 00:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;Netlify简介&lt;/h2&gt;
+&lt;p&gt;Netlify是一个面向现代web项目的托管平台，专注于提供持续部署、无服务器功能和全球CDN分发。它完美结合了GitHub等代码托管平台，实现了代码推送自动触发网站更新的工作流程。作为一个综合性平台，Netlify提供从构建、部署到托管的全套服务。&lt;/p&gt;
+&lt;h3&gt;Netlify的核心优势&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;免费起步&lt;/strong&gt;：Netlify提供慷慨的免费套餐，足够个人博客使用&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;自动部署&lt;/strong&gt;：与GitHub、GitLab等代码仓库无缝集成，实现推送即部署&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;全球CDN&lt;/strong&gt;：内容分发网络确保全球访问者都能获得快速访问体验&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;HTTPS支持&lt;/strong&gt;：自动配置SSL证书，确保网站安全&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;自定义域名&lt;/strong&gt;：支持绑定个人域名，建立专业形象&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;使用Netlify部署博客的步骤&lt;/h2&gt;
+&lt;h3&gt;1.准备工作&lt;/h3&gt;
+&lt;p&gt;在开始部署之前，需要进行一些准备工作：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;一个GitHub/GitLab账户，用于存储博客源代码&lt;/li&gt;
+&lt;li&gt;选择一个静态网站生成器（如Hugo、Hexo、Gatsby、Jekyll等）&lt;/li&gt;
+&lt;li&gt;本地开发环境配置&lt;/li&gt;
+&lt;li&gt;（可选）一个自定义域名&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;2.创建博客项目&lt;/h3&gt;
+&lt;p&gt;以使用Hugo为例，创建一个新的博客项目：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;# 安装Hugo
+brew install hugo  # macOS
+# 或 sudo apt-get install hugo  # Ubuntu
+# 创建新站点
+hugo new site my-blog
+cd my-blog
+# 添加主题
+git init
+git submodule add &amp;#x3C;https://github.com/theNewDynamic/gohugo-theme-ananke&gt; themes/ananke
+echo &quot;theme = &apos;ananke&apos;&quot; &gt;&gt; config.toml
+# 创建第一篇文章
+hugo new posts/my-first-post.md
+# 本地预览
+hugo server -D
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;编辑&lt;code&gt;config.toml&lt;/code&gt;文件配置博客基本信息：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-toml&quot;&gt;baseURL = &quot;&amp;#x3C;https://yourblog.netlify.app/&gt;&quot;
+languageCode = &quot;zh-cn&quot;
+title = &quot;我的技术博客&quot;
+theme = &quot;ananke&quot;
+[params]
+  description = &quot;个人技术分享和学习笔记&quot;
+  favicon = &quot;&quot;
+  site_logo = &quot;&quot;
+  # 更多配置...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;3.将项目推送到GitHub&lt;/h3&gt;
+&lt;p&gt;创建GitHub仓库并推送本地项目：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;# 添加.gitignore文件
+echo &quot;public/\\nresources/&quot; &gt; .gitignore
+# 推送到GitHub
+git add .
+git commit -m &quot;Initial commit&quot;
+git branch -M main
+git remote add origin &amp;#x3C;https://github.com/yourusername/my-blog.git&gt;
+git push -u origin main
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;4.在Netlify上部署&lt;/h3&gt;
+&lt;p&gt;现在，我们可以使用Netlify部署博客了：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;注册/登录Netlify&lt;/strong&gt;：访问&lt;a href=&quot;https://www.netlify.com/&quot;&gt;netlify.com&lt;/a&gt;并使用GitHub账户登录&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;创建新站点&lt;/strong&gt;：点击&quot;New site from Git&quot;按钮&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;选择代码仓库&lt;/strong&gt;：选择GitHub，授权Netlify访问，然后选择博客仓库&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;配置部署设置&lt;/strong&gt;：对于Hugo博客，设置：
+&lt;ul&gt;
+&lt;li&gt;构建命令：&lt;code&gt;hugo --minify&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;发布目录：&lt;code&gt;public&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;点击部署&lt;/strong&gt;：Netlify将自动开始构建和部署你的网站&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;5.自定义域名设置&lt;/h3&gt;
+&lt;p&gt;默认情况下，Netlify会提供一个形如random-name.netlify.app的子域名。如果你想使用自己的域名：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;在Netlify中添加域名&lt;/strong&gt;：在站点设置中找到&quot;Domain settings&quot;，点击&quot;Add custom domain&quot;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;验证域名所有权&lt;/strong&gt;：按照指示，在域名注册商处添加DNS记录或通过其他方式验证所有权&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;配置DNS&lt;/strong&gt;：可以选择使用Netlify的DNS服务，或者在你的域名注册商处添加CNAME记录指向Netlify提供的域名&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;启用HTTPS&lt;/strong&gt;：Netlify会自动为你的自定义域名配置免费的Let&apos;s Encrypt SSL证书&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;6.持续更新博客&lt;/h3&gt;
+&lt;p&gt;设置完成后，更新博客变得非常简单：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;# 创建新文章
+hugo new posts/another-post.md
+# 编辑文章内容...
+# 提交更改并推送
+git add .
+git commit -m &quot;Add new post&quot;
+git push
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;当你推送到GitHub时，Netlify会自动检测到更改并重新构建部署你的网站。&lt;/p&gt;
+&lt;h2&gt;Netlify高级功能&lt;/h2&gt;
+&lt;h3&gt;1.表单处理&lt;/h3&gt;
+&lt;p&gt;Netlify支持表单处理，可以轻松创建联系表单：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-html&quot;&gt;&amp;#x3C;form name=&quot;contact&quot; method=&quot;POST&quot; data-netlify=&quot;true&quot;&gt;
+  &amp;#x3C;p&gt;
+    &amp;#x3C;label&gt;姓名: &amp;#x3C;input type=&quot;text&quot; name=&quot;name&quot; /&gt;&amp;#x3C;/label&gt;
+  &amp;#x3C;/p&gt;
+  &amp;#x3C;p&gt;
+    &amp;#x3C;label&gt;邮箱: &amp;#x3C;input type=&quot;email&quot; name=&quot;email&quot; /&gt;&amp;#x3C;/label&gt;
+  &amp;#x3C;/p&gt;
+  &amp;#x3C;p&gt;
+    &amp;#x3C;label&gt;留言: &amp;#x3C;textarea name=&quot;message&quot;&gt;&amp;#x3C;/textarea&gt;&amp;#x3C;/label&gt;
+  &amp;#x3C;/p&gt;
+  &amp;#x3C;p&gt;
+    &amp;#x3C;button type=&quot;submit&quot;&gt;发送&amp;#x3C;/button&gt;
+  &amp;#x3C;/p&gt;
+&amp;#x3C;/form&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;2.重定向与自定义头&lt;/h3&gt;
+&lt;p&gt;在项目根目录创建_redirects文件和_headers文件，可以配置URL重定向和HTTP头：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;# _redirects 文件示例
+/old-page    /new-page    301
+/api/*    &amp;#x3C;https://api.example.com/:splat&gt;    200
+# _headers 文件示例
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;3.Netlify Functions&lt;/h3&gt;
+&lt;p&gt;Netlify Functions允许你创建无服务器功能，例如API端点：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-jsx&quot;&gt;// 创建 functions/hello.js
+exports.handler = async function (event, context) {
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ message: &apos;你好，这是Netlify Function!&apos; })
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;部署后，可以通过/.netlify/functions/hello访问此功能。&lt;/p&gt;
+&lt;h3&gt;4.环境变量与构建钩子&lt;/h3&gt;
+&lt;p&gt;Netlify支持环境变量设置和构建钩子，便于集成第三方服务或自定义构建流程。&lt;/p&gt;
+&lt;h2&gt;Netlify性能优化&lt;/h2&gt;
+&lt;h3&gt;1：静态优先的架构&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;静态网站的表现远优于动态网站 - 在负载、安全性和速度方面都有显著优势。Netlify的JAMstack架构充分利用了这一点。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Netlify采用&quot;静态优先&quot;的架构理念，通过预渲染页面内容并结合API动态数据，实现了卓越的性能：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;所有页面在构建时生成，访问时无需服务器处理&lt;/li&gt;
+&lt;li&gt;全球CDN分发确保访问者获得就近节点的快速响应&lt;/li&gt;
+&lt;li&gt;资源自动优化，包括图片压缩、延迟加载等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;2：开发体验的革新&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;现代web开发不应仅关注最终产品，还应关注开发过程的流畅性和可维护性。Netlify提供了一条从本地开发到生产部署的无缝路径。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Netlify彻底改变了博客开发与维护的体验：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;消除了传统服务器维护的复杂性&lt;/li&gt;
+&lt;li&gt;通过分支部署功能，可以轻松预览更改&lt;/li&gt;
+&lt;li&gt;部署原子性保证，失败不会影响现有站点&lt;/li&gt;
+&lt;li&gt;通过CLI工具与本地开发环境无缝集成&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;归纳&lt;/h2&gt;
+&lt;p&gt;Netlify为博客部署提供了一站式解决方案，从构建到部署，再到维护，都实现了极大的简化。通过本文介绍的步骤，即使是技术基础较弱的用户，也能轻松搭建一个专业、高性能的博客网站。&lt;/p&gt;
+&lt;p&gt;特别值得一提的是Netlify的持续部署功能，它彻底改变了内容更新的流程，使博客维护变得轻松自然。不再需要复杂的FTP上传或服务器操作，只需专注于创作内容，然后通过Git推送即可自动完成部署。&lt;/p&gt;
+&lt;p&gt;随着静态网站生成器和JAMstack架构的不断发展，Netlify这样的平台将继续引领博客和网站部署的未来趋势，为内容创作者提供更优质、更高效的发布渠道。&lt;/p&gt;
+&lt;h2&gt;参考文章及引用&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://docs.netlify.com/&quot;&gt;Netlify官方文档&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://gohugo.io/hosting-and-deployment/hosting-on-netlify/&quot;&gt;Hugo官方Netlify部署指南&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.netlify.com/blog/2016/09/29/a-step-by-step-guide-deploying-on-netlify/&quot;&gt;Netlify博客：部署步骤指南&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.smashingmagazine.com/2020/11/jamstack-static-site-generators/&quot;&gt;Smashing Magazine: JAMstack与静态网站生成器&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://css-tricks.com/netlify-functions-for-beginners/&quot;&gt;CSS-Tricks: Netlify Functions入门&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content:encoded><h:img src="/_astro/cover.Jep0VhJk.jpg"/><enclosure url="/_astro/cover.Jep0VhJk.jpg"/></item><item><title>博客伊始</title><link>https://blog.ljx.icu/blog/blog-begin</link><guid isPermaLink="true">https://blog.ljx.icu/blog/blog-begin</guid><description>关于此次博客的前世今生</description><pubDate>Tue, 19 Aug 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import { Spoiler } from &apos;astro-pure/user&apos;&lt;/p&gt;
+&lt;p&gt;望着窗边车水马龙，我写下了此篇草稿，或许是日记，或许是碎隙，或是回忆，文笔不好，还请见谅哈哈。&lt;/p&gt;
+&lt;p&gt;早在2019年，应是年初，还是疫情伊始？记不太清了，我初次接触到了云服务器——这个新奇的玩意，很是令人着迷，那时候所有人节奏都慢了下来，但依旧按捺不住大伙交流的心性，进而转战网络，我也如此，线上事物自那年起飞速发展。于是乎我租了个把月的云服务器，用来开泰拉瑞亚服务器——&lt;a href=&quot;https://store.steampowered.com/app/105600/Terraria/&quot;&gt;一个2D游戏&lt;/a&gt;，用的GitHub上的一个项目——&lt;a href=&quot;https://github.com/Pryaxis/TShock&quot;&gt;Tshock&lt;/a&gt;。那时还不懂得网络、IT、计算机相关方面的知识（现在也只是略懂皮毛哈哈），但与网上的朋友玩得很开心，在短暂但愉快的时光结束后，便想着把这段时间所思所想，所获得的知识，所遇到的人，事，物给记录下来。在一番搜索后，得到了一个结果——博客，于是我开启了搭建博客之旅。&lt;/p&gt;
+&lt;p&gt;在看到博客的那晚，我便开始了研究，找写作，找部署，搭框架，搭完找主题，配置基础设置，忙活了半天发现居然快天亮了，但我文章还没写，只能洗洗睡了第二天再干。写完了文章部署到网站又费了很长时间，但看到自己博客的那一刻很有成就感，即使弄不明白前后端，那也是我自己的博客。&lt;/p&gt;
+&lt;p&gt;而后不出意外的荒废了，因为学业的压力，导致时间和精力不足以让我维护博客，初代陨落。&lt;/p&gt;
+&lt;p&gt;第二次写作，便是运用的&lt;a href=&quot;https://ljx.icu/blog/gridea-blog&quot;&gt;Gridea+GitHub Pages+Netlify&lt;/a&gt;，于我此后的博客有介绍，肆意写作了两月有余，但依旧陨落了，Gridea项目失于维护有一定原因，更大一部分是来自于高考，为了升学放弃了博客的维护。&lt;/p&gt;
+&lt;p&gt;第三次，用的是GitHub上的&lt;a href=&quot;https://github.com/tangly1024/NotionNext&quot;&gt;NotionNext项目&lt;/a&gt;，采用Notion+Vercel架构搭建博客，依旧没服务器，毕竟穷。&lt;/p&gt;
+&lt;p&gt;希望这次能坚持久点，至少得把这域名用够一年吧。不过写了两个月还是抛弃了😭 原域名也不打算续费&lt;/p&gt;
+&lt;p&gt;因为这个项目若只是写写文章的话倒是挺好的，但想要高度自定义却很难办到（作者内置了非常多的模块，但还是满足不了我的胃口），也许是我水平不够，啃不下这么大的项目😫。&lt;/p&gt;
+&lt;p&gt;想着干脆重新来过，把整个博客翻新一遍。&lt;/p&gt;
+&lt;p&gt;于是在浏览架构时，我发现了&lt;a href=&quot;https://github.com/cworld1/astro-theme-pure&quot;&gt;AstroPure&lt;/a&gt;这个主题以及&lt;a href=&quot;https://astro.build/&quot;&gt;Astro&lt;/a&gt;这个架构，一眼就喜欢上了这个项目，刚好这个主题项目还不算大，估摸着自己能啃下来🤓，有了新架构接下来就去注册新域名了，原来的域名我自己都记不住，每次都得复制粘贴，很是麻烦。想着博客博客，就拿自己名字的简写注册了如今的域名，方便好记、辨识性强。&lt;/p&gt;
+&lt;p&gt;筹备几天搞定了相关备案（以为要很久，结果两三天就搞定了，这里点个赞😘）和基本架构，就剩几篇文章没迁移了。&lt;/p&gt;</content:encoded><h:img src="/_astro/cover.BZRNXoXn.jpg"/><enclosure url="/_astro/cover.BZRNXoXn.jpg"/></item><item><title>Gridea博客搭建</title><link>https://blog.ljx.icu/blog/gridea-blog</link><guid isPermaLink="true">https://blog.ljx.icu/blog/gridea-blog</guid><description>简述我之前的博客</description><pubDate>Tue, 19 Aug 2025 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import { Aside } from &apos;astro-pure/user&apos;&lt;/p&gt;
+&lt;h2&gt;Gridea是什么？&lt;/h2&gt;
+&lt;p&gt;Gridea是一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意...&lt;/p&gt;
+&lt;p&gt;具体介绍和特点详见&lt;a href=&quot;https://open.gridea.dev/&quot;&gt;Gridea官网&lt;/a&gt;及其&lt;a href=&quot;https://github.com/getgridea/gridea&quot;&gt;GitHub官网&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;下载Gridea&lt;/h2&gt;
+&lt;p&gt;在&lt;a href=&quot;https://github.com/getgridea/gridea/releases&quot;&gt;GitHub release界面&lt;/a&gt;选择你所需要的版本下载即可(本教程以v0.9.3展开说明)&lt;/p&gt;
+&lt;p&gt;下载完成后点击主题界面，有几个默认主题和一些基础配置可以捣鼓，官方说明已经很详细易懂了，这里我就不过多赘述。&lt;/p&gt;
+&lt;p&gt;现在有了写作工具，还差一个发布的地方，例如GitHub Pages，用GitHub来托管对于新手来说很够用了&lt;/p&gt;
+&lt;h2&gt;配置GitHub Pages&lt;/h2&gt;
+&lt;p&gt;在&lt;a href=&quot;https://github.com/&quot;&gt;GitHub官网&lt;/a&gt;注册账号，&lt;/p&gt;
+&lt;p&gt;点击个人头像选择Your Repositories，弹出页面选择New新建仓库，&lt;/p&gt;
+&lt;p&gt;名称为[username].github.io，方括号内(包括方括号)都改成你自己的起名字，&lt;/p&gt;
+&lt;p&gt;确保是Pubilc，勾选下方的Add a README file后选择创建，这样你的博客存放的地方就有了&lt;/p&gt;
+&lt;h2&gt;远程连接GitHub Pages&lt;/h2&gt;
+&lt;p&gt;打开gridea主界面后点击远程，第一个就是GitHub Pages，具体配置如下:&lt;/p&gt;
+&lt;p&gt;| 变量名     | 值                                                                   |
+| ---------- | -------------------------------------------------------------------- |
+| 域名       | 没有就填[username].github.io                                         |
+| 仓库名称   | [username].github.io                                                 |
+| 分支       | main                                                                 |
+| 仓库用户名 | [username]                                                           |
+| 邮箱       | 联系你的邮箱                                                         |
+| 令牌       | &lt;a href=&quot;https://blog.ljx.icu/blog/gridea-blog#%E5%88%9B%E5%BB%BAgithub%E4%BB%A4%E7%89%8C&quot;&gt;这个稍后再提&lt;/a&gt; |
+| CNAME      | [username].github.io                                                 |
+| HTTP代理   | 看个人配置                                                           |&lt;/p&gt;
+&lt;h3&gt;创建GitHub令牌&lt;/h3&gt;
+&lt;p&gt;点击个人头像选择Settings，拉到最下面选择左侧的Developer Settings&lt;/p&gt;
+&lt;p&gt;点击Personal access tokens并选择第二个并创建新token&lt;/p&gt;
+&lt;p&gt;填好名称后，在Expiration选项中选择No expiration则为永久token&lt;/p&gt;
+&lt;p&gt;勾选下方所有配置并创建token&lt;/p&gt;
+&lt;p&gt;最后复制粘贴到gridea即可，点击左下角检测远程连接测试成功即可&lt;/p&gt;
+&lt;h2&gt;开始写作&lt;/h2&gt;
+&lt;p&gt;最后，当以上所以配置成功后即可用gridea开始写作了，在写完一篇文章后，点击同步即可托管到你的GitHub仓库&lt;/p&gt;
+&lt;p&gt;如何访问？使用https://[username].github.io便能访问到你的博客&lt;/p&gt;</content:encoded><h:img src="/_astro/cover.DSjjlVZT.jpg"/><enclosure url="/_astro/cover.DSjjlVZT.jpg"/></item><item><title>青龙面板每日京豆详情通知</title><link>https://blog.ljx.icu/blog/qinglong-jd-notice</link><guid isPermaLink="true">https://blog.ljx.icu/blog/qinglong-jd-notice</guid><description>因懒得登录而写的邮件通知小程序</description><pubDate>Mon, 19 Aug 2024 00:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;代码如下&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&quot;language-python&quot;&gt;import subprocess
+import smtplib
+from email.mime.text import MIMEText
+# 运行 JavaScript 文件def run_js_file(js_file):
+    result = subprocess.run([&apos;node&apos;, js_file], capture_output=True, text=True)
+    return result.stdout.strip()
+# 发送邮件def send_email(subject, body, to_email):
+    from_email = &apos;your_email@example.com&apos;  # 替换你的邮箱地址    password = &apos;your_email_password&apos;  # 替换为你对应邮箱的SMTP密码    smtp_server = &apos;smtp.example.com&apos;  # 替换为你对应邮箱的SMTP 服务器地址    smtp_port = 587  # 通常是 587 或 465    msg = MIMEText(body)
+    msg[&apos;Subject&apos;] = subject
+    msg[&apos;From&apos;] = from_email
+    msg[&apos;To&apos;] = to_email
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(from_email, password)
+        server.send_message(msg)
+if __name__ == &quot;__main__&quot;:
+    js_file = &apos;path_to_your_file.js&apos;  # 替换为你的 JS 文件路径    result = run_js_file(js_file)
+    print(&quot;JavaScript execution result:&quot;, result)
+    # 发送结果到手机的邮件地址    send_email(&apos;JavaScript Execution Result&apos;, result,&apos;your_email@example.com&apos;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;需要安装的依赖库如下&lt;/h2&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;pip install beautifulsoup4
+pip install requests
+pip install PyExecJS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;青龙面板直接在依赖管理处安装就好了。&lt;/p&gt;
+&lt;h2&gt;具体使用&lt;/h2&gt;
+&lt;p&gt;把上述代码复制，在脚本管理里新建xxx.py文件，点击编辑，粘贴进该文件，并把文件里变量替换为你所需要的，点击保存，在定时任务里新建任务，命令填&quot;task &lt;a href=&quot;http://xxx.py&quot;&gt;xxx.py&lt;/a&gt;&quot;，定时规则推荐&quot;00 22 * * *&quot;，确定后点击运行查看是否设置正确。&lt;/p&gt;
+&lt;h2&gt;运行效果如下图所示&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/DDFGTVvD.jpg&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;</content:encoded><h:img src="/_astro/cover.oIAajQSp.jpg"/><enclosure url="/_astro/cover.oIAajQSp.jpg"/></item><item><title>随身WiFi刷Linux领京东豆</title><link>https://blog.ljx.icu/blog/auto-receive-jd</link><guid isPermaLink="true">https://blog.ljx.icu/blog/auto-receive-jd</guid><description>随身WiFi的一种用途</description><pubDate>Sun, 18 Aug 2024 00:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;1，查看随身WiFi芯片型号&lt;/h2&gt;
+&lt;p&gt;随身WiFi：芯片最好为高通410或者中兴微，可通过主板芯片上印刷的&quot;Qualcomm&quot;或&quot;zxlc&quot;字样辨认，其他品牌类型的芯片可玩性不大，上手难度较高，并不推荐。&lt;strong&gt;（本教程以高通410为例）&lt;/strong&gt;&lt;/p&gt;
+&lt;h2&gt;2，下载必要工具&lt;/h2&gt;
+&lt;p&gt;包括：&lt;/p&gt;
+&lt;p&gt;~~&lt;a href=&quot;https://pan.quark.cn/s/2681a6923909&quot;&gt;随身WiFi助手&lt;/a&gt;（来自@酷铵水遍大佬）[已失效]~~&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://pan.quark.cn/s/576e5fccccfa&quot;&gt;随身WiFi Debian固件&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://pan.quark.cn/s/631323a0be44&quot;&gt;随身WiFi OpenWRT固件&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://mobaxterm.mobatek.net/&quot;&gt;SSH连接工具MobaXterm(官网)&lt;/a&gt;（可自行下载其他连接工具）&lt;/p&gt;
+&lt;h2&gt;3，对随身WiFi进行基础配置&lt;/h2&gt;
+&lt;h3&gt;a.解压文件：&lt;/h3&gt;
+&lt;p&gt;将随身WiFi插入电脑，并解压随身WiFi助手，得到一个文件夹，点开，找到&lt;strong&gt;随身WiFi助手.bat&lt;/strong&gt;文件运行。&lt;/p&gt;
+&lt;h3&gt;b.查看基本信息：&lt;/h3&gt;
+&lt;p&gt;接着输入 01 运行，在这里可查看一些基本信息，若看不到主板型号可以对棒子拆壳后在随身WiFi的主板上查看。&lt;/p&gt;
+&lt;h3&gt;c.安装驱动：&lt;/h3&gt;
+&lt;p&gt;输入 1 回车，接着再输入 1 回车，并安装弹出的vivo驱动。&lt;/p&gt;
+&lt;h3&gt;d.开启随身WiFi的ADB：&lt;/h3&gt;
+&lt;p&gt;回到随身WiFi助手首页，输入 02 回车，再根据品牌主板选择对应选项即可，接着会让你输入随身WiFi后台地址（设备包装上会写），高通410的输入192.168.1.1，回车，结束后回到首页。&lt;/p&gt;
+&lt;h2&gt;4，对随身WiFi进行备份（设备变砖时会用到）&lt;/h2&gt;
+&lt;h3&gt;a.进入9008模式：&lt;/h3&gt;
+&lt;p&gt;运行&lt;strong&gt;随身WiFi助手.bat&lt;/strong&gt;文件，输入 05 回车，接着输入 1 回车，可以在设备管理器中的端口里查看设备是否进入9008模式，接着输入 1 回车打开miko进行备份，若打不开，可以点击我分享的链接下载&lt;a href=&quot;https://pan.quark.cn/s/0d0faddb357d&quot;&gt;miko工具&lt;/a&gt;。&lt;/p&gt;
+&lt;h3&gt;b.用miko工具进行备份：&lt;/h3&gt;
+&lt;p&gt;点击上方&lt;strong&gt;Read&lt;/strong&gt;，接着点击&lt;strong&gt;Partition Backup/Erase&lt;/strong&gt;，然后点击&lt;strong&gt;Load Partition Structure&lt;/strong&gt;读取设备信息，接着在上方把所有系统文件打上对勾，双击&lt;strong&gt;Firmware Folder Path&lt;/strong&gt;选择一个文件夹存放固件接着点击&lt;strong&gt;Read Full Image&lt;/strong&gt;，随便填个名字（例如“WIFI”），点击保存，固件就开始备份了。（备份时间会比较久，请耐心等待进度条跑完❤️）&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;具体救砖方法补充：&lt;/p&gt;
+&lt;p&gt;点击 Loader.exe 打开miko工具，点击Flash，选择 emmc block0 flasher ，按照提示双击打开文件夹，选择之前所保存的.bin文件，最后点击 FLASH! 开始救砖（请耐心等待进度条跑完❤️）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;5，切卡（可选）&lt;/h2&gt;
+&lt;p&gt;插拔一下随身WiFi让它重启，如果你想在刷机后用自己的手机卡来作为热点，那么还需要到随身WiFi后台切下卡，具体方式每个品牌都不相同，请搜索自己的随身WiFi型号+切卡方式来查找。&lt;/p&gt;
+&lt;h2&gt;6，刷入Debian&lt;/h2&gt;
+&lt;h3&gt;a.准备工作：&lt;/h3&gt;
+&lt;p&gt;确保你的随身WiFi是以正常模式（即9091模式）连接到电脑而非刷机模式（即9008模式），接着将随身WiFi的固件压缩包解压选择UZ801（其他请根据具体情况自行选择）。&lt;/p&gt;
+&lt;h3&gt;b.刷入系统：&lt;/h3&gt;
+&lt;p&gt;点开UZ801文件夹（点开后应显示系统文件），在其上方点击地址栏，输入&lt;strong&gt;cmd&lt;/strong&gt;并回车，接着输入运行框内输入&lt;strong&gt;adb devices&lt;/strong&gt;查看设备是否连接，若&lt;strong&gt;List of devices attached&lt;/strong&gt;下方无任何显示，则说明前面有步骤做错了，请仔细核对步骤。然后输入&lt;strong&gt;adb reboot bootloader&lt;/strong&gt;让设备重启到刷机模式，完成后退出运行框，回到固件文件夹内点击&lt;strong&gt;flash.bat&lt;/strong&gt;文件运行（Linux或MacOS系统应点击**&lt;a href=&quot;http://flash.sh&quot;&gt;flash.sh&lt;/a&gt;&lt;strong&gt;文件运行），点开后运行框会提示按任意键继续，一直回车就行了，期间会听到“咚咚”的声音，这说明设备在不断重连，一直到显示&lt;/strong&gt;all done!!**，就表示刷机完成了，此时设备会自动重启。&lt;/p&gt;
+&lt;h3&gt;c.更新驱动：&lt;/h3&gt;
+&lt;p&gt;注意：此时会有三种情况，请按照对应情况依次序进行！！！（需在设备管理器上查看）&lt;/p&gt;
+&lt;p&gt;Android Device里显示Android ADB Interface：鼠标右键点击Android ADB Interface选择卸载，弹出的框框打上勾，并确定卸载，卸载完成后重新插拔一下随身WiFi，来到下一种情况⬇️&lt;/p&gt;
+&lt;p&gt;其他设备里显示RNDIS：右键它选择更新驱动程序，选择第二个选项，接着点下边，在可用驱动列表中往下拉找到网络适配器点一下，点击下一步，在厂商这里找到Microsoft，在型号这里选择&lt;strong&gt;基于远程NDIS的Internet共享设备&lt;/strong&gt;点击下一步，这里会提示不推荐安装，别管他，点是，完成后关闭窗口，来到下一种情况⬇️&lt;/p&gt;
+&lt;p&gt;网络适配器里的基于远程NDIS的Internet共享设备：这就是成功后的情况啦&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://tc.artemisia.icu/file/9MrlQuvL.png&quot; alt=&quot;img&quot;&gt;&lt;/p&gt;
+&lt;h2&gt;7，SSH连接随身WiFi助手&lt;/h2&gt;
+&lt;p&gt;选择你自己的SSH连接工具即可&lt;/p&gt;
+&lt;p&gt;IP:192.168.68.1&lt;/p&gt;
+&lt;p&gt;User:root&lt;/p&gt;
+&lt;p&gt;Port:22&lt;/p&gt;
+&lt;p&gt;Password:1&lt;/p&gt;
+&lt;p&gt;ps：如果你不使用我这个固件，那么请留意固件作者的说明&lt;/p&gt;
+&lt;h2&gt;8，初次连接基本配置修改&lt;/h2&gt;
+&lt;h3&gt;a.修改网络配置（让其可以随时访问）&lt;/h3&gt;
+&lt;p&gt;在命令行里输入：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;nmtui
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;弹出的框框选择编辑连接，找到bridge点进去，选择WiFi并删除，到下方点击确定，接着回到第一页，选择启用连接，点击进去，然后选择你的WiFi，输入密码连接即可，若光标选不了WiFi，把链接里面的usb删掉即可。&lt;/p&gt;
+&lt;p&gt;现在，把棒子随便插到一个地方就能访问了（让它哪凉快哪呆着去👻），同局域网内的任何设备都能访问到它的后台，但是，因为切换了网络，所以它的登录IP会改变，不再是192.168.68.1，而是由路由器分配的IP，需要到路由器后台去查看它的IP。&lt;/p&gt;
+&lt;p&gt;这里我提供一下TP-LINK的查询方式（其他的请自行上网搜索查询）：&lt;/p&gt;
+&lt;p&gt;进入&lt;a href=&quot;http://tplogin.cn/&quot;&gt;TP-LINK后台&lt;/a&gt;，输入密码，默认密码为123456，点击DHCP服务器，选择客户端列表，随身WiFi客户端名为openstick，后面就有它的登录IP。&lt;/p&gt;
+&lt;h3&gt;b.解决BUG：&lt;/h3&gt;
+&lt;p&gt;若此时在命令行里输入更新命令&quot;apt update&quot;，会遇到一些报错，提示无法安全的用该源进行更新，这是因为这个Debian固件自带的清华源很老，而清华源进行过一次仓库迁移，如果用这个老源来更新就会这样。&lt;/p&gt;
+&lt;p&gt;以下为需要敲的代码，一键解决Debian固件问题：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;echo -e &apos;nnnnnnnnnn####################################n&apos;sudo rm /etc/apt/sources.list
+sudo touch /etc/apt/sources.list
+sudo echo -e &quot;# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释   nndeb &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye main contrib non-freen# deb-src &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye main contrib non-freenndeb &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye-updates main contrib non-freen# deb-src &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye-updates main contrib non-freenndeb &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye-backports main contrib non-freen# deb-src &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye-backports main contrib non-freenndeb &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian-security&gt; bullseye-security main contrib non-freen# deb-src &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian-security&gt; bullseye-security main contrib non-free&quot; &gt;&gt; /etc/apt/sources.list
+echo -e &apos;1、默认软件源修改完成！nn&apos;sudo sed -i &apos;1c deb &amp;#x3C;http://mirrors.tuna.tsinghua.edu.cn/Adoptium/deb&gt; buster main&apos; /etc/apt/sources.list.d/AdoptOpenJDK.list
+gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 843C48A565F8F04B
+sudo gpg --armor --export 843C48A565F8F04B | sudo apt-key add -echo -e &apos;nn2、AdoptOpenJDK报错修复完成！nn&apos;sudo sed -i &apos;1c #deb &amp;#x3C;http://repo.mobian-project.org/&gt; bullseye main non-free&apos;  /etc/apt/sources.list.d/mobian.list
+echo -e &apos;3、Mobian源报已屏蔽！&apos;echo -e &apos;nn####################################nn即将开始更新软件源list......n&apos;sleep 5
+sudo apt-get update
+echo -e &apos;nn4、更新软件源list更新完成！&apos;echo -e &apos;nn####################################nn即将开始升级系统程序至最新版......&apos;sleep 5
+sudo apt-mark hold openssh-server
+sudo apt-get -y upgrade
+sudo apt-mark unhold openssh-server
+echo -e &apos;nn5、系统程序更新完成！nn####################################nnnn&apos;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;9，服务器源更新&lt;/h2&gt;
+&lt;p&gt;将服务器换最新版清华源（可选，换成其他源也可）：&lt;/p&gt;
+&lt;p&gt;在命令行里输入：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo vim /etc/apt/sources.list
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;按&lt;strong&gt;i&lt;/strong&gt;，然后将文件中内容替换为如下代码：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释deb &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye main contrib non-free
+deb-src &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye main contrib non-free
+deb &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye-updates main contrib non-free
+deb-src &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye-updates main contrib non-free
+deb &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye-backports main contrib non-free
+deb-src &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian/&gt; bullseye-backports main contrib non-free
+# 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换deb &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian-security&gt; bullseye-security main contrib non-free
+deb-src &amp;#x3C;https://mirrors.tuna.tsinghua.edu.cn/debian-security&gt; bullseye-security main contrib non-free
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;再按 ESC 由编辑模式退出到正常模式，接着输入 :wq 保存并退出&lt;/p&gt;
+&lt;p&gt;然后进行更新&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo apt update
+sudo apt upgrade
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以用free -h查看运存情况，df -h查看内存情况。&lt;/p&gt;
+&lt;h2&gt;10，安装Docker&lt;/h2&gt;
+&lt;h3&gt;a.安装Docker所需依赖包：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo apt-get -y install ca-certificates curl
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;b.创建/etc/apt/keyrings目录，并下载Docker的官方GPG密钥到该目录：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL &amp;#x3C;https://mirrors.aliyun.com/docker-ce/linux/debian/gpg&gt; -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;c.将Docker仓库添加到系统的软件源列表：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;echo \\&quot;deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] &amp;#x3C;https://mirrors.aliyun.com/docker-ce/linux/debian&gt; \\$(. /etc/os-release &amp;#x26;&amp;#x26; echo &quot;$VERSION_CODENAME&quot;) stable&quot; | \\sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;d.更新软件包列表：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo apt update
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;e.安装Docker：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;f.执行以下命令，检查Docker是否安装成功：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;docker -v
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;若回显&lt;strong&gt;version&lt;/strong&gt;和&lt;strong&gt;build&lt;/strong&gt;信息则说明安装成功&lt;/p&gt;
+&lt;h3&gt;g.执行以下命令，启动Docker服务，并设置开机自启动：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo systemctl start docker
+sudo systemctl enable docker
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;h.下面是关于Docker命令的一点小补充：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo systemctl start docker     #运行Docker守护进程
+sudo systemctl stop docker      #停止Docker守护进程
+sudo systemctl restart docker   #重启Docker守护进程
+sudo systemctl enable docker    #设置Docker开机自启动
+sudo systemctl status docker    #查看Docker的运行状态
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;i.Docker切换镜像源：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json
+&amp;#x3C;&amp;#x3C;-&apos;EOF&apos;
+{&quot;registry-mirrors&quot;:
+    [
+    &quot;&amp;#x3C;https://docker.m.daocloud.io&gt;&quot;,
+    &quot;&amp;#x3C;https://dockerproxy.com&gt;&quot;,
+    &quot;&amp;#x3C;https://docker.mirrors.ustc.edu.cn&gt;&quot;,
+    &quot;&amp;#x3C;https://ustc-edu-cn.mirror.aliyuncs.com&gt;&quot;,
+    &quot;&amp;#x3C;https://ccr.ccs.tencentyun.com&gt;&quot;,
+    &quot;&amp;#x3C;https://docker.nju.edu.cn&gt;&quot;
+    ]
+}
+EOF
+udo systemctl daemon-reload
+sudo systemctl restart docker
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;若以上镜像源失效，还请自行寻找其他可用镜像源！&lt;/p&gt;
+&lt;p&gt;网速可能较慢，请耐心等待。&lt;/p&gt;
+&lt;h3&gt;j.重启服务：&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;systemctl restart docker
+systemctl status docker
+reboot
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;若回显 active（running） 则说明Docker已启动&lt;/p&gt;
+&lt;h2&gt;11，安装青龙面板&lt;/h2&gt;
+&lt;p&gt;以下为&lt;a href=&quot;https://github.com/whyour/qinglong&quot;&gt;青龙面板GitHub官方&lt;/a&gt;描述：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;latest 镜像是基于 alpine 构建，debian 镜像是基于 debian-slim 构建。如果需要使用 alpine 不支持的依赖，建议使用 debian 镜像。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;ps：下方”-p 5803:5700”这里的数可以随意更改但是访问地址需要随之改变（若不懂，请不要随意更改）&lt;/p&gt;
+&lt;p&gt;拉取latest版命令（青龙面板最新版）：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;docker run -dit \\    -v $PWD/ql/data:/ql/data \\    -p 5803:5700 \\    -e QlBaseUrl=&quot;/&quot; \\    -e QlPort=&quot;5700&quot; \\    --name qinglong \\    --hostname qinglong \\    --restart unless-stopped \\    whyour/qinglong:latest
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;由于最新版对部分依赖兼容不好，这里提供2.11.3的拉取方法&lt;/p&gt;
+&lt;p&gt;拉取2.11.3版命令（根据faker作者所言这是最适合的版本，建议使用该命令）：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;docker run -dit \\    -v $PWD/ql/data:/ql/data \\    -p 5803:5700 \\    -e QlBaseUrl=&quot;/&quot; \\    -e QlPort=&quot;5700&quot; \\    --name qinglong \\    --hostname qinglong \\    --restart unless-stopped \\    whyour/qinglong:2.11.3
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;拉取debian版本命令：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;docker run -dit \\    -v $PWD/ql/data:/ql/data \\    -p 5803:5700 \\    -e QlBaseUrl=&quot;/&quot; \\    -e QlPort=&quot;5700&quot; \\    --name qinglong \\    --hostname qinglong \\    --restart unless-stopped \\    whyour/qinglong:debian
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;查看是否构建成功：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;docker ps
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;输入&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;reboot
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;重启一下，表示安装成功&lt;/p&gt;
+&lt;h2&gt;12，配置青龙面板并安装脚本所需依赖&lt;/h2&gt;
+&lt;h3&gt;a.配置青龙面板：&lt;/h3&gt;
+&lt;p&gt;浏览器输入 &lt;a href=&quot;http://xn--IP-0p3cl7jf7fz5pe9m663ahca:5803&quot;&gt;http://你的服务器登录IP:5803&lt;/a&gt; 打开界面，（如果上面端口改了这里也需要改）&lt;/p&gt;
+&lt;p&gt;点击开始安装&lt;/p&gt;
+&lt;p&gt;通知方式可以跳过&lt;/p&gt;
+&lt;p&gt;设置账号密码并登陆&lt;/p&gt;
+&lt;h3&gt;b.安装脚本所需依赖：&lt;/h3&gt;
+&lt;p&gt;在依赖管理中点击新建依赖，自动拆分选择“是”&lt;/p&gt;
+&lt;p&gt;依次安装以下依赖：&lt;/p&gt;
+&lt;p&gt;Linux依赖：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-txt&quot;&gt;bizCode
+bizMsg
+lxml
+libc-dev
+gcc
+g++
+libffi-dev
+python3-dev
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Python3依赖：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;bs4
+telethon
+cacheout
+jieba
+PyExecJS
+ping3
+canvas
+Crypto
+ds
+requests
+pycryptodome
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;NodeJs依赖：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;request
+cheerio
+js-base64
+dotenv
+tough-cookie
+ws@7.4.3
+require
+requests
+date-fns
+ts-md5
+typescript
+json5
+axios@v0.27.2
+crypto-js
+@types/node
+png-js
+node-telegram-bot-api
+fs
+jsdom
+form-data
+jieba
+tslib
+ds
+jsdom -g
+prettytable
+ql
+common
+node-jsencrypt
+juejin-helper
+moment
+global-agent
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ps：Python3中的canvas依赖由于青龙面板自带python3版本过高可能安装不成功，不过大部分脚本命令都使用js，所以无伤大雅&lt;/p&gt;
+&lt;p&gt;ps：如果遇到安装失败，请点击右侧按钮重新一个个依次安装&lt;/p&gt;
+&lt;p&gt;如果依赖仍无法安装可以进入青龙bash界面，利用命令安装：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;docker exec -it qinglong bash
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;将pip源永久更换为清华源并更新pip（可自行选择其他源）：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;pip config set global.index-url &amp;#x3C;https://pypi.tuna.tsinghua.edu.cn/simple&gt;
+pip install --upgrade pip
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;将npm源永久更换为淘宝源（可自行选择其他源）：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;npm config set registry &amp;#x3C;https://registry.npmmirror.com/&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;安装Python3依赖：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;pip3 install 包名
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;安装NodeJs依赖：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-bash&quot;&gt;npm install 包名
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;13，拉取京东库脚本刷京东豆&lt;/h2&gt;
+&lt;h3&gt;a.拉取京东库：&lt;/h3&gt;
+&lt;p&gt;有很多脚本这里提供几个github地址&lt;/p&gt;
+&lt;p&gt;脚本项目地址一：https://github.com/shufflewzc/faker2&lt;/p&gt;
+&lt;p&gt;脚本项目地址二：https://github.com/shufflewzc/faker3&lt;/p&gt;
+&lt;p&gt;拉库前请打开青龙面板-配置文件 第18行 GithubProxyUrl=&quot;&quot; 双引号中的内容清空（2.11.3版本太低，没有这项配置，不用管）&lt;/p&gt;
+&lt;p&gt;复制以下拉库命令即可：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;Faker2 助力池版【安全本地sign防CK泄漏】使用助力池请在群里发&quot;助力池&quot; 机器人自动回复教程
+ql repo &amp;#x3C;https://git.metauniverse-cn.com/https://github.com/shufflewzc/faker2.git&gt; &quot;jd_|jx_|gua_|jddj_|jdCookie&quot; &quot;activity|backUp&quot; &quot;^jd[^_]|USER|function|utils|sendNotify|ZooFaker_Necklace.js|JDJRValidator_|sign_graphics_validate|ql|JDSignValidator|magic|depend|h5sts&quot; &quot;main&quot;
+
+Faker3 内部互助版【安全本地sign防CK泄漏】
+ql repo &amp;#x3C;https://git.metauniverse-cn.com/https://github.com/shufflewzc/faker3.git&gt; &quot;jd_|jx_|gua_|jddj_|jdCookie&quot; &quot;activity|backUp&quot; &quot;^jd[^_]|USER|function|utils|sendNotify|ZooFaker_Necklace.js|JDJRValidator_|sign_graphics_validate|ql|JDSignValidator|magic|depend|h5sts&quot; &quot;main&quot;
+
+Faker4 纯净版 仅包含少量日常内部助力任务 防止运行过多任务掉ck 适合安静挂机
+ql repo &amp;#x3C;https://git.metauniverse-cn.com/https://github.com/shufflewzc/faker4.git&gt; &quot;jd_|jx_|gua_|jddj_|jdCookie&quot; &quot;activity|backUp&quot; &quot;^jd[^_]|USER|function|utils|sendNotify|ZooFaker_Necklace.js|JDJRValidator_|sign_graphics_validate|ql|JDSignValidator|magic|depend|h5sts&quot; &quot;main&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;点击定时任务并新建任务&lt;/p&gt;
+&lt;p&gt;名称随便&lt;/p&gt;
+&lt;p&gt;拉取命令在上面&lt;/p&gt;
+&lt;p&gt;定时规则为 15 0-23/4 * * * ，也可自行配置，详见&lt;a href=&quot;https://blog.csdn.net/shuai_pi/article/details/123969976&quot;&gt;青龙面板定时规则&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;点击运行，过一段时间会添加定时自动任务脚本&lt;/p&gt;
+&lt;h3&gt;b.填入自己的京东Cookies：&lt;/h3&gt;
+&lt;p&gt;京东Cookies获取方法：&lt;/p&gt;
+&lt;p&gt;点击进入&lt;a href=&quot;https://m.jd.com/&quot;&gt;京东&lt;/a&gt;（一定是手机版官网，不是电脑版）&lt;/p&gt;
+&lt;p&gt;然后用自己的账号登录，登录后按F12，点击Application，点开Cookies&lt;/p&gt;
+&lt;p&gt;找到pt_key=?;pt_pin=?;&lt;/p&gt;
+&lt;p&gt;把对应的值替换到问号中即可，分号要保留&lt;/p&gt;
+&lt;p&gt;回到青龙面板，点击环境变量，点击新建环境变量&lt;/p&gt;
+&lt;p&gt;名称设为：JD_COOKIE&lt;/p&gt;
+&lt;p&gt;输入获取到Cookies的相关参数&lt;/p&gt;
+&lt;p&gt;ps：填写之后应该是已启用状态，如果不是则说明存在问题，例如cookie过期，需要重新设置&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;❤️之后便可以愉快地刷京东豆了❤️&lt;/strong&gt;&lt;/p&gt;
+&lt;h2&gt;参考文章及引用&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.bilibili.com/video/BV142421Z7gg/?vd_source=7166d3c31745e701e0f26a4ad912d2d0&quot;&gt;在下莫老师的blibili视频&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://www.zxmls.lol/#/&quot;&gt;在下莫老师的附件表&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://mirror.tuna.tsinghua.edu.cn/help&quot;&gt;清华大学开源软件镜像站&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://www.notion.so/1c598629675145988b43a37998a1604a?pvs=21&quot;&gt;青龙Faker仓库教程合集&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://help.aliyun.com/zh/ecs/use-cases/install-and-use-docker-on-a-linux-ecs-instance#33f11a5f1800n&quot;&gt;阿里云官方产品文档&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://blog.csdn.net/scy_wl/article/details/135893983&quot;&gt;醉尘归大佬的CSDN文档&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content:encoded><h:img src="/_astro/cover.y7hddhCO.jpg"/><enclosure url="/_astro/cover.y7hddhCO.jpg"/></item></channel></rss>
