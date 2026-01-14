@@ -27,6 +27,7 @@ const refreshMs = 60_000
     defaultRefreshMs: refreshMs
   }}
 >
+
   const normalizeServer = (server) => String(server || '').replace(/\/$/, '')
 
   const formatCommentTime = (timestamp) => {
@@ -166,7 +167,7 @@ const refreshMs = 60_000
         console.error('Recent comments error:', e)
         const listEl = root.querySelector('.comment-list')
         if (listEl) {
-          listEl.innerHTML = `<div class="comment-empty error">加载失败: ${e.message}</div>`
+          listEl.innerHTML = `<div class="comment-empty error">加载失败:${e.message}</div>`
         }
       }
     }
