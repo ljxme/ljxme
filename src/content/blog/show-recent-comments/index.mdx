@@ -27,109 +27,6 @@ summary: >-
 
 代码片段Gist开源地址：[Recent Comments for Astro-Theme-Pure](https://gist.github.com/ljxme/e08c5d42abc5e5aa3fdda2d16aa5a60a)
 
-### recentcomment.ts文件
-
-在 `src/plugins` 目录下新建 `recentcomment.ts` 文件并填入以下内容（**注意需要替换的部分**）：
-
-```ts title="recentcomment.ts"
-/**
- * 获取并处理最新评论数据
- * 通过Waline API获取最新评论并格式化显示
- */
-
-// 定义评论数据接口
-interface WalineComment {
-  nick: string // 评论者昵称
-  comment: string // 评论内容
-  url: string // 评论页面URL
-  avatar: string // 头像URL
-  time: number // 评论时间戳
-  like?: number // 点赞数
-  addr?: string // 地址
-}
-
-// 定义API响应接口
-interface WalineResponse {
-  data: WalineComment[]
-}
-
-/**
- * 获取最新评论数据
- * @param limit 获取评论数量限制
- * @returns 格式化后的评论数据
- */
-export async function fetchRecentComments(limit: number = 5): Promise<WalineComment[]> {
-  try {
-    // <Waline后端地址> 请将该部分替换为你自己搭建的Waline后端服务地址 <!-- [!code highlight:2] -->
-    const response = await fetch('https://<Waline后端地址>/api/comment?type=recent')
-    if (!response.ok) {
-      throw new Error(`获取评论失败: ${response.status}`)
-    }
-
-    const data: WalineResponse = await response.json()
-    return data.data.slice(0, limit)
-  } catch (error) {
-    console.error('获取最新评论出错:', error)
-    return []
-  }
-}
-
-/**
- * 格式化评论时间
- * @param timestamp 时间戳
- * @returns 格式化后的时间字符串
- */
-export function formatCommentTime(timestamp: number): string {
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  // 一分钟内
-  if (diff < 60 * 1000) {
-    return '刚刚'
-  }
-
-  // 一小时内
-  if (diff < 60 * 60 * 1000) {
-    return `${Math.floor(diff / (60 * 1000))}分钟前`
-  }
-
-  // 一天内
-  if (diff < 24 * 60 * 60 * 1000) {
-    return `${Math.floor(diff / (60 * 60 * 1000))}小时前`
-  }
-
-  // 一周内
-  if (diff < 7 * 24 * 60 * 60 * 1000) {
-    return `${Math.floor(diff / (24 * 60 * 60 * 1000))}天前`
-  }
-
-  // 其他情况显示具体日期
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
-
-/**
- * 清理HTML标签
- * @param html HTML字符串
- * @returns 清理后的纯文本
- */
-export function stripHtml(html: string): string {
-  // 使用正则表达式替代DOM操作，可在服务器端运行
-  return html.replace(/<[^>]*>/g, '')
-}
-
-/**
- * 截断文本
- * @param text 原始文本
- * @param length 最大长度
- * @returns 截断后的文本
- */
-export function truncateText(text: string, length: number = 100): string {
-  if (text.length <= length) return text
-  return text.substring(0, length) + '...'
-}
-```
-
 ### rc.css文件
 
 在 `src/assets/styles` 目录下新建 `rc.css` 文件并填入以下内容：
@@ -280,68 +177,228 @@ export function truncateText(text: string, length: number = 100): string {
 ```astro title="RecentComments.astro"
 ---
 import { Icon } from 'astro-pure/user'
-import {
-  fetchRecentComments,
-  formatCommentTime,
-  stripHtml,
-  truncateText
-} from '@/plugins/recentcomment'
+import config from '@/site-config'
 
-// 获取最新评论数据
-const comments = await fetchRecentComments(5)
+const limit = 5
+const refreshMs = 60_000
 ---
 
-<div class='recent-comments'>
+<div class='recent-comments' data-recent-comments data-limit={limit} data-refresh-ms={refreshMs}>
   <div class='recent-comments-title'>
-    <Icon name='list' />
+    <Icon name='list' class='me-2' color='#A6923F' />
     <span>最新评论</span>
   </div>
 
   <div class='comment-list'>
-    {
-      comments.length > 0 ? (
-        comments.map((comment) => (
-          <div class='comment-item'>
-            <div class='comment-avatar'>
-              <img src={comment.avatar} alt={comment.nick} loading='lazy' />
-            </div>
-            <div class='comment-content'>
-              <div class='comment-meta'>
-                <span class='comment-author'>{comment.nick}</span>
-                <span class='comment-time'>{formatCommentTime(comment.time)}</span>
-              </div>
-              <div class='comment-text' set:html={truncateText(stripHtml(comment.comment), 100)} />
-              <a href={comment.url ? comment.url.replace(/\/$/, '') : '#'} class='comment-link'>
-                查看详情 →
-              </a>
-            </div>
-          </div>
-        ))
-      ) : (
-        <div class='comment-empty'>暂无评论数据</div>
-      )
-    }
+    <div class='comment-empty'>加载中...</div>
   </div>
 </div>
 
-<script>
-  // 客户端清理HTML标签
-  document.addEventListener('astro:page-load', () => {
-    const commentTexts = document.querySelectorAll('.comment-text')
-    commentTexts.forEach((element) => {
-      // 确保链接在新窗口打开
-      const links = element.querySelectorAll('a')
-      links.forEach((link) => {
-        link.setAttribute('target', '_blank')
-        link.setAttribute('rel', 'noopener noreferrer')
-      })
+<script
+  is:inline
+  type='module'
+  data-astro-rerun
+  define:vars={{
+    walineServer: config.integ.waline.server,
+    defaultLimit: limit,
+    defaultRefreshMs: refreshMs
+  }}
+>
+
+  const normalizeServer = (server) => String(server || '').replace(/\/$/, '')
+
+  const formatCommentTime = (timestamp) => {
+    const date = new Date(timestamp)
+    const diff = Date.now() - date.getTime()
+
+    if (diff < 60 * 1000) return '刚刚'
+    if (diff < 60 * 60 * 1000) return `${Math.floor(diff / (60 * 1000))}分钟前`
+    if (diff < 24 * 60 * 60 * 1000) return `${Math.floor(diff / (60 * 60 * 1000))}小时前`
+    if (diff < 7 * 24 * 60 * 60 * 1000) return `${Math.floor(diff / (24 * 60 * 60 * 1000))}天前`
+
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
+
+  const stripHtml = (html) => {
+    const doc = new DOMParser().parseFromString(String(html || ''), 'text/html')
+    return doc.body.textContent || ''
+  }
+
+  const truncateText = (text, length = 100) => {
+    const s = String(text || '')
+    if (s.length <= length) return s
+    return s.slice(0, length) + '...'
+  }
+
+  const normalizeUrl = (url) => {
+    const s = String(url || '')
+    if (!s) return '#'
+    return s.endsWith('/') ? s.slice(0, -1) : s
+  }
+
+  const buildKey = (items) =>
+    items.map((c) => `${c.nick ?? ''}|${c.time ?? ''}|${c.url ?? ''}|${c.avatar ?? ''}`).join('||')
+
+  const renderComments = (root, comments) => {
+    const listEl = root.querySelector('.comment-list')
+    if (!listEl) return
+
+    listEl.replaceChildren()
+
+    if (!comments.length) {
+      const empty = document.createElement('div')
+      empty.className = 'comment-empty'
+      empty.textContent = '暂无评论数据'
+      listEl.appendChild(empty)
+      return
+    }
+
+    const frag = document.createDocumentFragment()
+
+    for (const comment of comments) {
+      const item = document.createElement('div')
+      item.className = 'comment-item'
+
+      const avatarWrap = document.createElement('div')
+      avatarWrap.className = 'comment-avatar'
+
+      const img = document.createElement('img')
+      img.src = comment.avatar || ''
+      img.alt = comment.nick || ''
+      img.loading = 'lazy'
+      avatarWrap.appendChild(img)
+
+      const content = document.createElement('div')
+      content.className = 'comment-content'
+
+      const meta = document.createElement('div')
+      meta.className = 'comment-meta'
+
+      const author = document.createElement('span')
+      author.className = 'comment-author'
+      author.textContent = comment.nick || ''
+
+      const time = document.createElement('span')
+      time.className = 'comment-time'
+      time.dataset.time = String(comment.time || '')
+      time.textContent = comment.time ? formatCommentTime(comment.time) : ''
+
+      meta.append(author, time)
+
+      const text = document.createElement('a')
+      text.className = 'comment-text'
+      text.textContent = truncateText(stripHtml(comment.comment), 100)
+      text.href = normalizeUrl(comment.url) + (comment.objectId ? `#${comment.objectId}` : '')
+
+      content.append(meta, text)
+      item.append(avatarWrap, content)
+
+      frag.appendChild(item)
+    }
+
+    listEl.appendChild(frag)
+  }
+
+  const updateTimesOnly = (root) => {
+    const timeEls = root.querySelectorAll('.comment-time[data-time]')
+    timeEls.forEach((el) => {
+      const timestamp = Number(el.dataset.time)
+      if (!Number.isFinite(timestamp) || timestamp <= 0) return
+      el.textContent = formatCommentTime(timestamp)
     })
-  })
+  }
+
+  const fetchRecentComments = async (server, signal) => {
+    const base = normalizeServer(server)
+    if (!base) return []
+
+    const res = await fetch(`${base}/api/comment?type=recent`, { signal })
+    if (!res.ok) return []
+
+    const json = await res.json()
+    const data = Array.isArray(json?.data) ? json.data : []
+    return data
+  }
+
+  const initRecentComments = (root) => {
+    const limit = Number(root.dataset.limit || defaultLimit) || defaultLimit
+    const refreshMs = Number(root.dataset.refreshMs || defaultRefreshMs) || defaultRefreshMs
+
+    let lastKey = ''
+    const aborter = new AbortController()
+
+    const tick = async () => {
+      try {
+        const list = await fetchRecentComments(walineServer, aborter.signal)
+        const items = list.slice(0, limit)
+        const key = items.length ? buildKey(items) : '__EMPTY__'
+
+        if (key !== lastKey) {
+          lastKey = key
+          renderComments(root, items)
+        } else {
+          updateTimesOnly(root)
+        }
+      } catch (e) {
+        if (e?.name === 'AbortError') return
+        console.error('Recent comments error:', e)
+        const listEl = root.querySelector('.comment-list')
+        if (listEl) {
+          listEl.innerHTML = `<div class="comment-empty error">加载失败:${e.message}</div>`
+        }
+      }
+    }
+
+    tick()
+
+    const timer = window.setInterval(() => {
+      if (document.hidden) return
+      tick()
+    }, refreshMs)
+
+    const onVisible = () => {
+      if (!document.hidden) tick()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      aborter.abort()
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }
+
+  const disposers = new Set()
+
+  const boot = () => {
+    document.querySelectorAll('[data-recent-comments]').forEach((root) => {
+      if (root.__recentCommentsInited) return
+      root.__recentCommentsInited = true
+      disposers.add(initRecentComments(root))
+    })
+  }
+
+  const disposeAll = () => {
+    disposers.forEach((fn) => fn())
+    disposers.clear()
+  }
+
+  const start = () => boot()
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true })
+  } else {
+    start()
+  }
+
+  document.addEventListener('astro:page-load', boot)
+  document.addEventListener('astro:before-swap', disposeAll)
 </script>
 
 <style is:global>
   @import '@/assets/styles/rc.css';
 </style>
+
 ```
 
 ## 使用
@@ -352,7 +409,7 @@ const comments = await fetchRecentComments(5)
 
 ```astro title="index.astro"
 ---
-import RecentComments from '@/components/RecentComments.astro' //引入组件 # [!code ++]
+import RecentComments from '@/components/RecentComments.astro' //引入组件 [!code ++]
 ---
 
 <PageLayout meta={{ title: '首页' }} highlightColor='#FFF8DC'>
@@ -361,12 +418,11 @@ import RecentComments from '@/components/RecentComments.astro' //引入组件 # 
       id='content'
       class='animate flex flex-col md:flex-row gap-y-10 md:gap-x-6 md:w-4/5 lg:w-5/6'
     >
-      <!--省略中间代码-->
-      <div class='md:w-1/3 md:mt-0'>
-        # [!code ++]
-        <RecentComments /> # [!code ++]
-      </div> # [!code ++]
-      <!--省略此后代码-->
+      <!-- 省略中间代码 -->
+      <div class='md:w-1/3 md:mt-0'> <!-- [!code ++] -->
+        <RecentComments /> <!-- [!code ++] -->
+      </div> <!-- [!code ++] -->
+      <!-- 省略此后代码 -->
     </div>
     <Quote class='mt-12' />
   </main>
