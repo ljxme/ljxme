@@ -1,0 +1,1 @@
+const e={npmCDN:"https://cdn.jsdmirror.com/npm",integ:{quote:{server:"https://v1.hitokoto.cn/?c=i",target:"(data) => (data.hitokoto || 'Error')"},waline:{server:"https://waline.ljx.icu/",emoji:["bmoji","ljxme","heybox_cube","heybox_heniang","linedog"],additionalConfigs:{pageview:!0,comment:!0,locale:{reaction0:"Like",placeholder:"欢迎留下评论~（无需登录，评论经审核后可见）"}}}}};export{e as c};

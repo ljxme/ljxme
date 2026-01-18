@@ -1,0 +1,620 @@
+<!DOCTYPE html><html lang="zh-CN" class="astro-37fxchfa" style="--highlightColor: hsl(var(--primary) / var(--un-text-opacity));"> <head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no, viewport-fit=cover" name="viewport"><meta content="IE=edge" http-equiv="X-UA-Compatible"><title>本地实现Astro文章AI摘要 • 梨尽兴 | Li&#39;s Blog</title><link rel="icon" type="image/x-icon" href="/favicon/favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="/favicon/favicon.ico"><link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png"><link rel="manifest" href="/favicon/site.webmanifest"><link rel="stylesheet" href="https://ik.imagekit.io/ljx/LXGWBright-Medium/result.css?updatedAt=1760351683473" media="print" onload="this.setAttribute('media', 'all')"><noscript><link rel="stylesheet" href="https://ik.imagekit.io/ljx/LXGWBright-Medium/result.css?updatedAt=1760351683473"></noscript><link rel="stylesheet" href="https://ik.imagekit.io/ljx/LXGWBright-MediumItalic/result.css?updatedAt=1760351714330" media="print" onload="this.setAttribute('media', 'all')"><noscript><link rel="stylesheet" href="https://ik.imagekit.io/ljx/LXGWBright-MediumItalic/result.css?updatedAt=1760351714330"></noscript><link rel="stylesheet" href="https://ik.imagekit.io/ljx/LXGWmikhailcai/result.css?updatedAt=1762168258143" media="print" onload="this.setAttribute('media', 'all')"><noscript><link rel="stylesheet" href="https://ik.imagekit.io/ljx/LXGWmikhailcai/result.css?updatedAt=1762168258143"></noscript><link rel="preconnect" href="https://ik.imagekit.io"><link rel="preconnect" href="https://cn.vercount.one"><link rel="canonical" href="https://blog.ljx.icu/blog/aisummary-blog"><meta content="本地实现Astro文章AI摘要 • 梨尽兴 | Li's Blog" name="title"><meta content="纯静态的ai文章摘要" name="description"><meta content="Ljx" name="author"><meta name="color-scheme" content="light dark"><meta content="article" property="og:type"><meta content="本地实现Astro文章AI摘要" property="og:title"><meta content="纯静态的ai文章摘要" property="og:description"><meta content="https://blog.ljx.icu/blog/aisummary-blog" property="og:url"><meta content="梨尽兴 | Li's Blog" property="og:site_name"><meta content="zh_CN" property="og:locale"><meta content="https://blog.ljx.icu/_astro/cover.BFW_RLt0.png" property="og:image"><meta content="1200" property="og:image:width"><meta content="630" property="og:image:height"><meta content="Ljx" property="article:author"><meta content="2025-12-18T00:00:00.000Z" property="article:published_time"><meta content="summary_large_image" property="twitter:card"><meta content="https://blog.ljx.icu/blog/aisummary-blog" property="twitter:url"><meta content="本地实现Astro文章AI摘要" property="twitter:title"><meta content="纯静态的ai文章摘要" property="twitter:description"><meta content="https://blog.ljx.icu/_astro/cover.BFW_RLt0.png" property="twitter:image"><link href="/sitemap-index.xml" rel="sitemap"><link rel="alternate" type="application/rss+xml" title="梨尽兴 | Li's Blog" href="https://blog.ljx.icu/rss.xml"><meta content="Astro v5.16.6" name="generator"><script type="module">console.log("%c Astro Theme Pure %c https://github.com/cworld1/astro-theme-pure/","color:#fff;background:linear-gradient(90deg,#448bff,#44e9ff);padding:5px 0;","color:#000;background:linear-gradient(90deg,#44e9ff,#ffffff);padding:5px 10px 5px 0px;");</script><script src="data:text/javascript;base64,LyoqCiAqIEFJU3VtbWFyeSDliY3nq6/phY3nva7mlofku7YKICog5rOo5oSP77ya5q2k5paH5Lu25Lya6KKr5rOo5YWl5Yiw5rWP6KeI5Zmo5Lit6L+Q6KGM77yM6K+35Yu/5Zyo5q2k5a2Y5pS+IEFQSSBLZXkg562J5pWP5oSf5L+h5oGv77yBCiAqLwoKLy8gQUlTdW1tYXJ5IOmdmeaAgeaRmOimgemFjee9ru+8mgp2YXIgYWlzdW1tYXJ5VHlwaW5nQW5pbWF0ZSA9IHRydWUgLy8gdHJ1ZSDlvIDlkK/miZPlrZfmnLrliqjnlLvvvJtmYWxzZSDnm7TmjqXmuLLmn5PmlofmnKwKdmFyIGFpc3VtbWFyeVBvc3RTZWxlY3RvciA9ICcjY29udGVudCcgLy8g5paH56ug5YaF5a655a655Zmo6YCJ5oup5Zmo77yM5L6L5aaCICNhcnRpY2xlLWNvbnRhaW5lciwgLnBvc3QtY29udGVudAo=" defer></script><script src="/_astro/aisummary.TwgLaOhF.js" defer></script><link rel="stylesheet" href="/_astro/aisummary.B7yaf_EW.css"><link rel="stylesheet" href="/_astro/shuoshuo.Dff99zka.css"><link rel="stylesheet" href="https://cdn.jsdmirror.com/npm/aplayer@1.10.1/dist/APlayer.min.css" media="all"><script src="https://cdn.jsdmirror.com/npm/aplayer@1.10.1/dist/APlayer.min.js" defer></script><script src="https://cdn.jsdmirror.com/npm/meting@2.0.2/dist/Meting.min.js" defer></script><script src="https://analytics.ljx.icu/tracker.min.js" data-website-id="ljxblog" defer></script><script src="https://cdn.jsdmirror.com/npm/instant.page@5.2.0/instantpage.js" type="module"></script><script src="data:text/javascript;base64,dmFyIGN1cnJlbnREb21haW4gPSB3aW5kb3cubG9jYXRpb24uaG9zdG5hbWUKCmlmIChjdXJyZW50RG9tYWluLmluY2x1ZGVzKCdibG9nLmxqeC5pY3UnKSkgewogIHZhciBzY3JpcHQgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzY3JpcHQnKQogIHNjcmlwdC5zcmMgPSAnaHR0cHM6Ly91bWFtaS5sanguaWN1L3NjcmlwdC5qcycKICBzY3JpcHQuc2V0QXR0cmlidXRlKCdkYXRhLXdlYnNpdGUtaWQnLCAnYWQxMWM3YTQtZGJiOC00MmZmLThmNjAtN2MyMjVkOWU5ZmZkJykKICBzY3JpcHQuYXN5bmMgPSB0cnVlCiAgZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpCiAgY29uc29sZS5sb2coJz09PT09PT095oiQ5Yqf5Yqg6L29IFtVbWFtaV0g57uf6K6h5YiG5p6Q5bel5YW35Luj56CBPT09PT09PT0nKQp9IGVsc2UgaWYgKGN1cnJlbnREb21haW4uaW5jbHVkZXMoJ1vnq5nngrkyXScpKSB7CiAgdmFyIHNjcmlwdCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ3NjcmlwdCcpCiAgc2NyaXB0LnNyYyA9ICdodHRwczovL+S9oOeahOermeeCuS9zY3JpcHQuanMnCiAgc2NyaXB0LnNldEF0dHJpYnV0ZSgnZGF0YS13ZWJzaXRlLWlkJywgJ1vnq5nngrky55qE572R56uZSURdJykKICBzY3JpcHQuYXN5bmMgPSB0cnVlCiAgZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpCiAgY29uc29sZS5sb2coJz09PT09PT095oiQ5Yqf5Yqg6L29IFvnq5nngrkyXSDnu5/orqHliIbmnpDlt6Xlhbfku6PnoIE9PT09PT09PScpCn0gZWxzZSB7CiAgLy8g5pys5Zyw6LCD6K+V5LiN6ZyA6KaB57uf6K6hCiAgY29uc29sZS5sb2coJz09PT09PT095b2T5YmN572R56uZ5LiN6ZyA6KaB5Yqg6L2957uf6K6h5YiG5p6Q5bel5YW3PT09PT09PT0nKQp9Cg==" defer></script><script>
+  function simpleSetTheme() {
+    let theme = localStorage.getItem('theme')
+    // If undefined or 'system', get from system
+    if (!theme || theme === 'system') {
+      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === 'dark' ? '#0B0B10' : '#FCFCFD')
+  }
+  simpleSetTheme()
+  document.addEventListener('astro:page-load', () => simpleSetTheme())
+</script><script type="module" src="/_astro/ThemeProvider.astro_astro_type_script_index_0_lang.suZL6u-L.js"></script><link rel="stylesheet" href="/_astro/index.CI5cvDX3.css">
+<link rel="stylesheet" href="/_astro/_id_.CVb4srxQ.css">
+<link rel="stylesheet" href="/_astro/_id_.xOrx1S2_.css">
+<link rel="stylesheet" href="/_astro/_id_.B6lZLyBl.css">
+<style>@media(min-width:769px){#sidebar-shade:where(.astro-scuu7fyy){display:none!important}}@media(max-width:769px){aside:where(.astro-scuu7fyy).show{display:block!important;opacity:1}@keyframes fade-in-side{0%{transform:translate(50%);opacity:0}to{transform:translate(0);opacity:1}}@keyframes fade-in{0%{opacity:0}to{opacity:1}}aside:where(.astro-scuu7fyy){animation:.3s fade-in-side!important;animation-fill-mode:forwards;right:0;top:0!important;height:100vh!important;min-width:40vw!important;max-width:75vw!important;border-top-right-radius:0!important;border-bottom-right-radius:0!important;padding-top:1.5rem!important;padding-bottom:1.5rem!important}#sidebar-shade:where(.astro-scuu7fyy){animation:.3s fade-in}}@media(max-width:640px){aside:where(.astro-scuu7fyy){min-width:55vw!important}}
+@keyframes pulsate{0%{opacity:1}50%{opacity:.4}to{opacity:1}}.loading:where(.astro-x7wpzmhq) .load-block:where(.astro-x7wpzmhq){color:transparent;border-radius:calc(var(--radius) - 3px);background-color:hsl(var(--card) / var(--un-bg-opacity, 1));animation:pulsate 2s infinite linear;user-select:none}.loading:where(.astro-x7wpzmhq) .load-block:where(.astro-x7wpzmhq):nth-child(2){animation-delay:1s}.no-license:where(.astro-x7wpzmhq){opacity:.5}:where(.astro-x7wpzmhq):not(.loading) #gh-avatar:where(.astro-x7wpzmhq){background-color:hsl(var(--card) / var(--un-bg-opacity))}
+</style>
+<link rel="stylesheet" href="/_astro/index.Dh_0HW6A.css">
+<style>:where([data-astro-image]){object-fit:var(--fit);object-position:var(--pos);height:auto}:where([data-astro-image=full-width]){width:100%}:where([data-astro-image=constrained]){max-width:100%}
+.medium-zoom-overlay{position:fixed;inset:0;opacity:0;transition:opacity .3s;will-change:opacity}.medium-zoom--opened .medium-zoom-overlay{cursor:zoom-out;opacity:1;z-index:999}.medium-zoom-image{cursor:zoom-in;transition:transform .3s cubic-bezier(.2,0,.2,1)}.medium-zoom-image--hidden{visibility:hidden}.medium-zoom-image--opened{position:relative;cursor:zoom-out;will-change:transform;z-index:999}
+.aside:where(.astro-x75cnk7d)>.aside-container:where(.astro-x75cnk7d){--un-bg-opacity: .07;&.aside-tip{--primary: 234 60% 60%}&.aside-caution{--primary: 41 90% 50%}&.aside-danger{--primary: 339 90% 60%}.aside-content{>:first-child{margin-top:0}>:last-child{margin-bottom:0}}}
+svg:where(.astro-udet5etc){color:var(--sl-icon-color);font-size:var(--sl-icon-size, 1em);width:1.5em;height:1.5em}
+.expand-content:where(.astro-znbwadyx){grid-template-rows:0fr}.expanded:where(.astro-znbwadyx) .expand-content:where(.astro-znbwadyx){grid-template-rows:1fr}
+.sl-steps{--bullet-size: 1.75rem ;--bullet-margin: .375rem;list-style:none!important;counter-reset:steps-counter var(--sl-steps-start, 0);padding-inline-start:0!important}.sl-steps>li{counter-increment:steps-counter;position:relative;padding-inline-start:calc(var(--bullet-size) + 1rem);padding-bottom:1px;min-height:calc(var(--bullet-size) + var(--bullet-margin))}.sl-steps>li+li{margin-top:0}.sl-steps>li:before{content:counter(steps-counter);position:absolute;top:0;inset-inline-start:0;width:var(--bullet-size);height:var(--bullet-size);line-height:var(--bullet-size);font-size:.8125rem;font-weight:600;text-align:center;color:hsl(var(--foreground) / var(--un-text-opacity, 1));background-color:hsl(var(--card) / var(--un-bg-opacity, 1));border-radius:99rem;box-shadow:inset 0 0 0 1px hsl(var(--border) / var(--un-border-opacity, 1))}.sl-steps>li:after{--guide-width: 1px;content:"";position:absolute;top:calc(var(--bullet-size) + var(--bullet-margin));bottom:var(--bullet-margin);inset-inline-start:calc((var(--bullet-size) - var(--guide-width)) / 2);width:var(--guide-width);background-color:hsl(var(--border) / var(--un-border-opacity, 1))}.sl-steps>li>:first-child{--lh: 1.75em ;--shift-y: calc(.5 * (var(--bullet-size) - var(--lh)));margin-top:0;transform:translateY(var(--shift-y));margin-bottom:var(--shift-y);color:hsl(var(--foreground) / var(--un-text-opacity, 1))}.sl-steps>li>:first-child:where(h1,h2,h3,h4,h5,h6){--lh: 1.2em }
+.spoiler:where(.astro-uaowncbv):not(:hover) *{color:inherit!important;background-color:transparent!important}
+</style><script type="module" src="/_astro/page.B1D-nYk3.js"></script></head> <body class="flex justify-center bg-background text-foreground astro-37fxchfa" class="astro-scuu7fyy" style="--highlightColor: hsl(var(--primary) / var(--un-text-opacity));"> <div class="pointer-events-none fixed bottom-0 left-0 right-0 top-0 print:hidden" style="mask-image: radial-gradient(circle, transparent, black); -webkit-mask-image: radial-gradient(circle, transparent, black);"> <canvas id="artPlumCanvas" width="400" height="400"></canvas> </div> <script type="module">const b=Math.PI,M=Math.PI/2,x=Math.PI/12,v=30,k=6,m=()=>Math.random()*.6+.2,f=(t,i=400,o=400,r)=>{const n=t.getContext("2d");if(!n)throw new Error("Unable to get canvas context");const s=window.devicePixelRatio||1,h=n.webkitBackingStorePixelRatio||n.mozBackingStorePixelRatio||n.msBackingStorePixelRatio||n.oBackingStorePixelRatio||n.backingStorePixelRatio||1,c=s/h;return t.style.width=`${i}px`,t.style.height=`${o}px`,t.width=c*i,t.height=c*o,n.scale(c,c),{ctx:n,dpi:c}},R=(t=0,i=0,o=0,r=0)=>{const n=o*Math.cos(r),s=o*Math.sin(r);return[t+n,i+s]},g=document.getElementById("artPlumCanvas"),e={width:window.innerWidth,height:window.innerHeight},{ctx:d}=f(g,e.width,e.height);let a=[],w=[];const l=(t,i,o,r={value:0})=>{const n=Math.random()*k;r.value+=1;const[s,h]=R(t,i,n,o);d.beginPath(),d.moveTo(t,i),d.lineTo(s,h),d.stroke();const c=o+Math.random()*x,P=o-Math.random()*x;if(s<-100||s>e.width+100||h<-100||h>e.height+100)return;const p=r.value<=v?.8:.5;Math.random()<p&&a.push(()=>l(s,h,c,r)),Math.random()<p&&a.push(()=>l(s,h,P,r))},y=()=>{w=a,a=[],w.length&&(w.forEach(t=>{Math.random()<.5?a.push(t):t()}),requestAnimationFrame(y))},u=()=>{const{width:t,height:i}=g,n=`hsl(${getComputedStyle(document.documentElement).getPropertyValue("--primary").trim()} / 0.15)`;d.clearRect(0,0,t,i),d.lineWidth=1,d.strokeStyle=n,w=[],a=[()=>l(m()*e.width,-5,M),()=>l(m()*e.width,e.height+5,-M),()=>l(-5,m()*e.height,0),()=>l(e.width+5,m()*e.height,b)],e.width<500&&(a=a.slice(0,2)),requestAnimationFrame(y)};u();window.addEventListener("resize",()=>{window.innerWidth!==e.width&&(e.width=window.innerWidth,e.height=window.innerHeight,f(g,e.width,e.height),u())});const S=new MutationObserver(t=>{t.forEach(i=>{i.attributeName==="class"&&u()})});S.observe(document.documentElement,{attributes:!0});</script> <div id="highlight-gradient" class="pointer-events-none absolute start-0 top-0 z-0 h-screen w-full opacity-25 astro-37fxchfa" style="background-image:linear-gradient(hsl(var(--primary) / var(--un-text-opacity)),transparent); --highlightColor: hsl(var(--primary) / var(--un-text-opacity));"></div> <div id="main-container" class="w-full max-w-[70rem] min-h-[100dvh] flex flex-col justify-between astro-37fxchfa" style="--highlightColor: hsl(var(--primary) / var(--un-text-opacity));"> <header-component class="group sticky top-4 z-50 max-md:z-30 mb-12 flex items-center justify-between rounded-xl border border-transparent max-sm:py-1 sm:rounded-2xl astro-b5wftkml"> <a class="z-30 text-xl font-medium group-[.not-top]:ms-2 sm:group-[.not-top]:ms-3 astro-b5wftkml" style="transition:margin-inline 0.3s" href="/" aria-label="Brand">梨尽兴 | Li&#39;s Blog</a> <div class="flex items-center gap-x-2 astro-b5wftkml">  <div id="headerExpandContent" class="end-0 start-0 top-12 grid border border-transparent group-[.not-top]:rounded-xl group-[.expanded]:opacity-100 dark:group-[.expanded.not-top]:bg-muted max-sm:absolute max-sm:opacity-0 max-sm:group-[.not-top]:border-border max-sm:group-[.expanded.not-top]:bg-background max-sm:group-[.not-top]:px-4 max-sm:group-[.not-top]:py-2 sm:grid-rows-1 astro-b5wftkml"> <div class="flex flex-col items-center justify-center overflow-hidden sm:flex-row astro-b5wftkml"> <a href="/blog" class="w-full flex-none grow py-2 text-right font-medium transition-none hover:text-primary sm:w-fit sm:px-3 astro-b5wftkml" aria-label="Nav menu item"> 文章 </a><a href="/projects" class="w-full flex-none grow py-2 text-right font-medium transition-none hover:text-primary sm:w-fit sm:px-3 astro-b5wftkml" aria-label="Nav menu item"> 项目 </a><a href="/links" class="w-full flex-none grow py-2 text-right font-medium transition-none hover:text-primary sm:w-fit sm:px-3 astro-b5wftkml" aria-label="Nav menu item"> 友链 </a><a href="/board" class="w-full flex-none grow py-2 text-right font-medium transition-none hover:text-primary sm:w-fit sm:px-3 astro-b5wftkml" aria-label="Nav menu item"> 留言 </a><a href="/about" class="w-full flex-none grow py-2 text-right font-medium transition-none hover:text-primary sm:w-fit sm:px-3 astro-b5wftkml" aria-label="Nav menu item"> 关于 </a> <div class="flex w-full grow flex-row justify-end gap-x-3 sm:w-fit sm:gap-x-5 astro-b5wftkml"> <a class="px-1 py-2 transition-none sm:px-2 astro-b5wftkml" href="/search" title="Search"> <span class="sr-only astro-b5wftkml">Search</span> <svg aria-hidden="true" class="size-5 astro-b5wftkml astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M5 10a5 5 0 1 1 10 0a5 5 0 0 1-10 0m5-7a7 7 0 1 0 4.192 12.606l5.1 5.101a1 1 0 0 0 1.415-1.414l-5.1-5.1A7 7 0 0 0 10 3"/></g></svg>  </a> </div> </div> </div>  <div class="z-30 flex gap-x-4 group-[.not-top]:gap-x-2 astro-b5wftkml" style="transition:gap 0.3s"> <button id="toggleDarkMode" class="group/dark box-content size-5 rounded-md border p-1.5 transition-colors hover:bg-border sm:group-[.not-top]:rounded-xl astro-b5wftkml"> <span class="sr-only astro-b5wftkml">Dark Theme</span> <svg aria-hidden="true" class="system size-5 group-hover/dark:text-primary astro-b5wftkml astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" fill-rule="nonzero" d="M19 3a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-4v1h1a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h1v-1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm-6 15h-2v1h2zm6-13H5v11h14z"/></g></svg>  <svg aria-hidden="true" class="light hidden size-5 group-hover/dark:text-primary astro-b5wftkml astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M12 19a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1m6.364-2.05l.707.707a1 1 0 0 1-1.414 1.414l-.707-.707a1 1 0 0 1 1.414-1.414m-12.728 0a1 1 0 0 1 1.497 1.32l-.083.094l-.707.707a1 1 0 0 1-1.497-1.32l.083-.094zM12 6a6 6 0 1 1 0 12a6 6 0 0 1 0-12m0 2a4 4 0 1 0 0 8a4 4 0 0 0 0-8m-8 3a1 1 0 0 1 .117 1.993L4 13H3a1 1 0 0 1-.117-1.993L3 11zm17 0a1 1 0 1 1 0 2h-1a1 1 0 1 1 0-2zM4.929 4.929a1 1 0 0 1 1.32-.083l.094.083l.707.707a1 1 0 0 1-1.32 1.497l-.094-.083l-.707-.707a1 1 0 0 1 0-1.414m14.142 0a1 1 0 0 1 0 1.414l-.707.707a1 1 0 1 1-1.414-1.414l.707-.707a1 1 0 0 1 1.414 0M12 2a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1"/></g></svg>  <svg aria-hidden="true" class="dark hidden size-5 group-hover/dark:text-primary astro-b5wftkml astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M12.477 4.546a1.01 1.01 0 0 1 1.097-1.409A9 9 0 0 1 12 21c-4.434 0-8.118-3.206-8.863-7.426a1.01 1.01 0 0 1 1.409-1.097a6 6 0 0 0 7.931-7.931m2.404 1.072a8 8 0 0 1-9.263 9.263A7.002 7.002 0 0 0 19 12.001a7 7 0 0 0-4.12-6.383ZM5.565 7.716l.064.14a3.26 3.26 0 0 0 1.237 1.363l.1.059a.068.068 0 0 1 0 .118l-.1.058a3.26 3.26 0 0 0-1.237 1.364l-.064.14a.071.071 0 0 1-.13 0l-.064-.14a3.26 3.26 0 0 0-1.237-1.364l-.1-.058a.068.068 0 0 1 0-.118l.1-.059A3.26 3.26 0 0 0 5.37 7.855l.064-.14a.071.071 0 0 1 .13 0Zm2.832-4.859c.04-.09.166-.09.206 0l.102.222a5.2 5.2 0 0 0 1.97 2.172l.157.092a.108.108 0 0 1 0 .189l-.158.092a5.2 5.2 0 0 0-2.07 2.394a.113.113 0 0 1-.207 0l-.102-.222a5.2 5.2 0 0 0-1.97-2.172l-.158-.092a.108.108 0 0 1 0-.189l.158-.092a5.2 5.2 0 0 0 1.97-2.172z"/></g></svg>  </button> <button id="toggleMenu" class="rounded-md border p-1.5 transition-colors hover:bg-border sm:hidden sm:group-[.not-top]:rounded-xl astro-b5wftkml"> <span class="sr-only astro-b5wftkml">Menu</span> <svg aria-hidden="true" class="size-5 astro-b5wftkml astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M20 18a1 1 0 0 1 .117 1.993L20 20H4a1 1 0 0 1-.117-1.993L4 18zm0-7a1 1 0 1 1 0 2H4a1 1 0 1 1 0-2zm0-7a1 1 0 1 1 0 2H4a1 1 0 0 1 0-2z"/></g></svg>  </button> </div> </div> </header-component>  <script>
+  const toggleDarkModeElement = document.getElementById('toggleDarkMode')
+  if (toggleDarkModeElement) {
+    toggleDarkModeElement.dataset.theme = localStorage.getItem('theme') || 'system'
+  }
+</script> <script type="module" src="/_astro/Header.astro_astro_type_script_index_0_lang.CwScYy8Q.js"></script>  <div class="flex-1 w-full astro-37fxchfa" style="--highlightColor: hsl(var(--primary) / var(--un-text-opacity));">  <a class="group inline-flex items-center gap-x-1 rounded-lg bg-muted border px-2 py-1 text-sm text-muted-foreground transition-all hover:bg-card no-underline astro-scuu7fyy" href="/blog" data-astro-prefetch="true">  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="stroke-muted-foreground group-hover:stroke-primary"> <line x1="19" y1="12" x2="5" y2="12" class="translate-x-3 scale-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-0 group-hover:scale-x-100"></line> <polyline points="12 19 5 12 12 5" class="translate-x-1 transition-all duration-300 ease-in-out group-hover:translate-x-0"></polyline> </svg>   <p class="my-0">Back</p>     </a> <main class="mt-6 items-start gap-x-10 md:flex astro-scuu7fyy">  <aside class="animate top-20 min-w-48 basis-60 overflow-y-scroll max-md:hidden z-40 fixed md:sticky md:order-2 lg:shrink-0 max-md:border max-md:px-4 max-md:py-3 max-md:bg-muted max-md:rounded-xl astro-scuu7fyy" style="height:calc(100vh - 7rem);" id="sidebar"> <toc-heading class=" astro-btewjcb6" slot="sidebar"> <h2 class="font-medium astro-btewjcb6">TABLE OF CONTENTS</h2> <ul class="mt-4 astro-btewjcb6"> <li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 起因" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted" href="#起因">起因</a> </div>  </li><li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 前置" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted" href="#前置">前置</a> </div> <ul> <li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 申请星火Spark-Lite" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted ps-7" href="#申请星火spark-lite">申请星火Spark-Lite</a> </div>  </li><li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 搭建 Vercel API" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted ps-7" href="#搭建-vercel-api">搭建 Vercel API</a> </div>  </li> </ul> </li><li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 引入" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted" href="#引入">引入</a> </div>  </li><li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 配置" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted" href="#配置">配置</a> </div> <ul> <li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 供离线脚本读取的配置项" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted ps-7" href="#供离线脚本读取的配置项">供离线脚本读取的配置项</a> </div>  </li><li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 供博客页面使用的配置项" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted ps-7" href="#供博客页面使用的配置项">供博客页面使用的配置项</a> </div>  </li> </ul> </li><li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 使用" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted" href="#使用">使用</a> </div>  </li><li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 后记" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted" href="#后记">后记</a> </div>  </li><li> <div class="relative"> <span class="absolute top-[5%] w-[2px] rounded transition-colors duration-300 [&.highlight-bg]:bg-primary [&.is-read]:bg-border"></span> <a aria-label="Scroll to section: 参考" class="toc-item line-clamp-2 px-3 py-1 ms-2 text-foreground/75 transition-all hover:text-foreground [&#38;.highlight]:font-medium [&#38;.highlight]:text-primary [&#38;.highlight-bg-translucent]:bg-muted" href="#参考">参考</a> </div>  </li> </ul> </toc-heading> <script type="module">class l extends HTMLElement{headings=[];tocLinks=[];headingProgress={};constructor(){super(),this.headings=Array.from(document.querySelectorAll("article h1, article h2, article h3, article h4, article h5, article h6")),this.tocLinks=Array.from(this.querySelectorAll('a[href^="#"]')).map(e=>({element:e,progressBar:e.previousElementSibling,slug:(e.getAttribute("href")||"").substring(1)}))}updatePositionAndStyle=()=>{const e=window.innerHeight,r=window.scrollY-(document.querySelector("#content")?.offsetTop||0),o=(document.querySelector("#content")?.offsetHeight||0)+127;this.headings.forEach((t,n)=>{const h=this.headings[n+1]?.offsetTop||o,s=[t.offsetTop-r,h-r-t.offsetHeight],i=(e-s[0])/(s[1]-s[0]);this.headingProgress[t.id]={inView:s[0]<e&&s[1]>0,progress:Math.max(0,Math.min(1,i))}}),this.tocLinks.forEach(({element:t,progressBar:n,slug:h},s)=>{const{inView:i,progress:g}=this.headingProgress[h];this.headingProgress[h]&&(t.classList.toggle("highlight",i),t.classList.toggle("highlight-bg-translucent",i),t.classList.toggle("rounded-t-2xl",i&&(s===0||!this.headingProgress[this.tocLinks[s-1]?.slug].inView)),t.classList.toggle("rounded-b-2xl",i&&(s===this.tocLinks.length-1||!this.headingProgress[this.tocLinks[s+1]?.slug].inView)),n.classList.toggle("is-read",!i&&g===1),n.classList.toggle("highlight-bg",i),n.style.setProperty("height",`${g*90}%`))})};connectedCallback(){this.tocLinks.forEach(e=>{e.element.addEventListener("click",r=>{r.preventDefault();const o=this.headings.find(t=>t.id===e.slug);o?(history.pushState(null,o.textContent||"",e.element.getAttribute("href")),o.scrollIntoView({behavior:"smooth"})):console.warn(`No heading found for slug: ${e.slug}`)})}),setInterval(this.updatePositionAndStyle,100),window.addEventListener("scroll",this.updatePositionAndStyle)}}customElements.define("toc-heading",l);</script>  </aside> <div id="sidebar-shade" class="fixed top-0 start-0 w-full h-full astro-scuu7fyy" style="display:none;background-color:#00000091;z-index:31"></div> <article class="min-w-0 grow astro-scuu7fyy">  <div id="content-header" class="animate astro-scuu7fyy"> <div class="hero-image relative mb-6 astro-dzhm7s2a"><img src="/_astro/cover.BFW_RLt0_1oP69.webp" alt="an image targetting my article" fetchpriority="high" loading="eager" decoding="async" width="1600" height="900" class="cover-image relative z-10 h-auto w-full max-w-[65ch] rounded-2xl object-contain astro-dzhm7s2a"><img src="/_astro/cover.BFW_RLt0_1oP69.webp" alt="an image targetting my article" fetchpriority="high" loading="eager" id="blurImage" decoding="async" width="1600" height="900" class="absolute end-0 top-4 z-0 mt-0 h-full max-w-[65ch] rounded-3xl opacity-60 transition-opacity duration-300 astro-dzhm7s2a"></div><div class="article-info max-lg:mx-auto astro-dzhm7s2a"> <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs leading-6 text-muted-foreground astro-dzhm7s2a">  <div class="flex items-center gap-1 astro-dzhm7s2a"> <svg aria-hidden="true" class="size-5 astro-dzhm7s2a astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M16 3a1 1 0 0 1 1 1v1h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2V4a1 1 0 0 1 2 0v1h6V4a1 1 0 0 1 1-1M8 7H5v2h14V7h-3zm-3 4v8h14v-8zm2 2a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1m1 2a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2zm3-2a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H12a1 1 0 0 1-1-1m1 2a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2zm3-2a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H16a1 1 0 0 1-1-1m1 2a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2z"/></g></svg>  <span class="text-muted-foreground font-mono font-sans astro-dzhm7s2a"> <time datetime="2025-12-18T00:00:00.000Z"> Dec 18, 2025 </time> </span>  </div>  <div class="flex items-center gap-1 astro-dzhm7s2a"> <svg aria-hidden="true" class="size-5 astro-dzhm7s2a astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2m0 2a8 8 0 1 0 0 16a8 8 0 0 0 0-16m0 2a1 1 0 0 1 .993.883L13 7v4.586l2.707 2.707a1 1 0 0 1-1.32 1.497l-.094-.083l-3-3a1 1 0 0 1-.284-.576L11 12V7a1 1 0 0 1 1-1"/></g></svg>  7 min </div> <span class="flex items-center gap-1 astro-dzhm7s2a"> <svg aria-hidden="true" class="size-5 astro-dzhm7s2a astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2m1.482 14.94a18 18 0 0 1-2.964 0q.14.596.31 1.102c.251.755.53 1.293.79 1.622c.127.162.23.248.3.29l.051.028l.03.008l.032-.008l.051-.027a1.2 1.2 0 0 0 .3-.29c.26-.33.539-.868.79-1.623q.17-.506.31-1.102m-8.675-1.435a8.03 8.03 0 0 0 4.441 4.01a11 11 0 0 1-.318-.84a16 16 0 0 1-.52-2.033a18 18 0 0 1-3.603-1.137m14.387 0c-1.145.5-2.351.883-3.605 1.137a16 16 0 0 1-.52 2.034q-.144.437-.318.838a8.03 8.03 0 0 0 4.443-4.01Zm-5.218-4.634a15 15 0 0 1-3.952 0a26 26 0 0 0 .141 4.025a16.2 16.2 0 0 0 3.67 0A25 25 0 0 0 14 12q0-.576-.024-1.13ZM4.568 9.032a8 8 0 0 0-.52 3.856a16 16 0 0 0 4.067 1.637a28 28 0 0 1-.074-4.053a15 15 0 0 1-3.473-1.44m14.864 0a15 15 0 0 1-3.473 1.44a28 28 0 0 1-.074 4.053a16 16 0 0 0 4.066-1.637a8 8 0 0 0-.52-3.855Zm-7.416-5.02l-.011-.002l-.02.003l-.038.015a1.2 1.2 0 0 0-.33.307c-.26.33-.538.868-.79 1.622c-.27.808-.488 1.8-.633 2.919a13 13 0 0 0 3.612 0c-.145-1.12-.364-2.111-.633-2.919c-.252-.754-.53-1.293-.79-1.622a1.2 1.2 0 0 0-.3-.29l-.067-.032Zm-2.768.474a8 8 0 0 0-3.71 2.797c.843.484 1.746.876 2.695 1.163c.16-1.164.397-2.223.697-3.122q.145-.438.318-.838m5.504 0q.172.4.318.838c.3.9.537 1.958.697 3.122a13 13 0 0 0 2.695-1.163a8 8 0 0 0-3.71-2.797"/></g></svg>  中文 </span> <span class="flex items-center gap-1 astro-dzhm7s2a"> <svg aria-hidden="true" class="size-5 astro-dzhm7s2a astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M10.124 3.008a1 1 0 0 1 .868 1.116L10.508 8h3.984l.516-4.124a1 1 0 1 1 1.984.248L16.508 8H20a1 1 0 1 1 0 2h-3.742l-.5 4H19.5a1 1 0 1 1 0 2h-3.992l-.516 4.124a1 1 0 1 1-1.984-.248L13.492 16H9.508l-.516 4.124a1 1 0 1 1-1.984-.248L7.492 16H4.5a1 1 0 1 1 0-2h3.242l.5-4H5a1 1 0 0 1 0-2h3.492l.516-4.124a1 1 0 0 1 1.116-.868M13.742 14l.5-4h-3.984l-.5 4z"/></g></svg>  <div class="astro-dzhm7s2a"> <a aria-label="View more blogs with the tag 主题魔改" class="hover:underline hover:underline-offset-4 astro-dzhm7s2a" data-pagefind-filter="tag" href="/tags/主题魔改"> 主题魔改 </a> / </div><div class="astro-dzhm7s2a"> <a aria-label="View more blogs with the tag aisummary" class="hover:underline hover:underline-offset-4 astro-dzhm7s2a" data-pagefind-filter="tag" href="/tags/aisummary"> aisummary </a> / </div><div class="astro-dzhm7s2a"> <a aria-label="View more blogs with the tag typescript" class="hover:underline hover:underline-offset-4 astro-dzhm7s2a" data-pagefind-filter="tag" href="/tags/typescript"> typescript </a> / </div><div class="astro-dzhm7s2a"> <a aria-label="View more blogs with the tag css" class="hover:underline hover:underline-offset-4 astro-dzhm7s2a" data-pagefind-filter="tag" href="/tags/css"> css </a> / </div><div class="astro-dzhm7s2a"> <a aria-label="View more blogs with the tag astro" class="hover:underline hover:underline-offset-4 astro-dzhm7s2a" data-pagefind-filter="tag" href="/tags/astro"> astro </a>  </div> </span> </div> <h1 class="mt-4 text-2xl font-medium sm:mb-2 sm:mt-6 sm:text-3xl astro-dzhm7s2a"> 本地实现Astro文章AI摘要 </h1> <div class="mt-3 italic astro-dzhm7s2a"> <blockquote class="text-sm text-muted-foreground astro-dzhm7s2a"><q class="astro-dzhm7s2a">纯静态的ai文章摘要</q></blockquote> <div class="text-base text-sm text-muted-foreground mt-1"> <span class="waline-pageview-count" data-path="/blog/aisummary-blog/"></span> 浏览
+ | <a href="#waline"> <span class="waline-comment-count" data-path="/blog/aisummary-blog/"></span> 评论
+</a>  </div> <p class="mt-1 text-sm italic text-amber-500">
+本文最后更新于<span class="mx-1 font-medium text-red-500">31</span>
+天以前，部分信息可能已经过时，请注意检查。
+</p> </div> </div>  <div class="mt-4 w-1/2 border-t max-md:mx-auto sm:mt-6 sm:w-1/3 astro-dzhm7s2a"></div> <script type="module">const o=window.innerHeight,s=o/9,i=o*2/9,l=o*3/9,e=document.getElementById("blurImage");e&&window.addEventListener("scroll",()=>{const t=window.scrollY;t>=l?e.style.opacity="0.15":t>=i?e.style.opacity="0.3":t>=s&&(e.style.opacity="0.45")});</script>  </div>  <div id="content" class="max-w-none animate mt-8 md:min-w-[45ch] overflow-x-hidden prose text-base astro-scuu7fyy">  <div class="aisummary-container"> <div class="aisummary-title"> <i class="aisummary-title-icon"> <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"> <title>机器人</title> <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <path d="M34.717885,5.03561087 C36.12744,5.27055371 37.079755,6.60373651 36.84481,8.0132786 L35.7944,14.3153359 L38.375,14.3153359 C43.138415,14.3153359 47,18.1768855 47,22.9402569 L47,34.4401516 C47,39.203523 43.138415,43.0650727 38.375,43.0650727 L9.625,43.0650727 C4.861585,43.0650727 1,39.203523 1,34.4401516 L1,22.9402569 C1,18.1768855 4.861585,14.3153359 9.625,14.3153359 L12.2056,14.3153359 L11.15519,8.0132786 C10.920245,6.60373651 11.87256,5.27055371 13.282115,5.03561087 C14.69167,4.80066802 16.024865,5.7529743 16.25981,7.16251639 L17.40981,14.0624532 C17.423955,14.1470924 17.43373,14.2315017 17.43948,14.3153359 L30.56052,14.3153359 C30.56627,14.2313867 30.576045,14.1470924 30.59019,14.0624532 L31.74019,7.16251639 C31.975135,5.7529743 33.30833,4.80066802 34.717885,5.03561087 Z M38.375,19.4902885 L9.625,19.4902885 C7.719565,19.4902885 6.175,21.0348394 6.175,22.9402569 L6.175,34.4401516 C6.175,36.3455692 7.719565,37.89012 9.625,37.89012 L38.375,37.89012 C40.280435,37.89012 41.825,36.3455692 41.825,34.4401516 L41.825,22.9402569 C41.825,21.0348394 40.280435,19.4902885 38.375,19.4902885 Z M14.8575,23.802749 C16.28649,23.802749 17.445,24.9612484 17.445,26.3902253 L17.445,28.6902043 C17.445,30.1191812 16.28649,31.2776806 14.8575,31.2776806 C13.42851,31.2776806 12.27,30.1191812 12.27,28.6902043 L12.27,26.3902253 C12.27,24.9612484 13.42851,23.802749 14.8575,23.802749 Z M33.1425,23.802749 C34.57149,23.802749 35.73,24.9612484 35.73,26.3902253 L35.73,28.6902043 C35.73,30.1191812 34.57149,31.2776806 33.1425,31.2776806 C31.71351,31.2776806 30.555,30.1191812 30.555,28.6902043 L30.555,26.3902253 C30.555,24.9612484 31.71351,23.802749 33.1425,23.802749 Z" fill="#444444" fill-rule="nonzero"></path> </g> </svg> </i> <div class="aisummary-title-text">Li's AI Summary</div> <div class="aisummary-tag" id="aisummary-tag">
+Li's AI
+</div> </div> <div class="aisummary-explanation" data-ai-summary="文章介绍了在本地实现Astro文章AI摘要的方法。作者首先从TianliGPT的AI摘要服务开始，但感觉不够自定义。之后尝试了KonoXIN的文章AI摘要实现思路，发现存储在Index DB里的摘要占用空间小，但每次访问文章时都会请求一次API，不太方便。因此，作者决定本地生成文章摘要，并将其放置在文章的Frontmatter块末尾。作者还提到了使用星火Spark-Lite和Vercel部署项目的过程，以及如何配置环境变量和引入相关代码片段。最后，作者提供了一些关于如何使用项目的说明。"> 文章介绍了在本地实现Astro文章AI摘要的方法。作者首先从TianliGPT的AI摘要服务开始，但感觉不够自定义。之后尝试了KonoXIN的文章AI摘要实现思路，发现存储在Index DB里的摘要占用空间小，但每次访问文章时都会请求一次API，不太方便。因此，作者决定本地生成文章摘要，并将其放置在文章的Frontmatter块末尾。作者还提到了使用星火Spark-Lite和Vercel部署项目的过程，以及如何配置环境变量和引入相关代码片段。最后，作者提供了一些关于如何使用项目的说明。 </div> <div class="aisummary-disclaimer">本摘要由AI生成，仅供参考，内容准确性请以原文为准</div> </div> <h2 id="起因">起因<a class="anchor" href="#起因">#</a></h2>
+
+<p>在之前的NotionNext架构博客使用过一两周 <a href="/safego?url=https%3A%2F%2Fai.zhheo.com%2F" rel="noopener noreferrer" target="_blank"><strong>TianliGPT</strong><span style="user-select:none"> ↗</span></a> 的AI摘要服务，虽然只需10￥就有足够的TOKEN余额，对于我这种小博客肯定是绰绰有余，但感觉还是不够自定义 <del>（想完全自建使用）</del> <span class="spoiler bg-muted rounded text-transparent hover:text-inherit px-1 transition-colors astro-uaowncbv"> 详见<a href="https://blog.ljx.icu/blog/notionnext-ai-summary/" rel="nofollow noopener noreferrer" target="_blank">《讨论NotionNext如何配置AI摘要》<span style="user-select:none"> ↗</span></a> </span> </p>
+<p>之后呢给博客迁移到了 <strong>Astro</strong> 架构，看到了 <a href="/safego?url=https%3A%2F%2Fwww.konoxin.top%2Fposts%2Fdb7b3418" rel="noopener noreferrer" target="_blank">konoXIN的文章<span style="user-select:none"> ↗</span></a> ，大佬的AI摘要实现思路也很完美，试了一周感觉不错，不过就是有点小小的不足，因为他的摘要是存储在 Index DB 里的，虽然占用的空间小，并且也足够存储生成的摘要，但每个人在访问文章时都会请求一次API还是太那啥了 <del>（即使TOKEN无限用）</del></p>
+<p>思考了几天，也试了试，还是想本地生成文章摘要再放置在文章的 <code>Frontmatter</code> 块末尾，于是结合 <a href="/safego?url=https%3A%2F%2Fwww.liushen.fun%2F" rel="noopener noreferrer" target="_blank">@Liushen<span style="user-select:none"> ↗</span></a> 和 <a href="/safego?url=https%3A%2F%2Fwww.konoxin.top%2F" rel="noopener noreferrer" target="_blank">@konoXIN<span style="user-select:none"> ↗</span></a> 的思路，捣鼓了几天<span class="spoiler bg-muted rounded text-transparent hover:text-inherit px-1 transition-colors astro-uaowncbv"> 实则是摸鱼~ </span> ，初步实现了我的需求<span class="spoiler bg-muted rounded text-transparent hover:text-inherit px-1 transition-colors astro-uaowncbv"> 应该不会有啥大毛病吧 </span> </p>
+<h2 id="前置">前置<a class="anchor" href="#前置">#</a></h2>
+<p>API这部分就直接采用 <a href="/safego?url=https%3A%2F%2Fwww.konoxin.top%2Fposts%2Fdb7b3418" rel="noopener noreferrer" target="_blank">konoXIN文章<span style="user-select:none"> ↗</span></a> 里的代码了（如有侵权可以与我联系）</p>
+<h3 id="申请星火spark-lite">申请星火Spark-Lite<a class="anchor" href="#申请星火spark-lite">#</a></h3>
+<ol>
+<li>访问 <a href="/safego?url=https%3A%2F%2Fxinghuo.xfyun.cn%2Fsparkapi" rel="noopener noreferrer" target="_blank">星火大模型API<span style="user-select:none"> ↗</span></a></li>
+<li>下滑页面到如下位置，选择 <code>Spark-Lite</code>，点击立即调用</li>
+</ol>
+<p><img src="https://tc.ljx.icu/file/imgs/0KfXRyDl.png" alt="图1" class="zoomable"></p>
+<ol start="3">
+<li>点击创建新应用，之后侧边栏点击 <code>Spark Lite</code> ，选择领取无限量即可</li>
+</ol>
+<p><img src="https://tc.ljx.icu/file/imgs/iTpaQIZb.png" alt="图2" class="zoomable"></p>
+<ol start="4">
+<li>之后右侧会出现你的 <code>APPID</code> 、 <code>APISecret</code> 、 <code>APIKey</code> , 需要记住保存好</li>
+</ol>
+<p><img src="https://tc.ljx.icu/file/imgs/3RlcJ1UM.png" alt="图2" class="zoomable"></p>
+<h3 id="搭建-vercel-api">搭建 Vercel API<a class="anchor" href="#搭建-vercel-api">#</a></h3>
+
+<ul>
+<li>一键部署到Vercel：<a class="group inline-flex items-center gap-x-1 rounded-lg bg-muted border px-2 py-1 text-sm text-muted-foreground transition-all hover:bg-card no-underline not-prose" href="https://vercel.com/new/clone?repository-url=https://github.com/ljxme/spark-ai-summary&project-name=spark-ai-summary&repository-name=spark-ai-summary" data-astro-prefetch="true" target="_blank">     <p class="my-0">Deploy with Vercel</p>   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="stroke-muted-foreground group-hover:stroke-primary"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-4 scale-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-1 group-hover:scale-x-100"></line> <polyline points="12 5 19 12 12 19" class="translate-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-1"></polyline> </svg>  </a></li>
+<li>Fork后自行导入：<a class="group inline-flex items-center gap-x-1 rounded-lg bg-muted border px-2 py-1 text-sm text-muted-foreground transition-all hover:bg-card no-underline not-prose" href="https://github.com/ljxme/spark-ai-summary" data-astro-prefetch="true" target="_blank">     <p class="my-0">Fork Github Project</p>   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="stroke-muted-foreground group-hover:stroke-primary"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-4 scale-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-1 group-hover:scale-x-100"></line> <polyline points="12 5 19 12 12 19" class="translate-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-1"></polyline> </svg>  </a></li>
+</ul>
+<ol>
+<li>
+<p>点击上方任一按钮导入项目成功后，进入该项目在 Vercel 上的仪表盘 <strong>Dashboard</strong> 选项</p>
+</li>
+<li>
+<p>在项目仪表盘中找到 <strong>Settings</strong> 选项</p>
+</li>
+<li>
+<p>在 <strong>Settings</strong> 下找到 <strong>Environment Variables</strong> 部分</p>
+</li>
+<li>
+<p>在这里添加你的 <code>SPARK_APPID</code> , <code>SPARK_API_KEY</code> 和 <code>SPARK_API_SECRET</code> ，对应如下表：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="overflow-x-auto w-full flex justify-center"><table><thead><tr><th>Spark Lite Websocket</th><th>VercelServer</th></tr></thead><tbody><tr><td><code>APPID</code></td><td><code>SPARK_APPID</code></td></tr><tr><td><code>APIKey</code></td><td><code>SPARK_API_KEY</code></td></tr><tr><td><code>APISecret</code></td><td><code>SPARK_API_SECRET</code></td></tr></tbody></table></div>
+</li>
+<li>
+<p>配置完环境变量后需重新部署一次项目</p>
+</li>
+</ol>
+<p>项目部署后，Vercel 会提供一个类似 <code>https://[your-project-name].vercel.app</code> 的域名。代理函数可以通过 <code>/api/spark-proxy</code> 接口访问。</p>
+<p>如果需要想改为自己的子域名，需要在域名控制台解析一下，让其可以在国内访问</p>
+<h2 id="引入">引入<a class="anchor" href="#引入">#</a></h2>
+<ul>
+<li>代码片段Gist开源地址：<a href="/safego?url=https%3A%2F%2Fgist.github.com%2Fljxme%2F851d9ff9684dff74e52c6027d79dfac2" rel="noopener noreferrer" target="_blank">Static-AiSummary for Astro-Theme-Pure<span style="user-select:none"> ↗</span></a></li>
+<li>GitHub源码下载：<a href="/safego?url=https%3A%2F%2Fgithub.com%2Fljxme%2Fstatic-aisummary%2Freleases" rel="noopener noreferrer" target="_blank">static-aisummary<span style="user-select:none"> ↗</span></a></li>
+</ul>
+
+<ol role="list" class="sl-steps">
+<li>
+<p>在 <code>src/plugins</code> 路径下添加脚本文件 <a href="/safego?url=https%3A%2F%2Fgist.github.com%2Fljxme%2F851d9ff9684dff74e52c6027d79dfac2%23file-aisummary-js" rel="noopener noreferrer" target="_blank"><code>aisummary.js</code><span style="user-select:none"> ↗</span></a></p>
+</li>
+<li>
+<p>在 <code>src/assets/styles</code> 路径下添加样式文件 <a href="/safego?url=https%3A%2F%2Fgist.github.com%2Fljxme%2F851d9ff9684dff74e52c6027d79dfac2%23file-aisummary-css" rel="noopener noreferrer" target="_blank"><code>aisummary.css</code><span style="user-select:none"> ↗</span></a></p>
+</li>
+<li>
+<p>在 <code>scripts/</code> 路径下添加脚本文件 <a href="/safego?url=https%3A%2F%2Fgist.github.com%2Fljxme%2F851d9ff9684dff74e52c6027d79dfac2%23file-generatesummary-ts" rel="noopener noreferrer" target="_blank"><code>generateSummary.ts</code><span style="user-select:none"> ↗</span></a></p>
+</li>
+<li>
+<p>在 <code>src/plugins</code> 路径下添加配置文件 <a href="/safego?url=https%3A%2F%2Fgist.github.com%2Fljxme%2F851d9ff9684dff74e52c6027d79dfac2%23file-aisummary-config-js" rel="noopener noreferrer" target="_blank"><code>aisummary.config.js</code><span style="user-select:none"> ↗</span></a></p>
+</li>
+<li>
+<p>在 <code>src/components/BaseHead.astro</code> 和 <code>src/layouts/BlogPost.astro</code> 中添加初始化代码</p>
+<div class="astro-code astro-code-themes github-light github-dark has-highlighted" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="astro"><div class="title text-sm text-muted-foreground px-3 py-1 rounded-lg border">BaseHead.astro</div><pre><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">---</span></span>
+<span class="line highlighted"><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> aisummaryConfig </span><span style="color:#D73A49;--shiki-dark:#F97583">from</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> '../plugins/aisummary.config.js?url'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line highlighted"><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> aisummary </span><span style="color:#D73A49;--shiki-dark:#F97583">from</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> '../plugins/aisummary.js?url'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line highlighted"><span style="color:#D73A49;--shiki-dark:#F97583">import</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> aisummaryCss </span><span style="color:#D73A49;--shiki-dark:#F97583">from</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> '../assets/styles/aisummary.css?url'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">---</span></span>
+<span class="line"></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span><span style="color:#6A737D;--shiki-dark:#6A737D">/* AISummary 工具 */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">script</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> src</span><span style="color:#24292E;--shiki-dark:#E1E4E8">={aisummaryConfig} </span><span style="color:#6F42C1;--shiki-dark:#B392F0">is:inline</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">script</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">{Astro.url.pathname.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">startsWith</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'/blog/'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line highlighted"><span style="color:#D73A49;--shiki-dark:#F97583">  &#x26;&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> !</span><span style="color:#032F62;--shiki-dark:#9ECBFF">/</span><span style="color:#D73A49;--shiki-dark:#F97583">^</span><span style="color:#22863A;--shiki-light-font-weight:bold;--shiki-dark:#85E89D;--shiki-dark-font-weight:bold">\/</span><span style="color:#032F62;--shiki-dark:#DBEDFF">blog</span><span style="color:#22863A;--shiki-light-font-weight:bold;--shiki-dark:#85E89D;--shiki-dark-font-weight:bold">\/</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\d</span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#22863A;--shiki-light-font-weight:bold;--shiki-dark:#85E89D;--shiki-dark-font-weight:bold">\/</span><span style="color:#D73A49;--shiki-dark:#F97583">?$</span><span style="color:#032F62;--shiki-dark:#9ECBFF">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">test</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Astro.url.pathname)</span></span>
+<span class="line highlighted"><span style="color:#D73A49;--shiki-dark:#F97583">  &#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">script</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> src</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">{aisummary} </span><span style="color:#6F42C1;--shiki-dark:#B392F0">is</span><span style="color:#24292E;--shiki-dark:#E1E4E8">:</span><span style="color:#6F42C1;--shiki-dark:#B392F0">inline</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">script</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>}</span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span><span style="color:#6A737D;--shiki-dark:#6A737D">/* AISummary 样式 */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">link</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> rel</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'stylesheet'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> href</span><span style="color:#24292E;--shiki-dark:#E1E4E8">={aisummaryCss} /></span></span></code></pre><span class="language ps-1 pe-3 text-sm bg-muted text-muted-foreground">astro</span><button class="copy text-muted-foreground p-1 box-content border rounded-lg bg-card" aria-label="Copy code" data-code="---
+import aisummaryConfig from &#x27;../plugins/aisummary.config.js?url&#x27;;// [!code highlight]
+import aisummary from &#x27;../plugins/aisummary.js?url&#x27;;// [!code highlight]
+import aisummaryCss from &#x27;../assets/styles/aisummary.css?url&#x27;;// [!code highlight]
+---
+
+<!-- [!code highlight:8] -->
+{/* AISummary 工具 */}
+<script src={aisummaryConfig} is:inline></script>
+{Astro.url.pathname.startsWith(&#x27;/blog/&#x27;)
+  &#x26;&#x26; !/^\/blog\/\d+\/?$/.test(Astro.url.pathname)
+  &#x26;&#x26; <script src={aisummary} is:inline></script>}
+{/* AISummary 样式 */}
+<link rel=&#x27;stylesheet&#x27; href={aisummaryCss} />" onclick="
+          navigator.clipboard.writeText(this.dataset.code);
+          this.classList.add(&#x27;copied&#x27;);
+          setTimeout(() => this.classList.remove(&#x27;copied&#x27;), 2000)
+        "><div class="ready"><svg class="size-5"><use href="/icons/code.svg#mingcute-clipboard-line"></use></svg></div><div class="success hidden"><svg class="size-5"><use href="/icons/code.svg#mingcute-file-check-line"></use></svg></div></button></div>
+<div class="astro-code astro-code-themes github-light github-dark has-highlighted collapsed" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="astro"><div class="title text-sm text-muted-foreground px-3 py-1 rounded-lg border">BlogPost.astro</div><pre><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">PageLayout</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  meta</span><span style="color:#24292E;--shiki-dark:#E1E4E8">={{ articleDate, description, ogImage: socialImage, title }}</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  highlightColor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">={primaryColor}</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  back</span><span style="color:#24292E;--shiki-dark:#E1E4E8">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'/blog'</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {</span><span style="color:#6A737D;--shiki-dark:#6A737D">/* AISummary AI摘要 */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">  {data.summary </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">    &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> class</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'aisummary-container'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">      &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> class</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'aisummary-title'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">        &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">i</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> class</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'aisummary-title-icon'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">          &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">svg</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> xmlns</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'http://www.w3.org/2000/svg'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> width</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'48'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> height</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'48'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> viewBox</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'0 0 48 48'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">            &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">title</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>机器人&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">title</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">            &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">g</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stroke</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'none'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stroke-width</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'1'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fill</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'none'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fill-rule</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'evenodd'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">              &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">path</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> d</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'M34.717885,5.03561087 C36.12744,5.27055371 37.079755,6.60373651 36.84481,8.0132786 L35.7944,14.3153359 L38.375,14.3153359 C43.138415,14.3153359 47,18.1768855 47,22.9402569 L47,34.4401516 C47,39.203523 43.138415,43.0650727 38.375,43.0650727 L9.625,43.0650727 C4.861585,43.0650727 1,39.203523 1,34.4401516 L1,22.9402569 C1,18.1768855 4.861585,14.3153359 9.625,14.3153359 L12.2056,14.3153359 L11.15519,8.0132786 C10.920245,6.60373651 11.87256,5.27055371 13.282115,5.03561087 C14.69167,4.80066802 16.024865,5.7529743 16.25981,7.16251639 L17.40981,14.0624532 C17.423955,14.1470924 17.43373,14.2315017 17.43948,14.3153359 L30.56052,14.3153359 C30.56627,14.2313867 30.576045,14.1470924 30.59019,14.0624532 L31.74019,7.16251639 C31.975135,5.7529743 33.30833,4.80066802 34.717885,5.03561087 Z M38.375,19.4902885 L9.625,19.4902885 C7.719565,19.4902885 6.175,21.0348394 6.175,22.9402569 L6.175,34.4401516 C6.175,36.3455692 7.719565,37.89012 9.625,37.89012 L38.375,37.89012 C40.280435,37.89012 41.825,36.3455692 41.825,34.4401516 L41.825,22.9402569 C41.825,21.0348394 40.280435,19.4902885 38.375,19.4902885 Z M14.8575,23.802749 C16.28649,23.802749 17.445,24.9612484 17.445,26.3902253 L17.445,28.6902043 C17.445,30.1191812 16.28649,31.2776806 14.8575,31.2776806 C13.42851,31.2776806 12.27,30.1191812 12.27,28.6902043 L12.27,26.3902253 C12.27,24.9612484 13.42851,23.802749 14.8575,23.802749 Z M33.1425,23.802749 C34.57149,23.802749 35.73,24.9612484 35.73,26.3902253 L35.73,28.6902043 C35.73,30.1191812 34.57149,31.2776806 33.1425,31.2776806 C31.71351,31.2776806 30.555,30.1191812 30.555,28.6902043 L30.555,26.3902253 C30.555,24.9612484 31.71351,23.802749 33.1425,23.802749 Z'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fill</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'#444444'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fill-rule</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'nonzero'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">path</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">            &#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">g</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">          &#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">svg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">        &#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">i</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">        &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> class</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'aisummary-title-text'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>Li's AI Summary&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">        &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> class</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'aisummary-tag'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> id</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'aisummary-tag'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>Li's AI&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">      &#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">      &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> class</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'aisummary-explanation'</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> data-ai-summary</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">{data.summary}>{data.summary}&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">      &#x3C;</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> class</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'aisummary-disclaimer'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>本摘要由AI生成，仅供参考，内容准确性请以原文为准。&#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">    &#x3C;/</span><span style="color:#22863A;--shiki-dark:#85E89D">div</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line highlighted"><span style="color:#24292E;--shiki-dark:#E1E4E8">  )}</span></span>
+<span class="line highlighted"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;/</span><span style="color:#005CC5;--shiki-dark:#79B8FF">PageLayout</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span></code></pre><span class="language ps-1 pe-3 text-sm bg-muted text-muted-foreground">astro</span><button class="copy text-muted-foreground p-1 box-content border rounded-lg bg-card" aria-label="Copy code" data-code="<PageLayout
+  meta={{ articleDate, description, ogImage: socialImage, title }}
+  highlightColor={primaryColor}
+  back=&#x27;/blog&#x27;
+>
+  <!-- [!code highlight:20] -->
+  {/* AISummary AI摘要 */}
+  {data.summary &#x26;&#x26; (
+    <div class=&#x27;aisummary-container&#x27;>
+      <div class=&#x27;aisummary-title&#x27;>
+        <i class=&#x27;aisummary-title-icon&#x27;>
+          <svg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; width=&#x27;48&#x27; height=&#x27;48&#x27; viewBox=&#x27;0 0 48 48&#x27;>
+            <title>机器人</title>
+            <g stroke=&#x27;none&#x27; stroke-width=&#x27;1&#x27; fill=&#x27;none&#x27; fill-rule=&#x27;evenodd&#x27;>
+              <path d=&#x27;M34.717885,5.03561087 C36.12744,5.27055371 37.079755,6.60373651 36.84481,8.0132786 L35.7944,14.3153359 L38.375,14.3153359 C43.138415,14.3153359 47,18.1768855 47,22.9402569 L47,34.4401516 C47,39.203523 43.138415,43.0650727 38.375,43.0650727 L9.625,43.0650727 C4.861585,43.0650727 1,39.203523 1,34.4401516 L1,22.9402569 C1,18.1768855 4.861585,14.3153359 9.625,14.3153359 L12.2056,14.3153359 L11.15519,8.0132786 C10.920245,6.60373651 11.87256,5.27055371 13.282115,5.03561087 C14.69167,4.80066802 16.024865,5.7529743 16.25981,7.16251639 L17.40981,14.0624532 C17.423955,14.1470924 17.43373,14.2315017 17.43948,14.3153359 L30.56052,14.3153359 C30.56627,14.2313867 30.576045,14.1470924 30.59019,14.0624532 L31.74019,7.16251639 C31.975135,5.7529743 33.30833,4.80066802 34.717885,5.03561087 Z M38.375,19.4902885 L9.625,19.4902885 C7.719565,19.4902885 6.175,21.0348394 6.175,22.9402569 L6.175,34.4401516 C6.175,36.3455692 7.719565,37.89012 9.625,37.89012 L38.375,37.89012 C40.280435,37.89012 41.825,36.3455692 41.825,34.4401516 L41.825,22.9402569 C41.825,21.0348394 40.280435,19.4902885 38.375,19.4902885 Z M14.8575,23.802749 C16.28649,23.802749 17.445,24.9612484 17.445,26.3902253 L17.445,28.6902043 C17.445,30.1191812 16.28649,31.2776806 14.8575,31.2776806 C13.42851,31.2776806 12.27,30.1191812 12.27,28.6902043 L12.27,26.3902253 C12.27,24.9612484 13.42851,23.802749 14.8575,23.802749 Z M33.1425,23.802749 C34.57149,23.802749 35.73,24.9612484 35.73,26.3902253 L35.73,28.6902043 C35.73,30.1191812 34.57149,31.2776806 33.1425,31.2776806 C31.71351,31.2776806 30.555,30.1191812 30.555,28.6902043 L30.555,26.3902253 C30.555,24.9612484 31.71351,23.802749 33.1425,23.802749 Z&#x27; fill=&#x27;#444444&#x27; fill-rule=&#x27;nonzero&#x27;></path>
+            </g>
+          </svg>
+        </i>
+        <div class=&#x27;aisummary-title-text&#x27;>Li&#x27;s AI Summary</div>
+        <div class=&#x27;aisummary-tag&#x27; id=&#x27;aisummary-tag&#x27;>Li&#x27;s AI</div>
+      </div>
+      <div class=&#x27;aisummary-explanation&#x27; data-ai-summary={data.summary}>{data.summary}</div>
+      <div class=&#x27;aisummary-disclaimer&#x27;>本摘要由AI生成，仅供参考，内容准确性请以原文为准。</div>
+    </div>
+  )}
+
+</PageLayout>" onclick="
+          navigator.clipboard.writeText(this.dataset.code);
+          this.classList.add(&#x27;copied&#x27;);
+          setTimeout(() => this.classList.remove(&#x27;copied&#x27;), 2000)
+        "><div class="ready"><svg class="size-5"><use href="/icons/code.svg#mingcute-clipboard-line"></use></svg></div><div class="success hidden"><svg class="size-5"><use href="/icons/code.svg#mingcute-file-check-line"></use></svg></div></button><button class="collapse-toggle bg-card text-muted-foreground rounded-lg m-2" aria-label="Toggle collapse code block" onclick="this.parentElement.classList.toggle(&#x27;collapsed&#x27;)"><svg class="size-5"><use href="/icons/code.svg#mingcute-arrow-down-line"></use></svg><span class="desc"> code</span></button><div class="collapse-fade"></div></div>
+</li>
+</ol>
+<h2 id="配置">配置<a class="anchor" href="#配置">#</a></h2>
+<p>主要集中在 <code>aisummary.config.js</code> 和 <code>.env</code> 文件进行配置和修改变量，列表如下（文件中也有详细注释说明）：</p>
+<h3 id="供离线脚本读取的配置项">供离线脚本读取的配置项<a class="anchor" href="#供离线脚本读取的配置项">#</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="overflow-x-auto w-full flex justify-center"><table><thead><tr><th align="left">配置项</th><th align="left">示例值</th><th align="left">说明</th></tr></thead><tbody><tr><td align="left"><strong>AI_SUMMARY_API</strong></td><td align="left"><code>https://your-api-server/api/spark-proxy</code></td><td align="left">摘要服务地址</td></tr><tr><td align="left"><strong>AI_SUMMARY_KEY</strong></td><td align="left"><code>your-api-key</code></td><td align="left">摘要服务密钥</td></tr><tr><td align="left"><strong>AI_SUMMARY_MODEL</strong></td><td align="left"><code>lite</code></td><td align="left">模型名称</td></tr><tr><td align="left"><strong>AISUMMARY_CONCURRENCY</strong></td><td align="left"><code>2</code></td><td align="left">并发执行摘要生成任务数</td></tr><tr><td align="left"><strong>AISUMMARY_COVER_ALL</strong></td><td align="left"><code>false</code></td><td align="left">是否重新生成所有摘要</td></tr><tr><td align="left"><strong>AISUMMARY_MAX_TOKEN</strong></td><td align="left"><code>5000</code></td><td align="left">用于截取文章内容</td></tr><tr><td align="left"><strong>AISUMMARY_MIN_CONTENT_LENGTH</strong></td><td align="left"><code>50</code></td><td align="left">用于判断是否跳过</td></tr></tbody></table></div>
+<p>说明：使用前文 <strong>Spark-Lite</strong> 模型搭建Vercel代理服务器不需配置 <code>AI_SUMMARY_KEY</code> 变量，可保持空值</p>
+<h3 id="供博客页面使用的配置项">供博客页面使用的配置项<a class="anchor" href="#供博客页面使用的配置项">#</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="overflow-x-auto w-full flex justify-center"><table><thead><tr><th align="left">配置项</th><th align="left">示例值</th><th align="left">说明</th></tr></thead><tbody><tr><td align="left"><strong>aisummaryTypingAnimate</strong></td><td align="left"><code>true</code></td><td align="left">是否开启打字机动画</td></tr><tr><td align="left"><strong>aisummaryPostSelector</strong></td><td align="left"><code>#content</code></td><td align="left">文章内容容器选择器</td></tr></tbody></table></div>
+<p><strong>如何知道 <code>aisummaryPostSelector</code> ?</strong></p>
+<p>进入任一博客文章页面，按下 <kbd>F12</kbd> 进入开发者控制台，再按下 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> ，并选取 <strong>正文部分</strong> 进行如下步骤复制后即为 <code>aisummaryPostSelector</code> 的值</p>
+<p><img src="https://tc.ljx.icu/file/imgs/y9uxBuyu.png" alt="图3" class="zoomable"></p>
+<h2 id="使用">使用<a class="anchor" href="#使用">#</a></h2>
+<ol>
+<li>补全缺失库 <code>npm install -D xxx</code></li>
+<li>确保 <code>aisummary.config.js</code> 和 <code>.env</code> 文件里变量配置正确</li>
+<li>在项目主目录运行 <code>npx tsx scripts/generate-summary.ts</code> 即可</li>
+</ol>
+<h2 id="后记">后记<a class="anchor" href="#后记">#</a></h2>
+<p>Vercel代理服务器部分的代码基本来自于 <a href="/safego?url=https%3A%2F%2Fwww.konoxin.top%2F" rel="noopener noreferrer" target="_blank">@konoXIN<span style="user-select:none"> ↗</span></a> ，主要修改的本地脚本的部分，感觉代码有点乱，还需要再整理一下</p>
+<h2 id="参考">参考<a class="anchor" href="#参考">#</a></h2>
+<ul>
+<li><a href="/safego?url=https%3A%2F%2Fblog.liushen.fun%2Fposts%2F40702a0d%2F" rel="noopener noreferrer" target="_blank">本地实现HEXO文章AI摘要<span style="user-select:none"> ↗</span></a></li>
+<li><a href="/safego?url=https%3A%2F%2Fwww.konoxin.top%2Fposts%2Fdb7b3418" rel="noopener noreferrer" target="_blank">hexo基于TianliGPT使用免费的Spark-Lite制作AI摘要<span style="user-select:none"> ↗</span></a></li>
+</ul>     </div> </article> </main> <div class="bottom mt-6 items-start gap-x-10 md:flex astro-scuu7fyy">  <div class="flex-1 text-muted-foreground md:min-w-[50ch] astro-scuu7fyy"> <div class="relative flex flex-col gap-y-2 rounded-xl border px-3 sm:px-4 py-2 sm:py-3 astro-q62egrd7"> <svg aria-hidden="true" class="absolute end-4 top-4 size-20 opacity-10 astro-q62egrd7 astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2m0 2a8 8 0 1 0 0 16a8 8 0 0 0 0-16m0 3a5 5 0 0 1 3.75 1.692a1 1 0 1 1-1.5 1.324a3 3 0 1 0 0 3.968a1 1 0 1 1 1.5 1.324A5 5 0 1 1 12 7"/></g></svg>   <div class="flex flex-col astro-q62egrd7"> <div class="font-medium text-foreground astro-q62egrd7">本地实现Astro文章AI摘要</div> <div class="text-sm astro-q62egrd7">https://blog.ljx.icu/blog/aisummary-blog</div> </div>  <div class="flex flex-row flex-wrap justify-start gap-x-5 gap-y-1 sm:gap-x-8 astro-q62egrd7"> <div class="flex gap-x-2 sm:flex-col astro-q62egrd7"> <span class="astro-q62egrd7">Author</span> <span class="text-sm text-foreground max-sm:place-self-center astro-q62egrd7">Ljx</span> </div> <div class="flex gap-x-2 sm:min-w-16 sm:flex-col astro-q62egrd7"> <span class="astro-q62egrd7">Published at</span> <span class="text-sm text-foreground max-sm:place-self-center astro-q62egrd7"> December 18, 2025 </span> </div> <div class="flex gap-x-2 sm:flex-col astro-q62egrd7"> <span class="astro-q62egrd7">Copyright</span> <a class="text-sm text-foreground max-sm:place-self-center astro-q62egrd7" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">
+CC BY-NC-SA 4.0
+</a> </div> </div>  <div class="relative astro-q62egrd7"> <div class="flex flex-row gap-3 astro-q62egrd7"> <button id="copy-link" aria-label="Copy link" class="group rounded-full bg-muted p-1 text-muted-foreground transition-colors hover:text-primary sm:p-1.5 astro-q62egrd7"> <svg aria-hidden="true" class="size-5 astro-q62egrd7 astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M16.243 9.878a1 1 0 0 1 1.32-.083l.094.083L19.778 12a5.5 5.5 0 0 1-7.596 7.952L12 19.778l-2.121-2.121a1 1 0 0 1 1.32-1.498l.094.083l2.121 2.122a3.5 3.5 0 0 0 5.091-4.8l-.141-.15l-2.121-2.121a1 1 0 0 1 0-1.415M9.17 9.171a1 1 0 0 1 1.32-.083l.095.083l4.242 4.243a1 1 0 0 1-1.32 1.497l-.094-.083l-4.243-4.242a1 1 0 0 1 0-1.415m-4.95-4.95a5.5 5.5 0 0 1 7.597-.173l.182.174l2.121 2.12A1 1 0 0 1 12.8 7.84l-.094-.083l-2.121-2.121a3.5 3.5 0 0 0-5.091 4.8l.141.15l2.121 2.12a1 1 0 0 1-1.32 1.498l-.094-.083L4.222 12a5.5 5.5 0 0 1 0-7.778Z"/></g></svg>  </button> <button id="get-qrcode" aria-label="Get QR code" class="group rounded-full bg-muted p-1 text-muted-foreground transition-colors hover:text-primary sm:p-1.5 astro-q62egrd7"> <svg aria-hidden="true" class="size-5 astro-q62egrd7 astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M11 3a2 2 0 0 1 1.995 1.85L13 5v6a2 2 0 0 1-1.85 1.995L11 13H5a2 2 0 0 1-1.995-1.85L3 11V5a2 2 0 0 1 1.85-1.995L5 3zm0 2H5v6h6zM8.5 7a.5.5 0 0 1 .492.41L9 7.5v1a.5.5 0 0 1-.41.492L8.5 9h-1a.5.5 0 0 1-.492-.41L7 8.5v-1a.5.5 0 0 1 .41-.492L7.5 7zM21 5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm-4 0h2v2h-2zM7 15a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2zm0 2H5v2h2zm14 0a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm-4 0h2v2h-2zm-2-5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2h-4a1 1 0 0 1-1-1m-2 4a1 1 0 1 0-2 0v4a1 1 0 1 0 2 0z"/></g></svg>  </button> <a href="http://service.weibo.com/share/share.php?url=https://blog.ljx.icu/blog/aisummary-blog&title=本地实现Astro文章AI摘要&pic=/_astro/cover.BFW_RLt0.png" target="_blank" id="share-weibo" aria-label="Share to weibo" class="group rounded-full bg-muted p-1 text-muted-foreground transition-colors hover:text-primary sm:p-1.5 astro-q62egrd7"> <svg aria-hidden="true" class="size-5 astro-q62egrd7 astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M13.12 5.815c.55.537.826 1.24.863 1.992c1.675-.502 3.045-.362 3.937.5c.848.82.937 1.967.617 2.964C19.9 11.961 21 13.058 21 14.715c0 1.93-1.256 3.526-2.962 4.586C16.318 20.371 14.004 21 11.5 21s-4.818-.63-6.538-1.699C3.256 18.241 2 16.646 2 14.715c0-1.762.842-3.589 2.05-5.156a14.6 14.6 0 0 1 4.723-3.954c1.635-.847 3.286-.828 4.347.21m-1.399 1.43c-.213-.21-.829-.485-2.028.136a12.6 12.6 0 0 0-4.06 3.4C4.576 12.154 4 13.558 4 14.715c0 .988.647 2.035 2.018 2.888C7.374 18.446 9.309 19 11.5 19c2.19 0 4.127-.554 5.482-1.397c1.371-.853 2.018-1.9 2.018-2.888c0-.711-.56-1.439-2.16-1.991a1 1 0 0 1-.473-1.546c.495-.66.355-1.248.163-1.433l-.048-.04l-.067-.042c-.337-.186-1.274-.368-3.335.661a1 1 0 0 1-1.347-1.33c.444-.92.225-1.517-.012-1.75ZM17 3c1.576 0 3.128.643 4.243 1.757A6.05 6.05 0 0 1 23 9a1 1 0 1 1-2 0c0-1.05-.429-2.086-1.172-2.828A4.04 4.04 0 0 0 17 5a1 1 0 1 1 0-2"/></g></svg>  </a><a href="https://x.com/intent/tweet?text='本地实现Astro文章AI摘要'&url='https://blog.ljx.icu/blog/aisummary-blog'&via='Ljx'" target="_blank" id="share-x" aria-label="Share to x" class="group rounded-full bg-muted p-1 text-muted-foreground transition-colors hover:text-primary sm:p-1.5 astro-q62egrd7"> <svg aria-hidden="true" class="size-5 astro-q62egrd7 astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M19.753 4.659a1 1 0 0 0-1.506-1.317l-5.11 5.84L8.8 3.4A1 1 0 0 0 8 3H4a1 1 0 0 0-.8 1.6l6.437 8.582l-5.39 6.16a1 1 0 0 0 1.506 1.317l5.11-5.841L15.2 20.6a1 1 0 0 0 .8.4h4a1 1 0 0 0 .8-1.6l-6.437-8.582l5.39-6.16ZM16.5 19L6 5h1.5L18 19z"/></g></svg>  </a><a href="https://bsky.app/intent/compose?text=本地实现Astro文章AI摘要%0Ahttps://blog.ljx.icu/blog/aisummary-blog" target="_blank" id="share-bluesky" aria-label="Share to bluesky" class="group rounded-full bg-muted p-1 text-muted-foreground transition-colors hover:text-primary sm:p-1.5 astro-q62egrd7"> <svg aria-hidden="true" class="size-5 astro-q62egrd7 astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M4.747 5.105a.94.94 0 0 0-.41.892l.314 3.287A3 3 0 0 0 7.637 12H9a1 1 0 0 1 .371 1.928l-2.34.937c-.885.354-1.122 1.32-.664 1.932c.288.384.576.731.84.996c.233.233.532.485.865.74c.619.475 1.625.214 1.94-.734l1.04-3.115a1 1 0 0 1 1.897 0l1.038 3.115c.316.948 1.322 1.21 1.941.735a9 9 0 0 0 .865-.741c.265-.265.553-.612.84-.996c.458-.612.222-1.578-.664-1.932l-2.34-.937A1 1 0 0 1 15 12h1.363a3 3 0 0 0 2.986-2.716l.314-3.287a.94.94 0 0 0-.41-.892a.75.75 0 0 0-.858-.001c-2.645 1.708-4.05 3.442-5.5 6.343a1 1 0 0 1-1.79 0c-1.45-2.901-2.855-4.635-5.5-6.343a.75.75 0 0 0-.858.001m-2.4 1.082C2.13 3.913 4.567 2.053 6.69 3.424C9.13 5 10.662 6.639 12 8.9c1.338-2.261 2.87-3.9 5.31-5.476c2.123-1.371 4.56.49 4.344 2.763l-.314 3.287a5 5 0 0 1-2.783 4.02c1.329 1.039 1.818 2.978.677 4.502c-.317.423-.669.853-1.027 1.211c-.317.317-.69.628-1.062.914c-1.88 1.441-4.375.35-5.055-1.69l-.09-.269l-.09.27c-.68 2.04-3.175 3.13-5.055 1.689a11 11 0 0 1-1.062-.914a11.5 11.5 0 0 1-1.027-1.211c-1.141-1.524-.651-3.463.678-4.502a5 5 0 0 1-2.784-4.02z"/></g></svg>  </a> </div> <div id="qrcode-container" class="absolute z-10 -mt-2 box-content max-h-0 max-w-44 overflow-hidden rounded-xl border bg-muted p-4 opacity-0 transition-all duration-300 ease-in-out astro-q62egrd7"></div> <script src="https://cdn.jsdmirror.com/npm/qrcodejs/qrcode.min.js"></script> <script>(function(){const content = undefined;
+
+  const renderContent = content ?? window.location.href
+  // Load qrcode
+  function loadQRcode(qrcodeContainer) {
+    if (!qrcodeContainer) throw new Error('qrcode container not found')
+    if (qrcodeContainer.innerHTML !== '') return
+    new QRCode(qrcodeContainer, renderContent)
+  }
+  const qrcodeContainer = document.getElementById('qrcode-container')
+  if (!qrcodeContainer) throw new Error('qrcode container not found')
+  loadQRcode(qrcodeContainer)
+})();</script> </div> </div> <div class="mx-6 rounded-b-xl border border-t-0 px-3 pb-1.5 pt-1 sm:mx-8 sm:px-4 astro-q62egrd7"> <a href="/projects#sponsorship" class="flex items-center justify-between text-muted-foreground no-underline astro-q62egrd7" target="_blank"> <span class="astro-q62egrd7">Buy me a cup of coffee ☕.</span> <svg aria-hidden="true" class="box-content size-5 p-1 astro-q62egrd7 astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M17 2a3 3 0 0 1 3 3v12a1 1 0 0 1 .351 1.936l-8 3a1 1 0 0 1-.702 0l-8-3A1 1 0 0 1 4 17V5a3 3 0 0 1 3-3zm0 2H7a1 1 0 0 0-.993.883L6 5v12.682l6 2.25l6-2.25V5a1 1 0 0 0-.883-.993zm-5 1a1 1 0 0 1 .993.883L13 6v1h2a1 1 0 0 1 .117 1.993L15 9h-5a.5.5 0 0 0-.09.992L10 10h4a2.5 2.5 0 0 1 .164 4.995L14 15h-1v1a1 1 0 0 1-1.993.117L11 16v-1H9a1 1 0 0 1-.117-1.993L9 13h5a.5.5 0 0 0 .09-.992L14 12h-4a2.5 2.5 0 0 1-.164-4.995L10 7h1V6a1 1 0 0 1 1-1"/></g></svg>  </a> </div>  <script type="module" src="/_astro/Copyright.astro_astro_type_script_index_0_lang.B_VQDGfL.js"></script> <div class="flex max-sm:flex-col sm:justify-between gap-2 mt-3 sm:mt-6"> <span class="min-w-0"> <a href="/blog/auto-check-links" class="group inline-flex items-center gap-x-2 rounded-xl px-4 py-2 no-underline transition-colors duration-300 hover:bg-muted max-sm:max-w-[80%] sm:flex"> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 rotate-180 stroke-muted-foreground transition-colors group-hover:stroke-primary"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-4 scale-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-1 group-hover:scale-x-100"></line> <polyline points="12 5 19 12 12 19" class="translate-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-1"></polyline> </svg> <p class="truncate font-medium transition-colors">自动化友链检测</p> </a> </span> <span class="min-w-0"> <a href="/blog/show-recent-comments" class="group inline-flex items-center gap-x-2 rounded-xl px-4 py-2 text-right no-underline transition-colors duration-300 hover:bg-muted max-sm:float-end max-sm:max-w-[80%] sm:flex"> <p class="truncate font-medium transition-colors">通过Waline API获取最新评论并显示</p> <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 stroke-muted-foreground transition-colors group-hover:stroke-primary"> <line x1="5" y1="12" x2="19" y2="12" class="translate-x-4 scale-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-1 group-hover:scale-x-100"></line> <polyline points="12 5 19 12 12 19" class="translate-x-0 transition-all duration-300 ease-in-out group-hover:translate-x-1"></polyline> </svg> </a> </span> </div> <comment-component class="astro-y3qunytq"><div id="waline" class="not-prose mt-3 sm:mt-6 astro-y3qunytq">
+Comment seems to stuck. Try to refresh?✨
+</div></comment-component><script type="module" src="/_astro/Comment.astro_astro_type_script_index_0_lang.Bahtz0jJ.js"></script> </div> <div class="min-w-48 basis-60 astro-scuu7fyy">  </div> </div> <div class="z-10 group fixed bottom-8 end-4 transition-all flex flex-col gap-y-4 sm:end-8 astro-7ciavms3" id="action-buttons"> <button aria-label="Toggle sidebar" class="size-10 flex items-center justify-center rounded-full border-2 border-transparent bg-muted text-muted-foreground duration-300 hover:border-border/75 md:hidden sm:size-12 astro-scuu7fyy" id="sidebar-btn"> <svg aria-hidden="true" class="astro-scuu7fyy astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M4.5 17.5a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3M20 18a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2zM4.5 10.5a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3M20 11a1 1 0 0 1 .117 1.993L20 13H9a1 1 0 0 1-.117-1.993L9 11zM4.5 3.5a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3M20 4a1 1 0 0 1 .117 1.993L20 6H9a1 1 0 0 1-.117-1.993L9 4z"/></g></svg>  </button> <scroll-button class="astro-7ciavms3"> <button aria-label="Back to Top" class="relative size-10 flex items-center justify-center rounded-full border-2 border-transparent bg-muted text-muted-foreground duration-300 hover:border-border/75 sm:size-12 opacity-0 astro-7ciavms3" id="to-top-btn"> <div class="top-text absolute bottom-0 end-0 start-0 top-0 flex items-center justify-center group-[.ended]:opacity-0 astro-7ciavms3"> <span class="text astro-7ciavms3">10</span> <span class="text-xs astro-7ciavms3">%</span> </div> <svg aria-hidden="true" class="top-icon group-[.ended]:opacity-100 astro-7ciavms3 astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="M24 0v24H0V0zM12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M11.293 8.293a1 1 0 0 1 1.414 0l5.657 5.657a1 1 0 0 1-1.414 1.414L12 10.414l-4.95 4.95a1 1 0 0 1-1.414-1.414z"/></g></svg>  </button> </scroll-button> </div> <script>(function(){const headerName = "content-header";
+const contentName = "content";
+const needPercent = true;
+
+  class ScrollBtn extends HTMLElement {
+    actionBtns
+    scrollBtn
+    scrollPercentEl
+    targetHeader
+    articleEl
+    scrollHeight = 0
+    articleTop = 0
+    clientHeight = 0
+    ticking = false
+    needPercent = true
+
+    calculateScrollPercent() {
+      const scrollTop = Math.max(0, window.scrollY || document.documentElement.scrollTop)
+      // Before article
+      if (scrollTop < this.articleTop) return 0
+      const maxScrollable = this.scrollHeight - this.clientHeight
+      // After article
+      if (maxScrollable <= 0) return 100
+      const progress = Math.min(scrollTop - this.articleTop, maxScrollable)
+      return Math.round((progress / maxScrollable) * 100)
+    }
+
+    updateScrollPercent() {
+      const percent = this.calculateScrollPercent()
+      this.scrollPercentEl.textContent = percent.toString()
+      this.actionBtns.classList.toggle('ended', percent >= 100)
+      this.ticking = false
+    }
+
+    connectedCallback() {
+      this.needPercent = needPercent
+      this.actionBtns = document.getElementById('action-buttons')
+      this.scrollBtn = this.querySelector('button#to-top-btn')
+      this.scrollPercentEl = this.scrollBtn.querySelector('.top-text .text')
+      this.targetHeader = document.getElementById(headerName)
+      this.articleEl = document.getElementById(contentName)
+
+      if (!this.articleEl) {
+        console.error(`Element with ID ${contentName} not found.`)
+        needPercent = false
+      }
+      // Scroll to top action
+      this.scrollBtn.addEventListener('click', this)
+      // Observe header visibility
+      if (this.targetHeader) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            this.actionBtns.classList.toggle('show', !entry.isIntersecting)
+          })
+        })
+        observer.observe(this.targetHeader)
+      } else {
+        console.error(`Element with ID ${headerName} not found.`)
+      }
+      // Scroll percent update
+      if (this.needPercent) {
+        this.scrollHeight = this.articleEl.scrollHeight
+        this.articleTop = this.articleEl.offsetTop
+        this.clientHeight = document.documentElement.clientHeight
+
+        document.addEventListener('scroll', () => {
+          if (!this.ticking) {
+            requestAnimationFrame(() => this.updateScrollPercent())
+            this.ticking = true
+          }
+        })
+      } else {
+        this.actionBtns.classList.add('ended')
+      }
+    }
+
+    handleEvent(event) {
+      if (event.type === 'click') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+  }
+  customElements.define('scroll-button', ScrollBtn)
+})();</script>   <div class="signature-wrapper w-40 float-right mt-4 [&#38;_path]:stroke-black dark:[&#38;_path]:stroke-gray-2 [&#38;_path]:opacity-0 astro-37fxchfa" data-mode="once-on-view"> <svg width="1602" height="660" viewBox="0 0 1602 660" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+       d="m 79,305 c 15.782184,33.9658 69.5972,7.94307 99.06536,1.74756 22.54498,-4.11285 69.42005,-39.91454 71.5332,-27.77363 -29.32679,46.98739 -56.63782,96.65284 -93.92726,137.59321 -40.7484,1.67764 -120.465881,15.97997 -88.238595,73.95816 37.129265,29.46006 69.925865,-25.92538 92.178965,-51.00713 44.03685,-20.00257 97.60228,-22.60812 141.19464,-48.89204 21.85853,-9.50021 50.63945,-28.77133 23.66557,4.19634 -25.579,25.73191 3.76523,61.51422 28.13013,28.952 44.5397,-29.36132 84.91176,-67.21654 134.25139,-88.16019 40.59669,-3.70492 16.4173,-41.34576 -9.65679,-16.5153 -28.67352,21.26392 -34.94018,6.8296 -10.83558,-15.31804 C 501.60195,265.49837 550.79665,245.56595 595,220 c -24.28785,43.45268 -32.5331,106.16376 -86.67327,121.87914 -80.44037,47.00557 -169.45305,105.64382 -194.30665,201.27839 -9.16154,31.94803 -3.43129,91.23583 42.56961,84.41602 60.82568,-14.10257 96.35757,-73.93518 124.21225,-125.04732 27.38932,-54.73829 50.08512,-111.96981 78.10315,-166.26311 16.70624,-6.72549 78.97804,-54.5349 49.64801,-12.08685 -28.67079,38.31387 10.63907,81.45311 32.9183,27.88794 14.8225,-22.39711 49.27374,-61.69816 65.48295,-59.48193 -10.19658,14.63476 -46.60338,70.07206 -4.91868,51.57135 26.62611,-19.76732 78.66265,-61.95949 95.17162,-58.85937 C 780.58836,307.91596 751.06046,365.2921 803,361 c -38.80662,35.72475 22.19057,23.65627 36.57657,3.06847 32.45979,-25.91543 72.76322,-39.85028 105.65834,-64.49694 13.20379,-14.09912 79.49129,-54.72292 40.70709,-17.2 -18.77894,26.232 -80.07032,75.15143 -44.88086,102.7642 45.38251,-10.75627 83.96226,-45.19723 110.76766,-82.60464 34.4343,-32.81059 -5.5457,-90.26525 50.177,-103.40748 13.4021,-17.21615 82.8817,-38.32932 50.7047,-53.45491 -36.7816,7.93094 -69.5646,64.05919 -103.1349,53.33594 -32.0361,-29.17671 -81.91021,-30.22428 -121.57481,-19.46143 -26.49236,36.31055 43.88931,1.12882 62.84768,10.59455 34.91543,-0.47637 75.28123,30.27519 23.65233,45.23067 -29.70369,14.04176 -106.28999,68.82983 -101.74269,57.97733 35.48928,-8.03389 -5.08272,-59.37593 -2.55575,-30.11792 -10.11218,25.56868 -55.16517,49.75994 -85.20236,65.5669 -22.6095,15.57054 -48.46519,17.05821 -21.44796,-11.57318 6.17789,-20.37559 52.58802,-66.8981 3.36262,-59.10716 -29.05737,5.28566 -68.82617,39.98545 -82.77258,42.53933 29.65685,-55.50236 -43.2639,-28.51221 -59.38819,-1.46726 -13.89885,13.27897 -56.00892,70.67055 -33.2902,22.38511 1.11055,-21.28145 54.77354,-74.24929 13.33044,-73.6173 -4.48546,28.21868 -67.25834,66.96969 -70.03396,51.95398 23.15617,-36.89088 30.46127,-88.21713 70.51171,-111.58986 31.97005,-22.98341 71.32157,-46.51752 85.77544,-84.46031 -18.2472,-55.385904 -87.68025,8.10408 -96.12824,43.63451 -14.02718,51.48119 -65.15074,67.20631 -106.08338,91.55228 -37.7774,24.83474 -86.65564,48.99649 -100.44141,94.95512 11.15297,28.2627 -48.2232,39.68869 -66.15464,63.23757 -19.8215,14.83576 -33.08269,22.85744 -13.7406,-6.58497 2.48316,-20.94789 67.51747,-60.0124 26.50095,-64.38023 -52.56032,44.62699 -118.75924,73.78418 -186.7522,85.96877 6.09055,-25.70791 52.63971,-74.50678 68.5465,-111.5697 14.23774,-47.20337 61.9821,-61.61525 98.44469,-86.77329 C 407.77267,176.9697 460.63979,137.31191 500.09412,86.156217 535.75472,31.887753 456.23726,31.748465 430.33595,61.749488 363.43553,106.68556 317.24338,175.21552 273.77423,241.51119 242.26166,268.37217 199.78649,278.77078 162.53244,295.97075 135.78849,306.62884 107.24688,306.47963 79,305 Z M 497,54 c -15.00718,53.1929 -70.98271,81.18137 -108.8034,117.7337 -22.96949,14.96404 -71.50275,61.26438 -82.93966,50.34224 C 347.88765,161.64044 392.45005,95.978837 460.54806,62.10453 472.04837,57.197431 484.43371,53.994221 497,54 Z M 640,172 C 658.1891,141.69833 674.3731,97.672212 715.58802,95.82938 712.55317,124.86448 665.47561,154.62842 640,172 Z m 415,59 c 8.215,36.64273 -19.1422,68.4873 -42.5228,93.6195 -18.48227,15.13893 -54.99793,48.06053 -69.63596,37.41635 27.20274,-48.53691 60.02336,-97.31381 106.90556,-128.73351 z m -433,114 -1,1 z m -89,3 c -28.41896,61.96708 -53.84253,126.44846 -89.86463,184.80347 -23.83401,33.95104 -51.87791,73.65596 -95.26435,81.49337 C 301.84346,595.1349 333.60049,523.15878 353.50711,490.1514 396.55565,425.72173 465.32106,382.52611 533,348 Z M 139,436 C 131.88917,470.00917 47.355139,509.61728 86.849191,449.69308 101.87227,438.58271 121.44958,439.27362 139,436 Z" stroke="black" stroke-width="4" stroke-linecap="round" data-duration="600"
+       id="path2" />
+    <path
+       d="m 1219,292 c 12.1301,-13.87859 32.0407,-21.20026 39.0723,-39.24063 -0.5351,-21.95938 -32.5321,-14.97423 -46.2984,-9.01535 -33.459,11.56368 -65.5933,26.66587 -96.6689,43.52558 -8.8577,3.25274 10.774,-10.81204 13.751,-15.38915 14.2735,-7.07175 9.0615,-35.885 -7.6228,-22.42352 -13.5364,18.59152 -37.5581,29.63198 -44.4948,52.71002 -2.3034,25.64828 29.1008,15.29972 40.2159,4.426 33.9364,-19.47693 68.928,-38.02194 106.4724,-49.4745 18.5838,-4.09199 -10.3266,12.74923 -15.2782,18.55377 -11.0692,9.44108 -25.8059,20.63355 -23.8612,36.97761 9.723,17.39855 33.1671,3.11629 45.6565,-3.68944 36.0633,-21.14697 68.6135,-49.42134 108.8015,-62.76095 15.3228,-4.14421 -6.2956,14.88155 -7.7515,22.44286 -9.807,14.97009 -6.2143,37.11136 9.8154,46.20476 21.0727,12.81042 47.0458,5.68085 69.6583,1.73054 29.0343,-6.6921 57.2775,-16.56588 84.1585,-29.3671 9.9312,-0.90912 16.2824,-4.8194 19.1731,-14.41721 4.3623,-5.00552 -2.3196,-10.01509 -3.8184,-15.02276 -0.9588,-10.29949 -25.1578,-9.09913 -22.2852,-0.13403 5.5937,4.03419 26.0811,5.7545 8.9807,9.85994 -39.1285,13.9863 -77.8022,31.91284 -119.8915,34.45837 -13.2359,4.31137 -41.3444,0.84156 -32.6657,-19.03129 6.3131,-17.06905 21.7376,-28.53714 29.5685,-44.56274 4.3189,-25.52057 -29.2208,-15.23098 -41.8651,-8.0437 -34.1466,13.75516 -65.8364,32.68041 -96.1792,53.35922 -5.3253,3.18795 -10.8324,6.11667 -16.6432,8.3237 z m 0,0 c -1.2409,1.24089 -0.9922,0.99221 0,0 z" stroke="black" stroke-width="4" stroke-linecap="round" data-duration="300"
+       id="path5" />
+    <path
+       d="m 390,312 c 1.16116,-9.84094 -9.29773,-21.75931 -16.96759,-9.58487 -2.93777,4.66318 3.21469,12.5152 7.95679,13.07791 3.1907,0.37863 6.23684,-2.29071 9.0108,-3.49304" stroke="black" stroke-width="4" stroke-linecap="round" data-duration="100"
+       id="path6" />
+    <path
+       d="m 676,226 c 1.26349,-3.79794 3.56342,-7.74704 2.13116,-11.82562 -1.72033,-4.89887 -10.30041,-8.7988 -14.52777,-4.57099 C 655.73395,217.47363 669.45764,225.9408 676,226" stroke="black" stroke-width="4" stroke-linecap="round" data-duration="50"
+       id="path3" />
+    <path
+       d="m 1134.0386,208.53705 c -4.343,0.62994 -11.5463,5.46441 -13.105,9.63656 -2.1423,5.73423 2.8924,13.06507 9.0671,12.50461 11.5959,-1.05252 18.7891,-24.28085 4.0379,-22.14117" stroke="black" stroke-width="4" stroke-linecap="round" data-duration="25"
+       id="path4" />
+</svg>
+ </div> <script>(function(){const mode = "once-on-view";
+const drawDelay = 200;
+const rollbackDelay = 80;
+const loopPause = 2000;
+const threshold = 0.8;
+const defaultDuration = 600;
+
+  function setupSignature(wrapper) {
+    let initialPaths = Array.from(wrapper.querySelectorAll('path[stroke]'))
+    if (initialPaths.length === 0) return
+
+    initialPaths.sort((a, b) => {
+      const seqA = a.getAttribute('seq')
+      const seqB = b.getAttribute('seq')
+      const numA = parseInt(seqA, 10)
+      const numB = parseInt(seqB, 10)
+      const hasSeqA = !isNaN(numA)
+      const hasSeqB = !isNaN(numB)
+
+      if (hasSeqA && hasSeqB) return numA - numB
+      if (hasSeqA) return -1
+      if (hasSeqB) return 1
+      return 0
+    })
+    const paths = initialPaths
+
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (motionQuery.matches) {
+      paths.forEach((path) => {
+        path.style.opacity = '1'
+      })
+      return
+    }
+
+    // 计算路径长度和动画时长
+    const pathLengths = new Map()
+    const pathDurations = new Map()
+
+    paths.forEach((path) => {
+      const length = path.getTotalLength()
+      pathLengths.set(path, length)
+
+      const customDuration = path.getAttribute('data-duration')
+      const duration = customDuration ? parseInt(customDuration, 10) : defaultDuration
+      pathDurations.set(path, duration)
+
+      /* 1. 初始状态 */
+      path.style.strokeDasharray = `${length} ${length}`
+      path.style.strokeDashoffset = length
+      path.style.transition = 'none'
+      path.style.opacity = '1'
+      path.style.fill = 'transparent' // 关键
+      path.dataset.targetFill = '#000' // 想填的颜色
+    })
+
+    // 使用递归方式实现顺序动画
+    const drawSequentially = (index, callback) => {
+      if (index >= paths.length) {
+        if (callback) callback()
+        return
+      }
+
+      const path = paths[index]
+      const duration = pathDurations.get(path)
+      // 强制重排以确保初始状态被应用
+      path.getBoundingClientRect() // force reflow
+      // 设置动画
+      path.style.transition = `stroke-dashoffset ${duration}ms ease-in-out,
+                              fill ${duration}ms ease-in-out` // 同时过渡 fill
+      path.style.strokeDashoffset = '0'
+      path.style.fill = path.dataset.targetFill // ← 边画边填
+      // 等待动画完成
+      setTimeout(() => {
+        // 如果不是最后一笔，添加延迟
+        // @ts-ignore
+        const nextDelay = index < paths.length - 1 ? drawDelay : 0
+        setTimeout(() => {
+          drawSequentially(index + 1, callback)
+        }, nextDelay)
+      }, duration)
+    }
+
+    const rollbackSequentially = (index, callback) => {
+      /* 回滚前恢复透明（可选）
+      paths.forEach(p => {
+        p.style.fill = 'transparent'
+        p.style.strokeDashoffset = pathLengths.get(p)
+      })
+          */
+      if (index < 0) {
+        if (callback) callback()
+        return
+      }
+
+      const path = paths[index]
+      const duration = pathDurations.get(path)
+      const currentRollbackDuration = duration * 0.8
+
+      // 强制重排
+      path.getBoundingClientRect()
+
+      // 设置回滚动画
+      path.style.transition = `stroke-dashoffset ${currentRollbackDuration}ms ease-in-out`
+      path.style.strokeDashoffset = pathLengths.get(path)
+
+      // 等待动画完成
+      setTimeout(() => {
+        // 如果不是最后一笔，添加延迟
+        // @ts-ignore
+        const nextDelay = index > 0 ? rollbackDelay : 0
+        setTimeout(() => {
+          rollbackSequentially(index - 1, callback)
+        }, nextDelay)
+      }, currentRollbackDuration)
+    }
+
+    // 执行动画
+    // @ts-ignore
+    if (mode === 'loop') {
+      const runLoop = () => {
+        // 绘制所有笔画
+        drawSequentially(0, () => {
+          // 绘制完成后暂停
+          setTimeout(() => {
+            // 回滚所有笔画
+            rollbackSequentially(paths.length - 1, () => {
+              // 回滚完成后暂停
+              setTimeout(() => {
+                // 重新开始循环
+                runLoop()
+                // @ts-ignore
+              }, loopPause / 2)
+            })
+            // @ts-ignore
+          }, loopPause)
+        })
+      }
+
+      // 初始延迟后开始
+      setTimeout(runLoop, 500)
+      // @ts-ignore
+    } else if (mode === 'once-on-view') {
+      const observer = new IntersectionObserver(
+        (entries, obs) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              // 再等500ms后移除观察器
+              setTimeout(() => {
+                drawSequentially(0)
+                obs.unobserve(entry.target)
+              }, 500)
+            }
+          })
+        },
+        // @ts-ignore
+        { threshold: threshold }
+      )
+      observer.observe(wrapper)
+    }
+  }
+
+  document.querySelectorAll('.signature-wrapper').forEach(setupSignature)
+})();</script>  </div> <footer class="mx-auto mb-5 mt-16 w-full"> <div class="border-t pt-5"> <div class="flex items-center gap-y-3 max-sm:flex-col sm:justify-between sm:gap-y-0"> <div class="flex flex-col items-center sm:items-start gap-y-2 text-sm text-muted-foreground [&_a]:text-foreground"> <div class="flex flex-col sm:flex-row items-center sm:items-start gap-x-4 gap-y-2">  <div> © 2025 - 2026 Ljx 
+&
+<span> <span> <a href="/terms/list" target="_blank"> Site Policy </a> </span> </span>  </div> <span> <a href="https://github.com/withastro/astro" target="_blank">
+Astro
+</a>
+&
+<a href="https://github.com/cworld1/astro-theme-pure" target="_blank">
+Pure
+</a>
+theme powered
+</span> </div>  <div> <span> <a href="https://beian.miit.gov.cn/" target="_blank" class="text-sm"> 鄂ICP备2025150801号-1 </a>  |  </span><span> <a href="https://beian.mps.gov.cn/#/query/webSearch?code=51170302000216" target="_blank" class="text-sm"> 川公网安备51170302000216号 </a>  </span> </div> </div>  <div class="flex flex-col gap-y-2 items-center sm:items-start">  <div class="flex items-center text-xs md:text-sm text-muted-foreground">  <div class="flex items-center gap-x-1 px-4"> <span>∑ Words</span> <span class="font-medium text-foreground"> 16.2k </span> </div> <div class="h-3 w-px bg-border"></div>  <div class="flex items-center gap-x-1 px-4"> <span>∑ Time</span> <span id="uptime" class="font-medium text-foreground"> Loading… </span> </div> </div>  <div class="flex items-center text-xs md:text-sm text-muted-foreground">  <div class="flex items-center gap-x-1 px-4"> <span>∑ Visits</span> <span id="vercount_value_site_pv" class="font-medium text-foreground">
+Loading…
+</span> </div> <div class="h-3 w-px bg-border"></div> <div class="flex items-center gap-x-1 px-4"> <span>∑ Views</span> <span id="vercount_value_page_pv" class="font-medium text-foreground">
+Loading…
+</span> </div> <div class="h-3 w-px bg-border"></div> <div class="flex items-center gap-x-1 px-4"> <span>∑ Visitors</span> <span id="vercount_value_site_uv" class="font-medium text-foreground">
+Loading…
+</span> </div>  </div> </div> <script>(function(){const siteStart = "2025-10-07T00:00:00";
+
+        const start = new Date(siteStart)
+        const updateUptime = () => {
+          const diff = Date.now() - start.getTime()
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+          const uptimeElement = document.getElementById('uptime')
+          if (uptimeElement) {
+            uptimeElement.textContent = `${days} d ${hours} h ${minutes} m ${seconds} s`
+          }
+        }
+        setInterval(updateUptime, 1000)
+        updateUptime()
+      })();</script>  <div class="flex items-center gap-x-4"> <a class="inline-block text-muted-foreground transition-all hover:text-muted-foreground/75" href="mailto:me@ljx.icu" aria-label="Email"> <svg aria-hidden="true" class=" astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M20 4a2 2 0 0 1 1.995 1.85L22 6v12a2 2 0 0 1-1.85 1.995L20 20H4a2 2 0 0 1-1.995-1.85L2 18V6a2 2 0 0 1 1.85-1.995L4 4zm0 3.414l-6.94 6.94a1.5 1.5 0 0 1-2.12 0L4 7.414V18h16zM18.586 6H5.414L12 12.586z"/></g></svg>  </a><a class="inline-block text-muted-foreground transition-all hover:text-muted-foreground/75" href="https://github.com/ljxme" aria-label="GitHub"> <svg aria-hidden="true" class=" astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M6.315 6.176c-.25-.638-.24-1.367-.129-2.034a6.8 6.8 0 0 1 2.12 1.07c.28.214.647.283.989.18A9.3 9.3 0 0 1 12 5c.961 0 1.874.14 2.703.391c.342.104.709.034.988-.18a6.8 6.8 0 0 1 2.119-1.07c.111.667.12 1.396-.128 2.033c-.15.384-.075.826.208 1.14C18.614 8.117 19 9.04 19 10c0 2.114-1.97 4.187-5.134 4.818c-.792.158-1.101 1.155-.495 1.726c.389.366.629.882.629 1.456v3a1 1 0 0 0 2 0v-3c0-.57-.12-1.112-.334-1.603C18.683 15.35 21 12.993 21 10c0-1.347-.484-2.585-1.287-3.622c.21-.82.191-1.646.111-2.28c-.071-.568-.17-1.312-.57-1.756c-.595-.659-1.58-.271-2.28-.032a9 9 0 0 0-2.125 1.045A11.4 11.4 0 0 0 12 3c-.994 0-1.953.125-2.851.356a9 9 0 0 0-2.125-1.045c-.7-.24-1.686-.628-2.281.031c-.408.452-.493 1.137-.566 1.719l-.005.038c-.08.635-.098 1.462.112 2.283C3.484 7.418 3 8.654 3 10c0 2.992 2.317 5.35 5.334 6.397A4 4 0 0 0 8 17.98l-.168.034c-.717.099-1.176.01-1.488-.122c-.76-.322-1.152-1.133-1.63-1.753c-.298-.385-.732-.866-1.398-1.088a1 1 0 0 0-.632 1.898c.558.186.944 1.142 1.298 1.566c.373.448.869.916 1.58 1.218c.682.29 1.483.393 2.438.276V21a1 1 0 0 0 2 0v-3c0-.574.24-1.09.629-1.456c.607-.572.297-1.568-.495-1.726C6.969 14.187 5 12.114 5 10c0-.958.385-1.881 1.108-2.684c.283-.314.357-.756.207-1.14"/></g></svg>  </a><a class="inline-block text-muted-foreground transition-all hover:text-muted-foreground/75" href="https://t.me/ljxme" aria-label="Telegram"> <svg aria-hidden="true" class=" astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none" fill-rule="evenodd"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M21.84 6.056a1.5 1.5 0 0 0-2.063-1.626l-17.1 7.2c-1.192.502-1.253 2.226 0 2.746a57 57 0 0 0 3.774 1.418c1.168.386 2.442.743 3.463.844c.279.334.63.656.988.95c.547.45 1.205.913 1.885 1.357c1.362.89 2.873 1.741 3.891 2.295c1.217.66 2.674-.1 2.892-1.427zM4.594 12.993l15.124-6.368l-2.118 12.84c-.999-.543-2.438-1.356-3.72-2.194a20 20 0 0 1-1.709-1.229a8 8 0 0 1-.426-.374l3.961-3.96a1 1 0 0 0-1.414-1.415L9.955 14.63c-.734-.094-1.756-.366-2.878-.736a49 49 0 0 1-2.482-.902Z"/></g></svg>  </a><a class="inline-block text-muted-foreground transition-all hover:text-muted-foreground/75" href="/rss.xml" aria-label="RSS"> <svg aria-hidden="true" class=" astro-udet5etc" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><g fill="none"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M5.5 17a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3m0-14C14.06 3 21 9.94 21 18.5q0 .268-.009.534a1 1 0 0 1-1.999-.068Q19 18.734 19 18.5C19 11.044 12.956 5 5.5 5q-.234 0-.466.008a1 1 0 0 1-.068-1.999Q5.231 3 5.5 3m0 7a8.5 8.5 0 0 1 8.482 9.066a1 1 0 0 1-1.996-.132a6.5 6.5 0 0 0-6.92-6.92a1 1 0 1 1-.132-1.995q.28-.02.566-.019"/></g></svg>  </a> </div> </div> </div> </footer> </div>    <script src="https://cn.vercount.one/js" async data-astro-rerun></script> </body> </html> <script type="module">const d=document.getElementById("sidebar-btn"),e=document.getElementById("sidebar"),s=document.getElementById("sidebar-shade");s&&s.addEventListener("click",()=>{t()});function t(){e&&e.classList.contains("show")?(e.classList.remove("show"),s.style.display="none"):e&&(e.classList.add("show"),s.style.display="block")}d?.addEventListener("click",()=>{t()});</script>  <script src="https://cdn.jsdmirror.com/npm/medium-zoom/dist/pure/medium-zoom.min.umd.js"></script> <script>(function(){const selector = ".prose .zoomable";
+const background = "hsl(var(--background) / 0.8)";
+
+  mediumZoom(selector, { background })
+})();</script> 

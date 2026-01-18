@@ -1,0 +1,160 @@
+{
+  "friends": [
+    {
+      "id_name": "cf-links",
+      "desc": "Common links included in circle friends",
+      "link_list": [
+        {
+          "name": "Arthals' ink",
+          "intro": "所见高山远木，阔云流风；所幸岁月盈余，了无拘束",
+          "link": "https://arthals.ink",
+          "avatar": "https://cdn.arthals.ink/Arthals.png",
+          "avatar_cache": {
+            "hash": "d5a2168afb7c8ed6",
+            "path": "/avatars/d5a2168afb7c8ed6.png"
+          }
+        },
+        {
+          "name": "CWorld Site",
+          "intro": "求知若愚，虚怀若谷",
+          "link": "https://cworld0.com",
+          "avatar": "https://cravatar.cn/avatar/1ffe42aa45a6b1444a786b1f32dfa8aa?s=200",
+          "avatar_cache": {
+            "hash": "e005227b657940ca",
+            "path": "/avatars/e005227b657940ca.webp"
+          }
+        },
+        {
+          "name": "温锦瑜的博客",
+          "intro": "先想想为什么，再考虑怎么做",
+          "link": "https://www.wenjinyu.me",
+          "avatar": "https://sso.wenjinyu.me/public/favicon.png",
+          "avatar_cache": {
+            "hash": "a82c0d0937a929bb",
+            "path": "/avatars/a82c0d0937a929bb.png"
+          }
+        },
+        {
+          "name": "Chancel's blog",
+          "intro": "有善始者实繁，能克终者盖寡",
+          "link": "https://www.chancel.me",
+          "avatar": "https://agent.chancel.me/secure.gravatar.com/avatar/d45071b54cf3339bd3d16bb35f750f35?s=48&d=404",
+          "avatar_cache": {
+            "hash": "3a5022d4edd4fe93",
+            "path": "/avatars/3a5022d4edd4fe93.jpg"
+          }
+        },
+        {
+          "name": "FKUN",
+          "intro": "F君のBLOGへようこそ！",
+          "link": "https://blog.fkun.tech",
+          "avatar": "https://fkun.tech/images/avatar.png",
+          "avatar_cache": {
+            "hash": "20ae624d7849c1eb",
+            "path": "/avatars/20ae624d7849c1eb.png"
+          }
+        },
+        {
+          "name": "Zeruns's Blog",
+          "intro": "爱折腾软件和硬件的技术宅",
+          "link": "https://blog.zeruns.com",
+          "avatar": "https://blog.zeruns.com/tx.jpg",
+          "avatar_cache": {
+            "hash": "bf6c6bb73d268699",
+            "path": "/avatars/bf6c6bb73d268699.jpg"
+          }
+        },
+        {
+          "name": "清羽飞扬",
+          "intro": "柳影曳曳，清酒孤灯，扬笔撒墨，心境如霜",
+          "link": "https://blog.liushen.fun/",
+          "avatar": "https://blog.liushen.fun/info/avatar.ico",
+          "avatar_cache": {
+            "hash": "aa6b45c344d16307",
+            "path": "/avatars/aa6b45c344d16307.ico"
+          }
+        },
+        {
+          "name": "青序栈",
+          "intro": "青序成栈·向简而生",
+          "link": "https://www.qixz.cn/",
+          "avatar": "https://www.qixz.cn/favicon.svg",
+          "avatar_cache": {
+            "hash": "5819e14c8bb85e54",
+            "path": "/avatars/5819e14c8bb85e54.svg"
+          }
+        },
+        {
+          "name": "AirTouchの小站",
+          "intro": "岩间琉璃云间月",
+          "link": "https://www.xsl.im/",
+          "avatar": "https://www.xsl.im/avatar.webp",
+          "avatar_cache": {
+            "hash": "fddd2057cf072df9",
+            "path": "/avatars/fddd2057cf072df9.webp"
+          }
+        },
+        {
+          "name": "Qingw",
+          "intro": "Just do it!",
+          "link": "https://qingw.top/",
+          "avatar": "http://qingw.top/images/fll.webp",
+          "avatar_cache": {
+            "hash": "1233738427a4ea35",
+            "path": "/avatars/1233738427a4ea35.webp"
+          }
+        }
+      ]
+    },
+    {
+      "id_name": "inactive-links",
+      "desc": "Inactive or rule-breaking friends",
+      "link_list": [
+        {
+          "name": "Shuoer's blog",
+          "intro": "Everyday is a new beginning",
+          "link": "https://shuoer.top/",
+          "avatar": "https://shuoer.top/favicon/favicon.ico",
+          "avatar_cache": {
+            "hash": "0938e2a64e7fec61",
+            "path": "/avatars/0938e2a64e7fec61.ico"
+          }
+        }
+      ]
+    },
+    {
+      "id_name": "special-links",
+      "desc": "Other special links",
+      "link_list": [
+        {
+          "name": "虫洞",
+          "intro": "随机前往十年之约的成员博客",
+          "link": "https://www.foreverblog.cn/go.html",
+          "avatar": "/images/wormhole.png"
+        },
+        {
+          "name": "开往",
+          "intro": "随机前往开往的成员博客",
+          "link": "https://www.travellings.cn/go.html",
+          "avatar": "https://www.travellings.cn/assets/travelling.png",
+          "avatar_cache": {
+            "hash": "0146650538f81e6a",
+            "path": "/avatars/0146650538f81e6a.png"
+          }
+        },
+        {
+          "name": "LINUX DO",
+          "intro": "新的理想型社区",
+          "link": "https://linux.do",
+          "avatar": "/images/linuxdo.png"
+        },
+        {
+          "name": "V2EX",
+          "intro": "Way to explore",
+          "link": "https://v2ex.com",
+          "avatar": "/images/v2ex.png"
+        }
+      ]
+    }
+  ]
+}
