@@ -153,6 +153,12 @@
           "intro": "Way to explore",
           "link": "https://v2ex.com",
           "avatar": "/images/v2ex.png"
+        },
+        {
+          "name": "NodeSeek",
+          "intro": "nodeseek",
+          "link": "https://www.nodeseek.com/",
+          "avatar": "/images/nodeseek.png"
         }
       ]
     }

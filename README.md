@@ -22,7 +22,7 @@ Except for the way the sidebar is provided, here are some ways that you can find
 
 <!-- Copy-paste in your Readme.md file -->
 
-[![Dashboard stats of @ljxme](https://next.ossinsight.io/widgets/official/compose-user-dashboard-stats/thumbnail.png?user_id=114164438&image_size=auto&color_scheme=light)](https://next.ossinsight.io/widgets/official/compose-user-dashboard-stats?user_id=114164438)
+<!-- [![Dashboard stats of @ljxme](https://next.ossinsight.io/widgets/official/compose-user-dashboard-stats/thumbnail.png?user_id=114164438&image_size=auto&color_scheme=light)](https://next.ossinsight.io/widgets/official/compose-user-dashboard-stats?user_id=114164438) -->
 
 <!-- Made with [OSS Insight](https://ossinsight.io/) -->
 
