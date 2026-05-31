@@ -55,6 +55,11 @@ const { class: className } = Astro.props
         ...walineConfig.additionalConfigs
       })
 
+      // Signal that Waline has initialized (counts may still be loading)
+      this.dispatchEvent(
+        new CustomEvent('waline:ready', { bubbles: true, composed: true })
+      )
+
       /**
        * Highlight the comment corresponding to the hash
        * @param hash - The URL hash (e.g. #comment-id)
