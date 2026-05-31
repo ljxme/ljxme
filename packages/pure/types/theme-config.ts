@@ -175,7 +175,7 @@ export const ThemeConfigSchema = () =>
         content: z.string().optional().default(' ↗').describe('Content to show for external links'),
         /** Properties for the external links element */
         properties: z
-          .record(z.string())
+          .record(z.string(), z.string())
           .optional()
           .describe('Properties for the external links element')
       }),
@@ -186,7 +186,10 @@ export const ThemeConfigSchema = () =>
       /** Whether to show the table of contents in the sidebar. */
       tocCollapse: z.boolean().optional().default(true),
       /** Share buttons to show */
-      share: ShareSchema()
+      share: ShareSchema(),
+
+      /** Enable image captions (default false) */
+      imageCaption: z.boolean().default(false).describe('Enable image captions')
     })
   })
 

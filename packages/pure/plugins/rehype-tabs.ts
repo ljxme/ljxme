@@ -3,7 +3,7 @@ import { select } from 'hast-util-select'
 import { rehype } from 'rehype'
 import { CONTINUE, SKIP, visit } from 'unist-util-visit'
 
-export interface Panel {
+interface Panel {
   panelId: string
   tabId: string
   label: string

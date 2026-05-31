@@ -26,8 +26,8 @@ const { class: className } = Astro.props
   const walineConfig = config.integ.waline
 
   class Comment extends HTMLElement {
-    observer: MutationObserver | null = null
-    hashChangeListener: (() => void) | null = null
+    private observer: MutationObserver | null = null
+    private hashChangeListener: (() => void) | null = null
 
     constructor() {
       super()
@@ -46,7 +46,7 @@ const { class: className } = Astro.props
       )
 
       walineInit({
-        el: '#waline',
+        el: 'comment-component #waline',
         serverURL: walineConfig.server || '',
         emoji,
         reaction: ['/icons/heart-item.svg'],

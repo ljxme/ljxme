@@ -5,10 +5,12 @@ import BaseHead from '@/components/BaseHead.astro'
 import Footer from '@/components/custom/Footer.astro'
 import config, { vercount } from '@/site-config'
 
-// Import custom CSS configured in site.config.ts so that it is included on all pages.
-import 'virtual:user-css'
+// Import the global.css file here so that it is included on
+// all pages through the use of the <BaseLayout /> component.
+import '@/assets/styles/global.css'
+import '@/assets/styles/app.css'
 
-import Signature from 'preset/components/signature/Signature.astro'
+import Signature from '../../preset/components/signature/Signature.astro'
 
 import BackgrounRandom from '@/components/custom/BackgrounRandom.astro'
 

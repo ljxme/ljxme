@@ -3,7 +3,8 @@ dist/
 .astro/
 
 ### AI ###
-.trae/
+.reasonix/
+.codegraph/
 
 ### Vercel ###
 .vercel/

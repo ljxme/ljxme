@@ -32,6 +32,11 @@ export default defineConfig({
   // base: '/astro-pure/',
   trailingSlash: 'never',
   // root: './my-project-directory',
+  // https://docs.astro.build/en/guides/prefetch/
+  prefetch: {
+    // prefetchAll: true,
+    defaultStrategy: 'viewport'
+  },
 
   // [Adapter]
   // https://docs.astro.build/en/guides/deploy/
@@ -44,15 +49,12 @@ export default defineConfig({
   // adapter: node({ mode: 'standalone' }),
   // output: 'server',
 
-  // adapter: zeabur(),
-  // output: 'server',
-  // ---
   // [Assets]
   image: {
     responsiveStyles: true,
-    service: {
-      entrypoint: 'astro/assets/services/sharp'
-    }
+    service: { entrypoint: 'astro/assets/services/sharp' },
+    // domains: ['ghchart.rshah.org'],
+    remotePatterns: [{ protocol: 'https' }]
   },
 
   // [Markdown]
@@ -79,16 +81,24 @@ export default defineConfig({
       },
       transformers: [
         // Two copies of @shikijs/types (one under node_modules
-        // and another nested under @astrojs/markdown-remark �� shiki).
+        // and another nested under @astrojs/markdown-remark → shiki).
         // Official transformers
+        // @ts-ignore this happens due to multiple versions of shiki types
         transformerNotationDiff(),
+        // @ts-ignore this happens due to multiple versions of shiki types
         transformerNotationHighlight(),
+        // @ts-ignore this happens due to multiple versions of shiki types
         transformerRemoveNotationEscape(),
         // Custom transformers
+        // @ts-ignore this happens due to multiple versions of shiki types
         updateStyle(),
+        // @ts-ignore this happens due to multiple versions of shiki types
         addTitle(),
+        // @ts-ignore this happens due to multiple versions of shiki types
         addLanguage(),
+        // @ts-ignore this happens due to multiple versions of shiki types
         addCopyButton(2000), // timeout in ms
+        // @ts-ignore this happens due to multiple versions of shiki types
         addCollapse(15) // max lines that needs to collapse
       ]
     }
@@ -110,25 +120,15 @@ export default defineConfig({
     // Enable SVGO optimization for SVG assets
     // https://docs.astro.build/en/reference/experimental-flags/svg-optimization/
     svgo: true,
-    // Enable font preloading and optimization
-    // https://docs.astro.build/en/reference/experimental-flags/fonts/
-
-    // no use for now
-
-    // fonts: [
-    //   {
-    //     provider: fontProviders.fontshare(),
-    //     name: 'Satoshi',
-    //     cssVariable: '--font-satoshi',
-        // Default included:
-        // weights: [400],
-        // styles: ["normal", "italics"],
-        // subsets: ["cyrillic-ext", "cyrillic", "greek-ext", "greek", "vietnamese", "latin-ext", "latin"],
-        // fallbacks: ["sans-serif"],
-    //     styles: ['normal', 'italic'],
-    //     weights: [400, 500],
-    //     subsets: ['latin']
-    //   }
-    // ]
+    // Enables pre-rendering your prefetched pages on the client in supported browsers.
+    // https://docs.astro.build/en/reference/experimental-flags/client-prerender/
+    clientPrerender: true,
+    // Enables using the new Rust-based compiler for Astro files.
+    // https://docs.astro.build/en/reference/experimental-flags/rust-compiler/
+    rustCompiler: false,
+    // https://docs.astro.build/en/reference/experimental-flags/queued-rendering/
+    queuedRendering: {
+      enabled: true
+    }
   }
 })

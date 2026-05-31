@@ -6,13 +6,12 @@ import { Icon } from 'astro-pure/user'
 import { getReadingTime } from 'astro-pure/utils'
 
 const footerConf = config.footer
-let social = footerConf.social || {}
 
-// If the list does not contain rss, add it
-social.rss = {
-  label: 'RSS',
-  url: '/rss.xml'
-}
+// Add RSS to social links if not already present
+const social = [
+  ...(footerConf.social || []),
+  { icon: 'rss' as const, label: 'RSS', href: '/rss.xml' }
+]
 
 const footerLink1 = footerConf.links?.filter(({ pos }) => pos === 2) || []
 
@@ -153,16 +152,15 @@ const siteStart = '2025-10-07T00:00:00'
       {/* Social Brands */}
       <div class='flex items-center gap-x-4'>
         {
-          footerConf.social &&
-            Object.entries(footerConf.social).map(([platform, { label, url }]) => (
-              <a
-                class='inline-block text-muted-foreground transition-all hover:text-muted-foreground/75'
-                href={url}
-                aria-label={label}
-              >
-                <Icon name={platform as keyof typeof footerConf.social} />
-              </a>
-            ))
+          social.map(({ icon, label, href }) => (
+            <a
+              class='inline-block text-muted-foreground transition-all hover:text-muted-foreground/75'
+              href={href}
+              aria-label={label}
+            >
+              <Icon name={icon} />
+            </a>
+          ))
         }
       </div>
     </div>

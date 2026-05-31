@@ -91,11 +91,11 @@ export const theme: ThemeUserConfig = {
     /** Enable displaying a “Astro & Pure theme powered” link in your site’s footer. */
     credits: true,
     /** Optional details about the social media accounts for this site. */
-    social: {
-      email: 'mailto:me@ljx.icu',
-      github: 'https://github.com/ljxme',
-      telegram: 'https://t.me/ljxme'
-    }
+    social: [
+      { icon: 'github', label: 'GitHub', href: 'https://github.com/cworld1/astro-theme-pure' },
+      { icon: 'telegram', label: 'Telegram', href: 'https://t.me/ljxme' },
+      { icon: 'email', label: 'Email', href: 'mailto:contact@ljx.icu' }
+    ]
   },
 
   // [Content]
@@ -104,126 +104,126 @@ export const theme: ThemeUserConfig = {
     externalLinks: {
       content: ' ↗',
       /** Properties for the external links element */
-      properties: {
-        style: 'user-select:none'
-      }
+      properties: { style: 'user-select:none' }
     },
     /** Blog page size for pagination (optional) */
     blogPageSize: 8,
-    /** Table of Contents configuration */
+    /** Share buttons to show */
     // Currently support weibo, x, bluesky
     share: ['weibo', 'x', 'bluesky']
+    /** Enable image captions (default false) */
+    // imageCaption: true
   }
 }
 
 export const integ: IntegrationUserConfig = {
-  // [Links]
-  // https://astro-pure.js.org/docs/integrations/links
-  links: {
-    // Friend logbook
-    logbook: [
-      { date: '2025-12-31', content: ' [Sans] accepted' },
-      { date: '2025-10-30', content: " [AirTouchの小站] accepted, [Shuoer's blog] inactived" },
-      { date: '2025-10-22', content: ' [青序栈] accepted' },
-      { date: '2025-10-17', content: ' [清羽飞扬] added' },
-      { date: '2025-10-10', content: " [Shuoer's blog] added" },
-      {
-        date: '2025-10-09',
-        content: " [温锦瑜的博客]、[Chancel's blog]、[FKUN]、[Zeruns's Blog] added"
+    // [Links]
+    // https://astro-pure.js.org/docs/integrations/links
+    links: {
+      // Friend logbook
+      logbook: [
+        { date: '2025-12-31', content: ' [Sans] accepted' },
+        { date: '2025-10-30', content: " [AirTouchの小站] accepted, [Shuoer's blog] inactived" },
+        { date: '2025-10-22', content: ' [青序栈] accepted' },
+        { date: '2025-10-17', content: ' [清羽飞扬] added' },
+        { date: '2025-10-10', content: " [Shuoer's blog] added" },
+        {
+          date: '2025-10-09',
+          content: " [温锦瑜的博客]、[Chancel's blog]、[FKUN]、[Zeruns's Blog] added"
+        }
+      ],
+      // Yourself link info
+      applyTip: [
+        { name: 'Name', val: '梨尽兴' },
+        { name: 'Desc', val: theme.description || 'Null' },
+        { name: 'Link', val: 'https://blog.ljx.icu' },
+        { name: 'Rss', val: 'https://blog.ljx.icu/rss.xml' },
+        { name: 'Avatar', val: 'https://blog.ljx.icu/favicon.png' }
+      ],
+      // Cache avatars in `public/avatars/` to improve user experience.
+      cacheAvatar: true
+    },
+    // [Search]
+    pagefind: true,
+    // Add a random quote to the footer (default on homepage footer)
+    // See: https://astro-pure.js.org/docs/integrations/advanced#web-content-render
+    // [Quote]
+    quote: {
+      // - Hitokoto
+      // https://developer.hitokoto.cn/sentence/#%E8%AF%B7%E6%B1%82%E5%9C%B0%E5%9D%80
+      // server: 'https://v1.hitokoto.cn/?c=i',
+      // target: `(data) => (data.hitokoto || 'Error')`
+      // - Quotable
+      // https://github.com/lukePeavey/quotable
+      // server: 'http://api.quotable.io/quotes/random?maxLength=60',
+      // target: `(data) => data[0].content || 'Error'`
+      // - DummyJSON
+      server: 'https://v1.hitokoto.cn/?c=i',
+      target: `(data) => (data.hitokoto || 'Error')`
+    },
+    // [Typography]
+    // https://unocss.dev/presets/typography
+    typography: {
+      class: 'prose text-base',
+      // The style of blockquote font `normal` / `italic` (default to italic in typography)
+      blockquoteStyle: 'italic',
+      // The style of inline code block `code` / `modern` (default to code in typography)
+      inlineCodeBlockStyle: 'modern'
+    },
+    // [Lightbox]
+    // A lightbox library that can add zoom effect
+    // https://astro-pure.js.org/docs/integrations/others#medium-zoom
+    mediumZoom: {
+      enable: true, // disable it will not load the whole library
+      selector: '.prose .zoomable',
+      options: {
+        className: 'zoomable'
       }
-    ],
-    // Yourself link info
-    applyTip: [
-      { name: 'Name', val: '梨尽兴' },
-      { name: 'Desc', val: theme.description || 'Null' },
-      { name: 'Link', val: 'https://blog.ljx.icu' },
-      { name: 'Rss', val: 'https://blog.ljx.icu/rss.xml' },
-      { name: 'Avatar', val: 'https://blog.ljx.icu/favicon.png' }
-    ],
-    // Cache avatars in `public/avatars/` to improve user experience.
-    cacheAvatar: true
-  },
-  // [Search]
-  pagefind: true,
-  // Add a random quote to the footer (default on homepage footer)
-  // See: https://astro-pure.js.org/docs/integrations/advanced#web-content-render
-  // [Quote]
-  quote: {
-    // - Hitokoto
-    // https://developer.hitokoto.cn/sentence/#%E8%AF%B7%E6%B1%82%E5%9C%B0%E5%9D%80
-    // server: 'https://v1.hitokoto.cn/?c=i',
-    // target: `(data) => (data.hitokoto || 'Error')`
-    // - Quoteable
-    // https://github.com/lukePeavey/quotable
-    // server: 'http://api.quotable.io/quotes/random?maxLength=60',
-    // target: `(data) => data[0].content || 'Error'`
-    // - DummyJSON
-    server: 'https://v1.hitokoto.cn/?c=i',
-    target: `(data) => (data.hitokoto || 'Error')`
-  },
-  // [Typography]
-  // https://unocss.dev/presets/typography
-  typography: {
-    class: 'prose text-base',
-    // The style of blockquote font `normal` / `italic` (default to italic in typography)
-    blockquoteStyle: 'italic',
-    // The style of inline code block `code` / `modern` (default to code in typography)
-    inlineCodeBlockStyle: 'modern'
-  },
-  // [Lightbox]
-  // A lightbox library that can add zoom effect
-  // https://astro-pure.js.org/docs/integrations/others#medium-zoom
-  mediumZoom: {
-    enable: true, // disable it will not load the whole library
-    selector: '.prose .zoomable',
-    options: {
-      className: 'zoomable'
-    }
-  },
-  // Comment system
-  waline: {
-    enable: true,
-    // Server service link
-    server: 'https://waline.ljx.icu/',
-    // Show meta info for comments
-    showMeta: false,
-    // Refer https://waline.js.org/en/guide/features/emoji.html
-    emoji: ['bmoji', 'ljxme', 'heybox_cube', 'heybox_heniang', 'linedog'],
-    // Refer https://waline.js.org/en/reference/client/props.html
-    additionalConfigs: {
-      // search: false,
-      pageview: true,
-      comment: true,
-      locale: {
-        reaction0: 'Like',
-        placeholder: '欢迎留下评论~（无需登录，评论经审核后可见）'
+    },
+    // Comment system
+    waline: {
+      enable: true,
+      // Server service link
+      server: 'https://waline.ljx.icu/',
+      // Show meta info for comments
+      showMeta: false,
+      // Refer https://waline.js.org/en/guide/features/emoji.html
+      emoji: ['bmoji', 'ljxme', 'heybox_cube', 'heybox_heniang', 'linedog'],
+      // Refer https://waline.js.org/en/reference/client/props.html
+      additionalConfigs: {
+        // search: false,
+        pageview: true,
+        comment: true,
+        locale: {
+          reaction0: 'Like',
+          placeholder: '欢迎留下评论~（无需登录，评论经审核后可见）'
+        },
+        imageUploader: false
       }
-      // imageUploader: false
     }
   }
-}
 
 export const terms: CardListData = {
-  title: 'Terms content',
-  list: [
-    {
-      title: '隐私政策',
-      link: '/terms/privacy-policy'
-    },
-    {
-      title: '服务条款',
-      link: '/terms/terms-and-conditions'
-    },
-    {
-      title: '版权声明',
-      link: '/terms/copyright'
-    },
-    {
-      title: '免责声明',
-      link: '/terms/disclaimer'
-    }
-  ]
-}
+    title: 'Terms content',
+    list: [
+      {
+        title: '隐私政策',
+        link: '/terms/privacy-policy'
+      },
+      {
+        title: '服务条款',
+        link: '/terms/terms-and-conditions'
+      },
+      {
+        title: '版权声明',
+        link: '/terms/copyright'
+      },
+      {
+        title: '免责声明',
+        link: '/terms/disclaimer'
+      }
+    ]
+  }
 
 const config = { ...theme, integ } as Config
 export default config
