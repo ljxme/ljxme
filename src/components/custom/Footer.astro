@@ -133,100 +133,54 @@ const siteStart = '2025-10-07T00:00:00'
       </div>
 
       <script define:vars={{ siteStart }} is:inline>
-        // Shared count-up utility
-        function countUp(el, target, duration = 1200) {
-          const startTime = performance.now()
-          function tick(now) {
-            const elapsed = now - startTime
-            const progress = Math.min(elapsed / duration, 1)
-            const eased = 1 - Math.pow(1 - progress, 3)
-            el.textContent = Math.floor(target * eased).toLocaleString()
-            if (progress < 1) requestAnimationFrame(tick)
-          }
-          requestAnimationFrame(tick)
-        }
-
-        function parseCount(text) {
-          if (!text) return NaN
-          return parseInt(text.replace(/[,，]/g, ''), 10)
-        }
-
         // ── 1. Total Words (static, animate on load) ──
-        const wordsEl = document.getElementById('total-words')
+        var wordsEl = document.getElementById('total-words')
         if (wordsEl) {
-          const raw = parseInt(wordsEl.dataset.raw || '0', 10)
-          if (raw > 0) countUp(wordsEl, raw, 1000)
+          var raw = parseInt(wordsEl.dataset.raw || '0', 10)
+          if (raw > 0) CountUp.animate(wordsEl, raw, 1000)
         }
 
         // ── 2. Total Uptime (animate initial value, then live counter) ──
-        const start = new Date(siteStart)
-        const uptimeEl = document.getElementById('uptime')
+        var uptimeEl = document.getElementById('uptime')
+        var start = new Date(siteStart)
 
         function formatUptime(seconds) {
-          const d = Math.floor(seconds / 86400)
-          const h = Math.floor((seconds % 86400) / 3600)
-          const m = Math.floor((seconds % 3600) / 60)
-          const s = Math.floor(seconds % 60)
-          return `${d} d ${h} h ${m} m ${s} s`
+          var d = Math.floor(seconds / 86400)
+          var h = Math.floor((seconds % 86400) / 3600)
+          var m = Math.floor((seconds % 3600) / 60)
+          var s = Math.floor(seconds % 60)
+          return d + ' d ' + h + ' h ' + m + ' m ' + s + ' s'
         }
 
         if (uptimeEl) {
-          const initialSeconds = Math.floor((Date.now() - start.getTime()) / 1000)
-          let uptimeAnimating = true
-          let animatedSeconds = initialSeconds
+          var initialSeconds = Math.floor((Date.now() - start.getTime()) / 1000)
+          var uptimeAnimating = true
 
-          // Animate from 0 to current uptime
           function tickUptime(now) {
             if (!uptimeAnimating) return
-            const elapsed = now - animStart
-            const progress = Math.min(elapsed / 1500, 1)
-            const eased = 1 - Math.pow(1 - progress, 3)
-            animatedSeconds = Math.floor(initialSeconds * eased)
-            uptimeEl.textContent = formatUptime(animatedSeconds)
-            if (progress < 1) {
-              requestAnimationFrame(tickUptime)
-            } else {
-              uptimeAnimating = false
-            }
+            var elapsed = now - animStart
+            var progress = Math.min(elapsed / 1500, 1)
+            var eased = 1 - Math.pow(1 - progress, 3)
+            uptimeEl.textContent = formatUptime(Math.floor(initialSeconds * eased))
+            if (progress < 1) requestAnimationFrame(tickUptime)
+            else uptimeAnimating = false
           }
-          const animStart = performance.now()
+          var animStart = performance.now()
           requestAnimationFrame(tickUptime)
 
-          // After animation, switch to live counter
-          setInterval(() => {
+          setInterval(function () {
             if (uptimeAnimating) return
-            const diff = Math.floor((Date.now() - start.getTime()) / 1000)
+            var diff = Math.floor((Date.now() - start.getTime()) / 1000)
             uptimeEl.textContent = formatUptime(diff)
           }, 1000)
         }
 
         // ── 3. Vercount numbers (async, animate when filled) ──
-        ;(() => {
-          const vercountIds = [
-            'vercount_value_site_pv',
-            'vercount_value_page_pv',
-            'vercount_value_site_uv'
-          ]
-          vercountIds.forEach((id) => {
-            const el = document.getElementById(id)
-            if (!el) return
-
-            const existing = parseCount(el.textContent?.trim() || '')
-            if (!isNaN(existing) && existing > 0) {
-              countUp(el, existing)
-              return
-            }
-
-            const observer = new MutationObserver((_mutations, obs) => {
-              const num = parseCount(el.textContent?.trim() || '')
-              if (!isNaN(num) && num > 0) {
-                obs.disconnect()
-                countUp(el, num)
-              }
-            })
-            observer.observe(el, { characterData: true, childList: true, subtree: true })
-          })
-        })()
+        CountUp.watchByIds([
+          'vercount_value_site_pv',
+          'vercount_value_page_pv',
+          'vercount_value_site_uv'
+        ])
       </script>
 
       {/* Social Brands */}

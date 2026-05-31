@@ -30,6 +30,8 @@ const {
   <head>
     <BaseHead {articleDate} {description} {ogImage} {title} />
     <ThemeProvider />
+    <!-- Must load before any inline component scripts use CountUp -->
+    <script is:inline src='/scripts/count-up.js'></script>
   </head>
 
   <body class='flex justify-center bg-background text-foreground' {...props}>

@@ -30,60 +30,20 @@ const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : Astro.url.p
 {view && !comment && <Pageview />}
 
 <script is:inline>
-  (() => {
-    function countUp(el, target, duration = 1000) {
-      const startTime = performance.now()
-      function tick(now) {
-        const elapsed = now - startTime
-        const progress = Math.min(elapsed / duration, 1)
-        const eased = 1 - Math.pow(1 - progress, 3)
-        el.textContent = Math.floor(target * eased).toLocaleString()
-        if (progress < 1) requestAnimationFrame(tick)
-      }
-      requestAnimationFrame(tick)
-    }
+  function startAnimations() {
+    var pageviewEl = document.querySelector('.waline-pageview-count')
+    var commentEl = document.querySelector('.waline-comment-count')
+    if (pageviewEl) CountUp.watch(pageviewEl, 1000)
+    if (commentEl) CountUp.watch(commentEl, 1000)
+  }
 
-    function parseCount(text) {
-      if (!text) return NaN
-      return parseInt(text.replace(/[,，]/g, ''), 10)
-    }
-
-    function animateElement(selector) {
-      const el = document.querySelector(selector)
-      if (!el) return
-
-      const existing = parseCount(el.textContent?.trim() || '')
-      if (!isNaN(existing) && existing > 0) {
-        countUp(el, existing)
-        return
-      }
-
-      // Wait for Waline to fill the count, then animate
-      const observer = new MutationObserver((_mutations, obs) => {
-        const num = parseCount(el.textContent?.trim() || '')
-        if (!isNaN(num) && num > 0) {
-          obs.disconnect()
-          countUp(el, num)
-        }
-      })
-      observer.observe(el, { characterData: true, childList: true, subtree: true })
-    }
-
-    function startAnimations() {
-      animateElement('.waline-pageview-count')
-      animateElement('.waline-comment-count')
-    }
-
-    // If Waline Comment component exists, wait for its ready signal
-    const commentEl = document.querySelector('comment-component')
-    if (commentEl) {
-      commentEl.addEventListener('waline:ready', () => {
-        // Small delay to let the async count API calls finish
-        setTimeout(startAnimations, 300)
-      }, { once: true })
-    } else {
-      // No comment component on this page — just watch the elements
-      startAnimations()
-    }
-  })()
+  // If Waline Comment component exists, wait for its ready signal
+  var host = document.querySelector('comment-component')
+  if (host) {
+    host.addEventListener('waline:ready', function () {
+      setTimeout(startAnimations, 300)
+    }, { once: true })
+  } else {
+    startAnimations()
+  }
 </script>

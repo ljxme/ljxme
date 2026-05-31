@@ -52,47 +52,9 @@ import { vercount } from '@/site-config'
 }
 
 <script is:inline>
-  ;(() => {
-    function countUp(el, target, duration = 1200) {
-      const startTime = performance.now()
-      function tick(now) {
-        const elapsed = now - startTime
-        const progress = Math.min(elapsed / duration, 1)
-        const eased = 1 - Math.pow(1 - progress, 3)
-        el.textContent = Math.floor(target * eased).toLocaleString()
-        if (progress < 1) requestAnimationFrame(tick)
-      }
-      requestAnimationFrame(tick)
-    }
-
-    function parseCount(text) {
-      if (!text) return NaN
-      return parseInt(text.replace(/[,，]/g, ''), 10)
-    }
-
-    const vercountIds = [
-      'vercount_value_site_pv',
-      'vercount_value_page_pv',
-      'vercount_value_site_uv'
-    ]
-    vercountIds.forEach((id) => {
-      const el = document.getElementById(id)
-      if (!el) return
-
-      const existing = parseCount(el.textContent?.trim() || '')
-      if (!isNaN(existing) && existing > 0) {
-        countUp(el, existing)
-        return
-      }
-
-      const observer = new MutationObserver((_mutations, obs) => {
-        const num = parseCount(el.textContent?.trim() || '')
-        if (!isNaN(num) && num > 0) {
-          obs.disconnect()
-          countUp(el, num)
-        }
-      })
-      observer.observe(el, { characterData: true, childList: true, subtree: true })
-    })
-  })()
+  CountUp.watchByIds([
+    'vercount_value_site_pv',
+    'vercount_value_page_pv',
+    'vercount_value_site_uv'
+  ])
 </script>
