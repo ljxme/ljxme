@@ -31,13 +31,19 @@ const aisummary = {
     if (!element || !text) return
     if (aisummaryIsRunning) return
 
-    // 不启用动画时直接渲染
+    const makeCursor = () => {
+      const cursor = document.createElement('span')
+      cursor.className = 'blinking-cursor'
+      return cursor
+    }
+
+    // 不启用动画时直接渲染（使用 textContent 避免 HTML 注入）
     if (
       typeof window !== 'undefined' &&
       typeof window.aisummaryTypingAnimate !== 'undefined' &&
       !window.aisummaryTypingAnimate
     ) {
-      element.innerHTML = text
+      element.textContent = text
       element.style.maxHeight = 'none'
       element.style.overflow = 'visible'
       return
@@ -50,7 +56,8 @@ const aisummary = {
     element.style.display = 'block'
     element.style.maxHeight = 'none'
     element.style.overflow = 'visible'
-    element.innerHTML = '生成中...' + '<span class="blinking-cursor"></span>'
+    element.textContent = '生成中...'
+    element.appendChild(makeCursor())
 
     let animationRunning = true
     let currentIndex = 0
@@ -69,13 +76,14 @@ const aisummary = {
           lastUpdateTime = currentTime
           currentIndex++
           if (currentIndex < text.length) {
-            element.innerHTML =
-              text.slice(0, currentIndex) + '<span class="blinking-cursor"></span>'
+            element.textContent = text.slice(0, currentIndex)
+            element.appendChild(makeCursor())
           } else {
-            element.innerHTML = text
+            element.textContent = text
             element.style.display = 'block'
             aisummaryIsRunning = false
             observer.disconnect()
+            return
           }
         }
         requestAnimationFrame(animate)

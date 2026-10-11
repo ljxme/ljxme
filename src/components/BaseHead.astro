@@ -9,7 +9,6 @@ import aisummaryCss from '../assets/styles/aisummary.css?url'
 import shuoshuoCss from '../assets/styles/shuoshuo.css?url'
 import aisummaryConfig from '../plugins/aisummary.config.js?url'
 import aisummary from '../plugins/aisummary.js?url'
-// import umamiLoader from '../plugins/umami-loader.js?url'
 
 type Props = SiteMeta
 
@@ -31,7 +30,7 @@ const socialImageURL = new URL(ogImage ? ogImage : config.socialCard, Astro.url)
 <link rel='icon' type='image/png' sizes='32x32' href='/favicon/favicon-32x32.png' />
 <link rel='icon' type='image/png' sizes='16x16' href='/favicon/favicon-16x16.png' />
 <link rel='apple-touch-icon' sizes='180x180' href='/favicon/apple-touch-icon.png' />
-<link rel='manifest' href='/favicon/site.webmanifest' />d
+<link rel='manifest' href='/favicon/site.webmanifest' />
 {/* Font preloads */}
 <Font cssVariable='--font-noto-sans-sc' preload={[{ subset: 'latin', style: 'normal' }]} />
 <style>
@@ -40,46 +39,7 @@ const socialImageURL = new URL(ogImage ? ogImage : config.socialCard, Astro.url)
   }
 </style>
 
-{/* Font via CDN */}
-<link
-  rel='stylesheet'
-  href='https://ik.imagekit.io/ljx/LXGWBright-Medium/result.css?updatedAt=1760351683473'
-  media='print'
-  onload="this.setAttribute('media', 'all')"
-/>
-<noscript>
-  <link
-    rel='stylesheet'
-    href='https://ik.imagekit.io/ljx/LXGWBright-Medium/result.css?updatedAt=1760351683473'
-  />
-</noscript>
-<link
-  rel='stylesheet'
-  href='https://ik.imagekit.io/ljx/LXGWBright-MediumItalic/result.css?updatedAt=1760351714330'
-  media='print'
-  onload="this.setAttribute('media', 'all')"
-/>
-<noscript>
-  <link
-    rel='stylesheet'
-    href='https://ik.imagekit.io/ljx/LXGWBright-MediumItalic/result.css?updatedAt=1760351714330'
-  />
-</noscript>
-<link
-  rel='stylesheet'
-  href='https://ik.imagekit.io/ljx/LXGWmikhailcai/result.css?updatedAt=1762168258143'
-  media='print'
-  onload="this.setAttribute('media', 'all')"
-/>
-<noscript>
-  <link
-    rel='stylesheet'
-    href='https://ik.imagekit.io/ljx/LXGWmikhailcai/result.css?updatedAt=1762168258143'
-  />
-</noscript>
-
 {/* Preconnect */}
-<link rel='preconnect' href='https://ik.imagekit.io' />
 <link rel='preconnect' href='https://cn.vercount.one' />
 
 {/* Canonical URL */}
@@ -157,20 +117,9 @@ const socialImageURL = new URL(ogImage ? ogImage : config.socialCard, Astro.url)
 {/* Shuoshuo Style */}
 <link rel='stylesheet' href={shuoshuoCss} />
 
-{/* APlayer Style */}
-<link rel='stylesheet' href={`${config.npmCDN}/aplayer@1.10.1/dist/APlayer.min.css`} media='all' />
-<script src={`${config.npmCDN}/aplayer@1.10.1/dist/APlayer.min.js`} defer is:inline></script>
-<script src={`${config.npmCDN}/meting@2.0.2/dist/Meting.min.js`} defer is:inline></script>
-
 {/* Analytics */}
 <script src='https://analytics.ljx.icu/tracker.min.js' data-website-id='ljxblog' defer is:inline
 ></script>
 
-{/* Netease Mini Player */}
-
 {/* Page Preload */}
 <script src={`${config.npmCDN}/instant.page@5.2.0/instantpage.js`} type='module' is:inline></script>
-
-{/* Umami Analytics
-<script src={umamiLoader} defer is:inline></script>
-*/}
