@@ -41,5 +41,6 @@ node_modules/
 old_blog
 ignore.*
 bunfig.toml
+bun.lock
 /src/content/blog/test.*
 /test/
