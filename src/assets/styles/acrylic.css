@@ -1,0 +1,206 @@
+/* =============================================================
+   亚克力 / 玻璃拟态全局样式 — 编程前卫风格
+   (Acrylic / Glassmorphism global styles)
+   -------------------------------------------------------------
+   本文件作为「主题覆盖层」，必要时使用 !important 以保证优先级。
+   所有模糊/半透明效果均带 -webkit- 前缀，兼容 Safari。
+   所有光晕均基于现有主题色（--primary），不引入新颜色。
+   ============================================================= */
+
+/* ---------- 1. 玻璃设计令牌 ---------- */
+:root {
+  --glass-blur: 18px;
+  --glass-saturate: 160%;
+  --glass-alpha: 0.55;
+  --glass-alpha-strong: 0.72;
+  --glass-border: hsl(var(--foreground) / 0.08);
+  --glass-shadow: 0 8px 32px hsl(var(--foreground) / 0.08);
+  /* 顶部高光，营造亚克力「厚度感」 */
+  --glass-sheen: inset 0 1px 0 0 hsl(255 100% 100% / 0.55);
+}
+.dark {
+  --glass-border: hsl(var(--foreground) / 0.12);
+  --glass-shadow: 0 8px 32px hsl(0 0% 0% / 0.45);
+  --glass-sheen: inset 0 1px 0 0 hsl(255 100% 100% / 0.09);
+}
+
+/* ---------- 2. 氛围背景（现有主色光晕 + 网格线） ---------- */
+/* 主色极淡光斑，供亚克力模糊「出彩」 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(50rem 50rem at 15% 0%, hsl(var(--primary) / 0.12), transparent 60%),
+    radial-gradient(45rem 45rem at 85% 100%, hsl(var(--primary) / 0.08), transparent 60%);
+}
+/* 网格线（编程/终端质感） */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(circle at 50% 35%, black, transparent 78%);
+  mask-image: radial-gradient(circle at 50% 35%, black, transparent 78%);
+}
+
+/* ---------- 3. 顶部导航（滚动后变为毛玻璃胶囊） ---------- */
+header-component.not-top {
+  background-color: hsl(var(--background) / var(--glass-alpha-strong)) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow), var(--glass-sheen) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+.dark header-component.not-top {
+  background-color: hsl(var(--muted) / 0.62) !important;
+}
+/* 移动端展开菜单同样毛玻璃化 */
+header-component.expanded.not-top #headerExpandContent {
+  background-color: hsl(var(--background) / var(--glass-alpha-strong)) !important;
+  border-color: var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+.dark header-component.expanded.not-top #headerExpandContent {
+  background-color: hsl(var(--muted) / 0.62) !important;
+}
+
+/* ---------- 4. 文章卡片 ---------- */
+.post-preview > a {
+  background-color: hsl(var(--background) / var(--glass-alpha)) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-sheen);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+.post-preview > a:hover {
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.35),
+    0 12px 40px hsl(var(--primary) / 0.14),
+    var(--glass-sheen);
+}
+
+/* ---------- 5. 项目卡片 ---------- */
+.project-card {
+  background-color: hsl(var(--muted) / var(--glass-alpha)) !important;
+  border-color: var(--glass-border) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+.project-card:hover {
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.4),
+    0 16px 48px hsl(var(--primary) / 0.16),
+    var(--glass-sheen);
+}
+
+/* ---------- 6. 代码块（毛玻璃「终端」观感） ---------- */
+.astro-code {
+  background-color: hsl(var(--muted) / 0.62) !important;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+/* 行号 gutter 与代码块底色保持一致 */
+.astro-code pre code::before,
+.astro-code pre code .line::before {
+  background-color: hsl(var(--muted) / 0.62) !important;
+}
+/* 折叠渐隐与毛玻璃底色对齐 */
+.astro-code.collapsed .collapse-fade {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--muted) / 0.62) 60%
+  );
+}
+
+/* ---------- 7. 提示框 / AI 摘要 / 评论区 ---------- */
+.aside {
+  border-color: var(--glass-border) !important;
+  background-color: hsl(var(--background) / var(--glass-alpha));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+.aisummary-container {
+  background: hsl(var(--muted) / 0.4);
+  border-color: var(--glass-border) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+.recent-comments {
+  background-color: hsl(var(--background) / var(--glass-alpha)) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow), var(--glass-sheen);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+/* Waline 评论区 */
+#waline .wl-panel,
+#waline .wl-card {
+  background-color: hsl(var(--background) / var(--glass-alpha));
+  border-color: var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+/* ---------- 8. 通用卡片（Card / CardList） ---------- */
+.not-prose.block.relative.rounded-2xl.bg-muted {
+  background-color: hsl(var(--muted) / var(--glass-alpha)) !important;
+  border-color: var(--glass-border) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+}
+
+/* ---------- 9. 编程前卫点缀 ---------- */
+/* 等宽字体用于标签/目录/日期，强化「代码感」 */
+:root {
+  --font-mono:
+    ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+}
+toc-heading h2,
+.tag-list a,
+.recent-comments-title,
+.comment-time,
+.article-date {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+/* 交互 UI 元素主色光晕（基于现有 --primary，避免影响正文链接清晰度） */
+header-component a:hover,
+header-component button:hover,
+.tag-list a:hover {
+  text-shadow: 0 0 12px hsl(var(--primary) / 0.35);
+}
+
+/* ---------- 10. 无障碍兼容 ---------- */
+/* 不支持 backdrop-filter 时回退为更不透明的底色，保证可读性 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  header-component.not-top,
+  .post-preview > a,
+  .project-card,
+  .astro-code,
+  .recent-comments {
+    background-color: hsl(var(--background) / 0.96) !important;
+  }
+  .dark header-component.not-top,
+  .dark .post-preview > a,
+  .dark .project-card,
+  .dark .astro-code,
+  .dark .recent-comments {
+    background-color: hsl(var(--muted) / 0.96) !important;
+  }
+}
