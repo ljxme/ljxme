@@ -1,13 +1,15 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
 import { glob } from 'glob'
 import matter from 'gray-matter'
 import pLimit from 'p-limit'
 
-// 加载环境变量
-dotenv.config()
+// 加载环境变量（始终从项目主目录的 .env 读取，与运行时的 cwd 无关）
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') })
 
 // ================= 配置区域 =================
 const CONFIG = {
