@@ -145,11 +145,12 @@ const siteStart = '2025-10-07T00:00:00'
         var start = new Date(siteStart)
 
         function formatUptime(seconds) {
-          var d = Math.floor(seconds / 86400)
+          var y = Math.floor(seconds / 31536000)
+          var d = Math.floor(seconds % 31536000 / 86400)
           var h = Math.floor((seconds % 86400) / 3600)
           var m = Math.floor((seconds % 3600) / 60)
           var s = Math.floor(seconds % 60)
-          return d + ' d ' + h + ' h ' + m + ' m ' + s + ' s'
+          return y + ' y ' + d + ' d ' + h + ' h ' + m + ' m ' + s + ' s '
         }
 
         if (uptimeEl) {
